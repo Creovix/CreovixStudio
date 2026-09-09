@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { isSupabaseConfigured } from "@/integrations/supabase/env";
+import { supabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const Route = createFileRoute("/")({
   ssr: false,

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 
 /** Builds a signed OAuth start URL that links the provider to the signed-in user. */
 export const startPlatformLink = createServerFn({ method: "POST" })
@@ -80,7 +80,7 @@ export const ingestStreamElementsEvent = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { activeSubathonFor, ingestEvent } = await import("@/lib/webhooks/ingest.server");
     const target = await activeSubathonFor(supabaseAdmin, context.userId);
     if (!target) return { status: "ignored" as const, reason: "no_active_subathon" };
@@ -179,7 +179,7 @@ export const ingestStreamlabsSocketEvent = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { activeSubathonFor, ingestEvent } = await import("@/lib/webhooks/ingest.server");
     const target = await activeSubathonFor(supabaseAdmin, context.userId);
     if (!target) return { status: "ignored" as const, reason: "no_active_subathon" };

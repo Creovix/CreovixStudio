@@ -3,11 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Pencil, Plus, Trash2, Zap } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/layout/AppShell";
+import { supabase } from "@/lib/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WIDGET_LABEL, type WidgetType } from "@/lib/widgets";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/lib/supabase/types";
 import { DarkSelect } from "@/components/ui/dark-select";
 
 type Platform = Database["public"]["Enums"]["platform_type"];

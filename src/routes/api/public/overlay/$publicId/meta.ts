@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/meta")({
       GET: async ({ params }) => {
         // Token-gated public metadata lookup. The token is an unguessable
         // UUID and only safe columns leave the server.
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
 
         const { data: widget } = await supabaseAdmin
           .from("widgets")

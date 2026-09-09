@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/public/webhooks/streamlabs")({
           return jsonResponse({ error: "invalid_json" }, 400);
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const target = await resolveSubathonByToken(supabaseAdmin, "STREAMLABS", token);
         if (!target || !safeEqual(target.secret, token)) {
           return new Response("Invalid token", { status: 401 });

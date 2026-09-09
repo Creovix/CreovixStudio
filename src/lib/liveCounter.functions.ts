@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 
 export type CounterPlatform = "KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE" | "ALL";
 
@@ -245,7 +245,7 @@ export const lookupChannel = createServerFn({ method: "POST" })
     const username = data.username.trim().replace(/^@/, "");
     if (!username) throw new Error("Enter a channel name");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { data: connections } = await supabaseAdmin
       .from("platform_connections")
       .select("platform, platform_user_id, access_token, username, metadata")

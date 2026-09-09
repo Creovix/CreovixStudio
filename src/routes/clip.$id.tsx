@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { ClipPlayer } from "@/components/ClipPlayer";
+import { ClipPlayer } from "@/components/clips/ClipPlayer";
 
 type ClipData = {
   id: string;

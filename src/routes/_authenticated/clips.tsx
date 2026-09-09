@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { Check, Copy, Download, Play, Search, Share2, Trash2, Video, X } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
-import { ClipPlayer } from "@/components/ClipPlayer";
+import { AppShell } from "@/components/layout/AppShell";
+import { ClipPlayer } from "@/components/clips/ClipPlayer";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { deleteClip, listChannelClips } from "@/lib/clipCommand.functions";
 

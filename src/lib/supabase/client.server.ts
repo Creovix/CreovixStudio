@@ -34,7 +34,7 @@ function createSupabaseAdminClient() {
 let _supabaseAdmin: ReturnType<typeof createSupabaseAdminClient> | undefined;
 
 // SECURITY: never expose this client to browser code.
-// Load inside server handlers: const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+// Load inside server handlers: const { supabaseAdmin } = await import("@/lib/supabase/client.server");
 // Top-level import is safe only in other *.server.ts modules — route files and *.functions.ts ship to the client bundle.
 export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdminClient>, {
   get(_, prop, receiver) {

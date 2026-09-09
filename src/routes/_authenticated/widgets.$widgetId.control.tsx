@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { SubathonElementControlPanel } from "@/components/widgets/SubathonElementControlPanel";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useWidgetStream } from "@/hooks/useWidgetStream";
 import { useLanguage } from "@/lib/i18n";
 

@@ -4,7 +4,7 @@
 // the overlay never receives new events. This client forces `no-store`.
 import { createClient } from "@supabase/supabase-js";
 
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/lib/supabase/types";
 
 function createLiveClient() {
   const url = process.env["SUPABASE_URL"];

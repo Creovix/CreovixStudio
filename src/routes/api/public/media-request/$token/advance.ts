@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/public/media-request/$token/advance")
   server: {
     handlers: {
       POST: async ({ params, request }) => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const { data: settings } = await supabaseAdmin.from("media_request_settings")
           .select("user_id").eq("overlay_token", params.token).maybeSingle();
         if (!settings) return Response.json({ error: "overlay_not_found" }, { status: 404 });

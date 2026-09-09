@@ -3,11 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, ExternalLink } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
-import { OverlayView } from "@/components/OverlayView";
+import { AppShell } from "@/components/layout/AppShell";
+import { OverlayView } from "@/components/overlay/OverlayView";
 import { useTimerStream } from "@/hooks/useTimerStream";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { DarkSelect } from "@/components/ui/dark-select";
 import {
   DEFAULT_OVERLAY_THEME,

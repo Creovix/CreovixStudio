@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/public/giveaway/$token/live")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const { data: settings } = await supabaseAdmin
           .from("giveaway_settings")
           .select("user_id, keyword, draw_state, last_winner")

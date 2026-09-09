@@ -10,8 +10,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { isSupabaseConfigured } from "@/integrations/supabase/env";
+import { supabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { LanguageProvider } from "@/lib/i18n";
 import appCss from "../styles.css?url";
 

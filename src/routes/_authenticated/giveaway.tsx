@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Copy, Gift, Loader2, Sparkles, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { GiveawayDisplay, type DrawPhase } from "@/components/widgets/GiveawayDisplay";

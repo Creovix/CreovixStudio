@@ -14,11 +14,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
-import { DeleteWidgetDialog } from "@/components/DeleteWidgetDialog";
+import { AppShell } from "@/components/layout/AppShell";
+import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
 import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
 
 import {

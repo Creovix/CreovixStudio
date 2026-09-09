@@ -3,10 +3,10 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Activity, Check, ChevronDown, Gift, LogOut, Radio, Scissors, Settings, Sparkles } from "lucide-react";
 
-import { StreamlabsBridge } from "@/components/StreamlabsBridge";
-import { StreamElementsBridge } from "@/components/StreamElementsBridge";
+import { StreamlabsBridge } from "@/components/layout/StreamlabsBridge";
+import { StreamElementsBridge } from "@/components/layout/StreamElementsBridge";
 import { SubscriptionStatusPill } from "@/components/settings/SubscriptionPanel";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useLanguage, type Lang, type TranslationKey } from "@/lib/i18n";
 import type { Subathon } from "@/hooks/useWorkspace";
 

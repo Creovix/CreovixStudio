@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 
 export type SimulateInput = {
   widgetId: string;
@@ -21,7 +21,7 @@ export const simulateStreamEvent = createServerFn({ method: "POST" })
   .inputValidator((input: SimulateInput) => input)
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { activeSubathonFor, ingestEvent } = await import("@/lib/webhooks/ingest.server");
 
     const { data: widget } = await supabaseAdmin
@@ -71,7 +71,7 @@ export const sendTestChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { widgetId: string; text?: string; author?: string }) => input)
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { data: widget } = await supabaseAdmin
       .from("widgets")
       .select("id, user_id")
@@ -110,7 +110,7 @@ export const fireTestEvent = createServerFn({ method: "POST" })
   .inputValidator((input: TestEventInput) => input)
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { activeSubathonFor, ingestEvent, isAllowedEventSource } = await import(
       "@/lib/webhooks/ingest.server"
     );

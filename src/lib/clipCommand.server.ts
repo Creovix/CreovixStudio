@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/lib/supabase/client.server";
 import { captureKickClip, fetchKickChannel, refreshKickBuffer } from "@/lib/kickClip.server";
 
 

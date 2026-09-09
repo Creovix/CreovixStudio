@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/lib/supabase/client.server";
 
 export type YouTubeMetadata = {
   videoId: string; url: string; title: string; thumbnailUrl: string | null;

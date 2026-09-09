@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 
-import { OverlayView } from "@/components/OverlayView";
+import { OverlayView } from "@/components/overlay/OverlayView";
 import { PlatformIcon, normalizePlatform } from "@/components/widgets/PlatformIcon";
 import { RoleBadgeIcon, resolveBadgeRoles } from "@/components/widgets/RoleBadgeIcon";
 

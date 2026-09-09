@@ -1,7 +1,7 @@
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
-import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+import { attachSupabaseAuth } from "@/lib/supabase/auth-attacher";
 
 function isClientAbort(error: unknown): boolean {
   if (error == null || typeof error !== "object") return false;

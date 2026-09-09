@@ -116,7 +116,7 @@ export const Route = createFileRoute("/api/public/webhooks/twitch")({
         const ev = payload.event ?? {};
         // Native Twitch pins drive the Chat Spotlight overlay directly.
         if (type === "channel.chat.message_pinned") {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { supabaseAdmin } = await import("@/lib/supabase/client.server");
           const broadcaster =
             typeof ev["broadcaster_user_id"] === "string" ? (ev["broadcaster_user_id"] as string) : null;
           if (!broadcaster) return jsonResponse({ status: "ignored", reason: "no_broadcaster" });
@@ -172,7 +172,7 @@ export const Route = createFileRoute("/api/public/webhooks/twitch")({
           typeof ev["broadcaster_user_id"] === "string" ? (ev["broadcaster_user_id"] as string) : null;
         if (!broadcasterId) return jsonResponse({ status: "ignored", reason: "no_broadcaster" });
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const target = await resolveSubathonByPlatformUser(supabaseAdmin, "TWITCH", broadcasterId);
         if (!target) return jsonResponse({ status: "ignored", reason: "no_active_subathon" });
 

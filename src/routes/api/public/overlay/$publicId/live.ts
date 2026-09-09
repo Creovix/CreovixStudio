@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/live")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const supabase = supabaseAdmin;
 
         const { data: widget } = await supabase

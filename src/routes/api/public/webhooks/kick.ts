@@ -115,7 +115,7 @@ export const Route = createFileRoute("/api/public/webhooks/kick")({
           const text = pickString(body, "content") ?? "";
           const username = pickString(body, "sender", "username") ?? "Kick viewer";
           if (!broadcasterId) return jsonResponse({ status: "ignored", reason: "no_broadcaster" });
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { supabaseAdmin } = await import("@/lib/supabase/client.server");
           const { data: connection } = await supabaseAdmin.from("platform_connections")
             .select("user_id").eq("platform", "KICK").eq("platform_user_id", broadcasterId)
             .eq("is_active", true).maybeSingle();
@@ -214,7 +214,7 @@ export const Route = createFileRoute("/api/public/webhooks/kick")({
           pickString(body, "channel_id");
         if (!broadcasterId) return jsonResponse({ status: "ignored", reason: "no_broadcaster" });
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const target = await resolveSubathonByPlatformUser(supabaseAdmin, "KICK", broadcasterId);
         if (!target) return jsonResponse({ status: "ignored", reason: "no_active_subathon" });
 

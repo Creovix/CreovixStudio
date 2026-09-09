@@ -16,13 +16,13 @@ import {
 } from "lucide-react";
 
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import {
   MetricAnalyticsModal,
   type MetricKey,
 } from "@/components/activity/MetricAnalyticsModal";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 export const Route = createFileRoute("/_authenticated/activity-feed")({

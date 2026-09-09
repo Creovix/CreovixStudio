@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 const DEFAULT_RULES = [
   { platform: "TWITCH", event_type: "FOLLOW", seconds_per_unit: 10, unit_amount: 1 },

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/lib/supabase/types";
 
 export type Platform = Database["public"]["Enums"]["platform_type"];
 export type EventType = Database["public"]["Enums"]["rule_event_type"];

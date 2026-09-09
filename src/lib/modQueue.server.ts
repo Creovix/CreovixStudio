@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/lib/supabase/client.server";
 
 export type ModAction = "APPROVE" | "REJECT" | "SKIP" | "DELETE" | "PLAY" | "PAUSE" | "RESUME" | "SET_MODE";
 export type RequestMode = "AUTO" | "MANUAL" | "PAUSED";

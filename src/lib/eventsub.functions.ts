@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 
 /**
  * Registers Twitch EventSub subscriptions (follow, subscribe, cheer, raid)
@@ -21,7 +21,7 @@ export const syncTwitchEventSub = createServerFn({ method: "POST" })
     const origin = new URL(getRequest().url).origin;
     const callback = `${origin}/api/public/webhooks/twitch`;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { data: connection } = await supabaseAdmin
       .from("platform_connections")
       .select("platform_user_id")

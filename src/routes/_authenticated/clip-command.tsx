@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Check, Copy, Download, Play, Plug, Scissors, Video } from "lucide-react";
 import { toast } from "sonner";
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getClipCommandState, saveClipCommandSettings } from "@/lib/clipCommand.functions";
 

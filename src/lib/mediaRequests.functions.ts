@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 
 type RequestMode = "AUTO" | "MANUAL" | "PAUSED";
 type SettingsInput = { kickRewardId?: string; requestMode: RequestMode; keywordBlacklist: string; userBlacklist: string; displayMode: "VIDEO" | "AUDIO_ONLY"; playerLayout?: string; volume: number };
@@ -53,7 +53,7 @@ export const createKickMediaRewardFn = createServerFn({ method: "POST" }).middle
 export const mediaRequestAction = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: { action: "APPROVE"|"REJECT"|"PLAY"|"PAUSE"|"RESUME"|"SKIP"|"DELETE"|"VOLUME"|"BLACKLIST"|"ENDED"; requestId?: string; volume?: number }) => input)
   .handler(async ({ data, context }) => {
-    const admin = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    const admin = (await import("@/lib/supabase/client.server")).supabaseAdmin;
     const { acceptKickRedemption, rejectKickRedemption, advanceQueue, startIfIdle } = await import("@/lib/mediaRequests.server");
     if (data.action === "ENDED") { await advanceQueue(context.userId, data.requestId ?? null); return { ok: true }; }
     const { data: request } = data.requestId ? await context.supabase.from("media_requests").select("*").eq("id", data.requestId).eq("user_id", context.userId).single() : { data: null };
@@ -111,7 +111,7 @@ export const addManualMediaRequest = createServerFn({ method: "POST" }).middlewa
 /** Public chat coordinates so the dashboard can watch Kick chat for redemptions. */
 export const getMediaChatSources = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { resolveChatSources } = await import("@/lib/chatSources.server");
     const { data: kick } = await supabaseAdmin.from("platform_connections")
       .select("access_token,platform_user_id").eq("user_id", context.userId)
@@ -141,7 +141,7 @@ export const ingestChatMediaRequestFn = createServerFn({ method: "POST" }).middl
 export const testKickMediaRedemption = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: { url: string }) => ({ url: String(input.url ?? "").trim().slice(0, 500) }))
   .handler(async ({ data, context }) => {
-    const admin = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    const admin = (await import("@/lib/supabase/client.server")).supabaseAdmin;
     const [{ data: settings }, { data: connection }] = await Promise.all([
       admin.from("media_request_settings").select("kick_reward_id").eq("user_id", context.userId).maybeSingle(),
       admin.from("platform_connections").select("platform_user_id,username").eq("user_id", context.userId)

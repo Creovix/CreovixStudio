@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Copy, Check, Trash2 } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/layout/AppShell";
+import { supabase } from "@/lib/supabase/client";
 import { useWidgets } from "@/hooks/useWidgets";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { createWidget } from "@/lib/createWidget";

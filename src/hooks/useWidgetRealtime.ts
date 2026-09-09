@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 export type WidgetBroadcast = {
   event: string;

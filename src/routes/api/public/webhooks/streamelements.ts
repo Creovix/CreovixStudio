@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/public/webhooks/streamelements")({
           "";
         if (!token) return new Response("Missing token", { status: 401 });
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const connections = await listConnections(supabaseAdmin, "STREAMELEMENTS");
 
         // The JWT must verify against a stored channel secret AND its channel

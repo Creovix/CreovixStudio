@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { AdminCodesPanel } from "@/components/settings/AdminCodesPanel";
 import { ConnectionsPanel } from "@/components/settings/ConnectionsPanel";
 import { EventTestPanel } from "@/components/settings/EventTestPanel";

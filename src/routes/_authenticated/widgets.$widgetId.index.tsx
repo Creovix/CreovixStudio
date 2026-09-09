@@ -3,8 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, RefreshCw, Trash2 } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
-import { DeleteWidgetDialog } from "@/components/DeleteWidgetDialog";
+import { AppShell } from "@/components/layout/AppShell";
+import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
 import { TestSimulatePanel } from "@/components/widgets/TestSimulatePanel";
 import { useLanguage } from "@/lib/i18n";
 import { WidgetRenderer } from "@/components/widgets/WidgetRenderer";
@@ -12,7 +12,7 @@ import { SubathonElementControlPanel } from "@/components/widgets/SubathonElemen
 import { SubathonTimerSidebar } from "@/components/widgets/SubathonTimerSidebar";
 import { SpotlightControlPanel } from "@/components/widgets/SpotlightControlPanel";
 import { parseSpotlightConfig } from "@/lib/widgets";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { syncGoalFollowers } from "@/lib/goals.functions";
 import { useWidgetStream } from "@/hooks/useWidgetStream";

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 import type { GiveawayPlatform } from "@/lib/giveaway.server";
 
 export type GiveawaySettings = {
@@ -157,7 +157,7 @@ export const joinGiveaway = createServerFn({ method: "POST" })
       input,
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { captureGiveawayEntry } = await import("@/lib/giveaway.server");
     return captureGiveawayEntry(supabaseAdmin, context.userId, data);
   });
@@ -177,7 +177,7 @@ export const announceGiveawayWinner = createServerFn({ method: "POST" })
 export const getGiveawayChatSources = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
     const { resolveChatSources } = await import("@/lib/chatSources.server");
     return resolveChatSources(supabaseAdmin, context.userId);
   });

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/lib/supabase/types";
 import { computeRemaining, clampRemaining, snapshotFromRow, toFrame } from "@/lib/timer";
 import type { TimerFrame, TimerStatus } from "@/lib/timer";
 

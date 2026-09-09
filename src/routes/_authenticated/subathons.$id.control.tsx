@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
-import { AppShell } from "@/components/AppShell";
-import { TimerControls } from "@/components/TimerControls";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/layout/AppShell";
+import { TimerControls } from "@/components/widgets/TimerControls";
+import { supabase } from "@/lib/supabase/client";
 import { useWorkspace, useSubathonStats } from "@/hooks/useWorkspace";
 import { formatDuration } from "@/lib/timer";
 

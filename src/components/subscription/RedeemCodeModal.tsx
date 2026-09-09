@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, KeyRound, X } from "lucide-react";
 import { useState } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { formatCode, normalizeCode } from "@/hooks/useSubscription";
 import { useLanguage } from "@/lib/i18n";
 

@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { DEFAULT_OVERLAY_THEME } from "@/lib/overlayTheme";
 import { goalTypePreset, type GoalTypeId } from "@/lib/goalTypes";
 import {

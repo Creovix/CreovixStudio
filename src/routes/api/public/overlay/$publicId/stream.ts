@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/lib/supabase/types";
 import { snapshotFromRow, toFrame } from "@/lib/timer";
 import type { OverlayEvent } from "@/lib/widgets";
 import {

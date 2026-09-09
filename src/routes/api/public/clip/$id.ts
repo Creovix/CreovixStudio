@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/public/clip/$id")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase/client.server");
         const { data } = await supabaseAdmin
           .from("clips")
           .select("id, title, url, external_id, thumbnail_url, duration_seconds, clipped_by, created_at")

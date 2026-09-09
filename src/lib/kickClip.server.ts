@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/lib/supabase/client.server";
 
 /**
  * Kick has no clip-creation API (KickDevDocs#71 is still open) and its internal

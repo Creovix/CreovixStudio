@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/public/auth/$provider/callback")({
           // user (state is HMAC-signed) and never touch the auth session.
           const linkedUserId = verifyLinkState(state);
           if (linkedUserId) {
-            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            const { supabaseAdmin } = await import("@/lib/supabase/client.server");
             const socketToken =
               provider === "streamlabs"
                 ? await fetchStreamlabsSocketToken(tokens.access_token)
@@ -109,7 +109,7 @@ export const Route = createFileRoute("/api/public/auth/$provider/callback")({
           const email =
             profile.email ?? `${provider}_${profile.id}@users.${new URL(origin).hostname}`;
 
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { supabaseAdmin } = await import("@/lib/supabase/client.server");
 
           // Create or reuse the auth identity, then mint a one-time link the
           // browser exchanges for a real session.
