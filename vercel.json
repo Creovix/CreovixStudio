@@ -1,5 +1,4 @@
 {
-  "framework": "other",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".output/public"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "tanstack-start"
 }
