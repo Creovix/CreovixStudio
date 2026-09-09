@@ -10,6 +10,12 @@ import tsConfigPaths from "vite-tsconfig-paths";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 
+function nitroDeployPreset(): "netlify" | "vercel" | "node-server" {
+  if (process.env["NETLIFY"]) return "netlify";
+  if (process.env["VERCEL"]) return "vercel";
+  return "node-server";
+}
+
 export default defineConfig({
   server: {
     port: 3000,
@@ -31,7 +37,7 @@ export default defineConfig({
       },
     }),
     nitro({
-      preset: "node-server",
+      preset: nitroDeployPreset(),
     }),
     viteReact(),
     tailwindcss(),
