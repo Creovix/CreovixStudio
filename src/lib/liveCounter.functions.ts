@@ -1,0 +1,307 @@
+import { createServerFn } from "@tanstack/react-start";
+
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export type CounterPlatform = "KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE" | "ALL";
+
+export type ChannelSnapshot = {
+  platform: "KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE";
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  followers: number | null;
+  isLive: boolean;
+  viewers: number | null;
+  /** Present when the platform can be reached but the count is unavailable. */
+  note: string | null;
+  fetchedAt: string;
+};
+
+type KickPayload = {
+  slug?: string;
+  followers_count?: number;
+  followersCount?: number;
+  user?: { username?: string; profile_pic?: string | null };
+  livestream?: { is_live?: boolean; viewer_count?: number } | null;
+};
+
+/** Kick blocks plain server requests, so mimic a normal browser request. */
+async function kickFetch(url: string): Promise<KickPayload | null> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        accept: "application/json",
+        "accept-language": "en-US,en;q=0.9",
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        referer: "https://kick.com/",
+      },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as KickPayload;
+  } catch {
+    return null;
+  }
+}
+
+/** Kick exposes public channel data — followers, avatar and live state. */
+async function kickChannel(username: string): Promise<ChannelSnapshot | null> {
+  const slug = encodeURIComponent(username.toLowerCase());
+  const payload =
+    (await kickFetch(`https://kick.com/api/v2/channels/${slug}`)) ??
+    (await kickFetch(`https://kick.com/api/v1/channels/${slug}`));
+  if (!payload) return null;
+  const followers =
+    typeof payload.followers_count === "number"
+      ? payload.followers_count
+      : typeof payload.followersCount === "number"
+        ? payload.followersCount
+        : null;
+  return {
+    platform: "KICK",
+    username: payload.slug ?? username,
+    displayName: payload.user?.username ?? payload.slug ?? username,
+    avatarUrl: payload.user?.profile_pic ?? null,
+    followers,
+    isLive: Boolean(payload.livestream?.is_live),
+    viewers: payload.livestream?.viewer_count ?? null,
+    note: followers === null ? "Kick did not return a follower total for this channel." : null,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+
+/** Twitch app token — enough for profile + live state on any channel. */
+async function twitchAppToken(): Promise<string | null> {
+  const id = process.env["TWITCH_CLIENT_ID"];
+  const secret = process.env["TWITCH_CLIENT_SECRET"];
+  if (!id || !secret) return null;
+  const response = await fetch("https://id.twitch.tv/oauth2/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: id,
+      client_secret: secret,
+      grant_type: "client_credentials",
+    }),
+  });
+  if (!response.ok) return null;
+  const payload = (await response.json()) as { access_token?: string };
+  return payload.access_token ?? null;
+}
+
+async function twitchChannel(
+  username: string,
+  userToken: string | null,
+  ownBroadcasterId: string | null,
+): Promise<ChannelSnapshot | null> {
+  const clientId = process.env["TWITCH_CLIENT_ID"];
+  const appToken = await twitchAppToken();
+  if (!clientId || !appToken) return null;
+
+  const headers = { Authorization: `Bearer ${appToken}`, "Client-Id": clientId };
+  const userRes = await fetch(
+    `https://api.twitch.tv/helix/users?login=${encodeURIComponent(username.toLowerCase())}`,
+    { headers },
+  );
+  if (!userRes.ok) return null;
+  const users = (await userRes.json()) as {
+    data?: { id: string; display_name: string; login: string; profile_image_url: string }[];
+  };
+  const profile = users.data?.[0];
+  if (!profile) return null;
+
+  const streamRes = await fetch(
+    `https://api.twitch.tv/helix/streams?user_id=${encodeURIComponent(profile.id)}`,
+    { headers },
+  );
+  const streams = streamRes.ok
+    ? ((await streamRes.json()) as { data?: { viewer_count?: number }[] })
+    : { data: [] };
+  const stream = streams.data?.[0];
+
+  // Twitch only returns the follower total to the broadcaster's own token.
+  let followers: number | null = null;
+  let note: string | null =
+    "Twitch only shares follower totals with the channel owner — connect this account to see the count.";
+  if (userToken && ownBroadcasterId === profile.id) {
+    const followRes = await fetch(
+      `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${profile.id}&first=1`,
+      { headers: { Authorization: `Bearer ${userToken}`, "Client-Id": clientId } },
+    );
+    if (followRes.ok) {
+      const payload = (await followRes.json()) as { total?: number };
+      if (typeof payload.total === "number") {
+        followers = payload.total;
+        note = null;
+      }
+    }
+  }
+
+  return {
+    platform: "TWITCH",
+    username: profile.login,
+    displayName: profile.display_name,
+    avatarUrl: profile.profile_image_url,
+    followers,
+    isLive: Boolean(stream),
+    viewers: stream?.viewer_count ?? null,
+    note,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * X (Twitter) public metrics via the official API v2 app-only bearer token.
+ */
+async function xAccount(username: string): Promise<ChannelSnapshot | null> {
+  const bearer = process.env["X_BEARER_TOKEN"];
+  if (!bearer) return null;
+
+  const handle = encodeURIComponent(username.replace(/^@/, ""));
+  const response = await fetch(
+    `https://api.twitter.com/2/users/by/username/${handle}?user.fields=name,username,profile_image_url,public_metrics`,
+    {
+      headers: {
+        Authorization: `Bearer ${bearer}`,
+      },
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    console.error(`X lookup failed [${response.status}]: ${body}`);
+    return null;
+  }
+  const payload = (await response.json()) as {
+    data?: {
+      name?: string;
+      username?: string;
+      profile_image_url?: string;
+      public_metrics?: { followers_count?: number };
+    };
+  };
+  const profile = payload.data;
+  if (!profile?.username) return null;
+
+  const followers = profile.public_metrics?.followers_count ?? null;
+  return {
+    platform: "X",
+    username: profile.username,
+    displayName: profile.name ?? profile.username,
+    avatarUrl: profile.profile_image_url?.replace("_normal", "_400x400") ?? null,
+    followers,
+    isLive: false,
+    viewers: null,
+    note: followers === null ? "X did not return a follower total for this account." : null,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+/** TikTok only exposes stats for the connected (authorised) account. */
+async function tiktokAccount(
+  accessToken: string,
+  fallbackName: string,
+): Promise<ChannelSnapshot | null> {
+  const fields = "open_id,display_name,avatar_url,follower_count";
+  const response = await fetch(
+    `https://open.tiktokapis.com/v2/user/info/?fields=${encodeURIComponent(fields)}`,
+    { headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" } },
+  );
+  if (!response.ok) {
+    console.error(`TikTok lookup failed [${response.status}]: ${await response.text()}`);
+    return null;
+  }
+  const payload = (await response.json()) as {
+    data?: {
+      user?: { display_name?: string; avatar_url?: string; follower_count?: number };
+    };
+  };
+  const user = payload.data?.user;
+  if (!user) return null;
+  const followers = typeof user.follower_count === "number" ? user.follower_count : null;
+  return {
+    platform: "TIKTOK",
+    username: user.display_name ?? fallbackName,
+    displayName: user.display_name ?? fallbackName,
+    avatarUrl: user.avatar_url ?? null,
+    followers,
+    isLive: false,
+    viewers: null,
+    note: followers === null ? "TikTok did not return a follower total." : null,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Live follower lookup for the Live Counter page. Kick is fully public;
+ * Twitch needs the owner's connection for follower totals. TikTok and
+ * YouTube do not expose a public counter API, so they report clearly
+ * instead of returning invented numbers.
+ */
+export const lookupChannel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { platform: CounterPlatform; username: string }) => input)
+  .handler(async ({ data, context }) => {
+    const username = data.username.trim().replace(/^@/, "");
+    if (!username) throw new Error("Enter a channel name");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: connections } = await supabaseAdmin
+      .from("platform_connections")
+      .select("platform, platform_user_id, access_token, username, metadata")
+      .eq("user_id", context.userId)
+      .eq("is_active", true);
+    const twitchConn = connections?.find((row) => row.platform === "TWITCH") ?? null;
+    const tiktokConn = connections?.find((row) => row.platform === "TIKTOK") ?? null;
+
+    const order: ("KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE")[] =
+      data.platform === "ALL"
+        ? ["KICK", "TWITCH", "X", ...(tiktokConn ? (["TIKTOK"] as const) : [])]
+        : [data.platform as "KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE"];
+
+    for (const platform of order) {
+      if (platform === "KICK") {
+        const snapshot = await kickChannel(username);
+        if (snapshot) return snapshot;
+      }
+      if (platform === "TWITCH") {
+        const snapshot = await twitchChannel(
+          username,
+          twitchConn?.access_token ?? null,
+          twitchConn?.platform_user_id ?? null,
+        );
+        if (snapshot) return snapshot;
+      }
+      if (platform === "X") {
+        const snapshot = await xAccount(username);
+        if (snapshot) return snapshot;
+        if (data.platform === "X") {
+          throw new Error(
+            process.env["X_BEARER_TOKEN"]
+              ? `Channel Not Found: "${username}"`
+              : "Set X_BEARER_TOKEN to read live follower counts for X handles.",
+          );
+        }
+      }
+      if (platform === "TIKTOK") {
+        const snapshot = tiktokConn?.access_token
+          ? await tiktokAccount(tiktokConn.access_token, tiktokConn.username ?? username)
+          : null;
+        if (snapshot) return snapshot;
+        if (data.platform === "TIKTOK") {
+          throw new Error(
+            tiktokConn
+              ? "TikTok returned no data for the connected account. Reconnect TikTok in Settings."
+              : "Connect your TikTok account in Settings — TikTok only exposes follower counts for the connected account.",
+          );
+        }
+      }
+      if (platform === "YOUTUBE") {
+        throw new Error(
+          "YouTube does not offer a public live follower counter yet — track Kick, Twitch or TikTok instead.",
+        );
+      }
+    }
+
+    throw new Error(`Channel Not Found: "${username}"`);
+  });

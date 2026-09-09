@@ -1,0 +1,234 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Copy, Check, Trash2 } from "lucide-react";
+
+import { AppShell } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
+import { useWidgets } from "@/hooks/useWidgets";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { createWidget } from "@/lib/createWidget";
+import { WIDGET_LABEL, WIDGET_TYPES, type WidgetType } from "@/lib/widgets";
+import { DarkSelect } from "@/components/ui/dark-select";
+
+export const Route = createFileRoute("/_authenticated/widgets/")({
+  head: () => ({
+    meta: [
+      { title: "Widget Hub — Subathon Studio" },
+      {
+        name: "description",
+        content:
+          "Create and manage OBS widgets: subathon timers, goal bars, alert boxes, activity feeds and spin wheels.",
+      },
+      { property: "og:title", content: "Widget Hub — Subathon Studio" },
+      {
+        property: "og:description",
+        content: "All your browser-source widgets with one-click OBS URLs.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: WidgetHub,
+});
+
+function WidgetHub() {
+  const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: workspace } = useWorkspace(user.id);
+  const { data, isLoading } = useWidgets();
+  const [type, setType] = useState<WidgetType>("SUBATHON_TIMER");
+  const [name, setName] = useState("");
+  const [copied, setCopied] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const subathonId = workspace?.subathons[0]?.id ?? null;
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["widgets"] });
+
+  const create = useMutation({
+    mutationFn: () => createWidget({ userId: user.id, subathonId, type, name }),
+    onError: (err: Error) => setError(err.message),
+    onSuccess: async (widget) => {
+      setError(null);
+      setName("");
+      await invalidate();
+      navigate({ to: "/widgets/$widgetId", params: { widgetId: widget.id } });
+    },
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const { error: writeError } = await supabase
+        .from("widgets")
+        .update({ is_enabled: enabled })
+        .eq("id", id);
+      if (writeError) throw writeError;
+    },
+    onError: (err: Error) => setError(err.message),
+    onSuccess: () => void invalidate(),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error: writeError } = await supabase.from("widgets").delete().eq("id", id);
+      if (writeError) throw writeError;
+    },
+    onError: (err: Error) => setError(err.message),
+    onSuccess: () => void invalidate(),
+  });
+
+  const copyUrl = async (token: string) => {
+    const url = `${window.location.origin}/overlay/${token}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(token);
+    setTimeout(() => setCopied(null), 1500);
+  };
+
+  const fieldClass =
+    "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
+
+  return (
+    <AppShell
+      user={user}
+      profile={workspace?.profile}
+      subathons={workspace?.subathons ?? []}
+      title="Widget hub"
+      subtitle="Every widget gets its own OBS browser-source URL."
+    >
+      {error ? (
+        <p className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Quick create
+        </h2>
+        <form
+          className="mt-4 grid gap-4 md:grid-cols-[1fr_1fr_auto]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            create.mutate();
+          }}
+        >
+          <label>
+            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Widget type
+            </span>
+            <DarkSelect
+              className="mt-2"
+              value={type}
+              onValueChange={(next) => setType(next as WidgetType)}
+              options={WIDGET_TYPES.map((entry) => ({
+                value: entry.value,
+                label: `${entry.label} — ${entry.hint}`,
+              }))}
+            />
+          </label>
+          <label>
+            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Name
+            </span>
+            <input
+              className={`${fieldClass} mt-2`}
+              placeholder={WIDGET_LABEL[type]}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <div className="flex items-end">
+            <button
+              type="submit"
+              disabled={create.isPending}
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+            >
+              {create.isPending ? "Creating…" : "Create widget"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading widgets…</p>
+        ) : data && data.widgets.length > 0 ? (
+          data.widgets.map((widget) => {
+            const goal = data.goals.find((entry) => entry.widget_id === widget.id);
+            return (
+              <article key={widget.id} className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{widget.name}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary">
+                      {WIDGET_LABEL[widget.type]}
+                    </p>
+                  </div>
+                  <label className="flex cursor-pointer items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={widget.is_enabled}
+                      onChange={(event) =>
+                        toggle.mutate({ id: widget.id, enabled: event.target.checked })
+                      }
+                    />
+                    <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5" />
+                  </label>
+                </div>
+
+                {goal ? (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {goal.current_value} / {goal.target_value} {goal.unit}
+                  </p>
+                ) : null}
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <Link
+                    to="/widgets/$widgetId"
+                    params={{ widgetId: widget.id }}
+                    className="rounded-lg border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary"
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    to="/widgets/$widgetId/rules"
+                    params={{ widgetId: widget.id }}
+                    className="rounded-lg border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary"
+                  >
+                    Rules
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => void copyUrl(widget.public_token)}
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary"
+                  >
+                    {copied === widget.public_token ? (
+                      <Check className="size-4" aria-hidden />
+                    ) : (
+                      <Copy className="size-4" aria-hidden />
+                    )}
+                    OBS URL
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${widget.name}`}
+                    onClick={() => remove.mutate(widget.id)}
+                    className="ml-auto rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            No widgets yet — create your first one above.
+          </p>
+        )}
+      </section>
+    </AppShell>
+  );
+}
