@@ -52,7 +52,7 @@ function LoginPage() {
 
   const signIn = (provider: "twitch" | "kick" | "tiktok") => {
     setPending(provider);
-    window.location.href = `/api/public/auth/${provider}/start`;
+    window.location.href = `/api/auth/${provider}/start`;
   };
 
 

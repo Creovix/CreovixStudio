@@ -31,7 +31,12 @@ npm run build
 npm start
 ```
 
-Nitro writes the Node server to `.output/server/index.mjs`. Set `PORT` (default `3000`) and `PUBLIC_SITE_URL` to your public origin so clip links and OAuth callbacks resolve correctly.
+Nitro writes the Node server to `.output/server/index.mjs`. Set `PORT` (default `3000`) and `PUBLIC_SITE_URL=https://creovixstudio.org` in production (no trailing slash).
+
+OAuth redirect URIs (Kick / Twitch developer consoles):
+
+- `https://creovixstudio.org/api/auth/kick/callback`
+- `https://creovixstudio.org/api/auth/twitch/callback`
 
 ## Netlify
 

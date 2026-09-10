@@ -40,6 +40,8 @@ import { Route as AuthenticatedWidgetsWidgetIdIndexRouteImport } from './routes/
 import { Route as AuthenticatedWidgetsWidgetIdControlRouteImport } from './routes/_authenticated/widgets.$widgetId.control'
 import { Route as AuthenticatedWidgetsWidgetIdGoalRouteImport } from './routes/_authenticated/widgets.$widgetId.goal'
 import { Route as AuthenticatedWidgetsWidgetIdRulesRouteImport } from './routes/_authenticated/widgets.$widgetId.rules'
+import { Route as ApiAuthProviderCallbackRouteImport } from './routes/api/auth/$provider/callback'
+import { Route as ApiAuthProviderStartRouteImport } from './routes/api/auth/$provider/start'
 import { Route as ApiAuthCallbackTiktokRouteImport } from './routes/api/auth/callback/tiktok'
 import { Route as ApiPublicClipIdRouteImport } from './routes/api/public/clip/$id'
 import { Route as ApiPublicWebhooksKickRouteImport } from './routes/api/public/webhooks/kick'
@@ -225,6 +227,16 @@ const AuthenticatedWidgetsWidgetIdRulesRoute =
     path: '/rules',
     getParentRoute: () => AuthenticatedWidgetsWidgetIdRoute,
   } as any)
+const ApiAuthProviderCallbackRoute = ApiAuthProviderCallbackRouteImport.update({
+  id: '/api/auth/$provider/callback',
+  path: '/api/auth/$provider/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthProviderStartRoute = ApiAuthProviderStartRouteImport.update({
+  id: '/api/auth/$provider/start',
+  path: '/api/auth/$provider/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthCallbackTiktokRoute = ApiAuthCallbackTiktokRouteImport.update({
   id: '/api/auth/callback/tiktok',
   path: '/api/auth/callback/tiktok',
@@ -354,6 +366,8 @@ export interface FileRoutesByFullPath {
   '/widgets/$widgetId/control': typeof AuthenticatedWidgetsWidgetIdControlRoute
   '/widgets/$widgetId/goal': typeof AuthenticatedWidgetsWidgetIdGoalRoute
   '/widgets/$widgetId/rules': typeof AuthenticatedWidgetsWidgetIdRulesRoute
+  '/api/auth/$provider/callback': typeof ApiAuthProviderCallbackRoute
+  '/api/auth/$provider/start': typeof ApiAuthProviderStartRoute
   '/api/auth/callback/tiktok': typeof ApiAuthCallbackTiktokRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
@@ -402,6 +416,8 @@ export interface FileRoutesByTo {
   '/widgets/$widgetId/control': typeof AuthenticatedWidgetsWidgetIdControlRoute
   '/widgets/$widgetId/goal': typeof AuthenticatedWidgetsWidgetIdGoalRoute
   '/widgets/$widgetId/rules': typeof AuthenticatedWidgetsWidgetIdRulesRoute
+  '/api/auth/$provider/callback': typeof ApiAuthProviderCallbackRoute
+  '/api/auth/$provider/start': typeof ApiAuthProviderStartRoute
   '/api/auth/callback/tiktok': typeof ApiAuthCallbackTiktokRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
@@ -453,6 +469,8 @@ export interface FileRoutesById {
   '/_authenticated/widgets/$widgetId/control': typeof AuthenticatedWidgetsWidgetIdControlRoute
   '/_authenticated/widgets/$widgetId/goal': typeof AuthenticatedWidgetsWidgetIdGoalRoute
   '/_authenticated/widgets/$widgetId/rules': typeof AuthenticatedWidgetsWidgetIdRulesRoute
+  '/api/auth/$provider/callback': typeof ApiAuthProviderCallbackRoute
+  '/api/auth/$provider/start': typeof ApiAuthProviderStartRoute
   '/api/auth/callback/tiktok': typeof ApiAuthCallbackTiktokRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
@@ -504,6 +522,8 @@ export interface FileRouteTypes {
     | '/widgets/$widgetId/control'
     | '/widgets/$widgetId/goal'
     | '/widgets/$widgetId/rules'
+    | '/api/auth/$provider/callback'
+    | '/api/auth/$provider/start'
     | '/api/auth/callback/tiktok'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
@@ -552,6 +572,8 @@ export interface FileRouteTypes {
     | '/widgets/$widgetId/control'
     | '/widgets/$widgetId/goal'
     | '/widgets/$widgetId/rules'
+    | '/api/auth/$provider/callback'
+    | '/api/auth/$provider/start'
     | '/api/auth/callback/tiktok'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
@@ -602,6 +624,8 @@ export interface FileRouteTypes {
     | '/_authenticated/widgets/$widgetId/control'
     | '/_authenticated/widgets/$widgetId/goal'
     | '/_authenticated/widgets/$widgetId/rules'
+    | '/api/auth/$provider/callback'
+    | '/api/auth/$provider/start'
     | '/api/auth/callback/tiktok'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
@@ -637,6 +661,8 @@ export interface RootRouteChildren {
   OverlaySubathonTimerRoute: typeof OverlaySubathonTimerRoute
   OverlayTiktokTapGoalRoute: typeof OverlayTiktokTapGoalRoute
   OverlayTiktokTappersRoute: typeof OverlayTiktokTappersRoute
+  ApiAuthProviderCallbackRoute: typeof ApiAuthProviderCallbackRoute
+  ApiAuthProviderStartRoute: typeof ApiAuthProviderStartRoute
   ApiAuthCallbackTiktokRoute: typeof ApiAuthCallbackTiktokRoute
   ApiPublicClipIdRoute: typeof ApiPublicClipIdRoute
   ApiPublicWebhooksKickRoute: typeof ApiPublicWebhooksKickRoute
@@ -875,6 +901,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWidgetsWidgetIdRulesRouteImport
       parentRoute: typeof AuthenticatedWidgetsWidgetIdRoute
     }
+    '/api/auth/$provider/callback': {
+      id: '/api/auth/$provider/callback'
+      path: '/api/auth/$provider/callback'
+      fullPath: '/api/auth/$provider/callback'
+      preLoaderRoute: typeof ApiAuthProviderCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$provider/start': {
+      id: '/api/auth/$provider/start'
+      path: '/api/auth/$provider/start'
+      fullPath: '/api/auth/$provider/start'
+      preLoaderRoute: typeof ApiAuthProviderStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/callback/tiktok': {
       id: '/api/auth/callback/tiktok'
       path: '/api/auth/callback/tiktok'
@@ -1072,6 +1112,8 @@ const rootRouteChildren: RootRouteChildren = {
   OverlaySubathonTimerRoute: OverlaySubathonTimerRoute,
   OverlayTiktokTapGoalRoute: OverlayTiktokTapGoalRoute,
   OverlayTiktokTappersRoute: OverlayTiktokTappersRoute,
+  ApiAuthProviderCallbackRoute: ApiAuthProviderCallbackRoute,
+  ApiAuthProviderStartRoute: ApiAuthProviderStartRoute,
   ApiAuthCallbackTiktokRoute: ApiAuthCallbackTiktokRoute,
   ApiPublicClipIdRoute: ApiPublicClipIdRoute,
   ApiPublicWebhooksKickRoute: ApiPublicWebhooksKickRoute,
@@ -1094,13 +1136,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

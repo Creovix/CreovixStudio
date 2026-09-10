@@ -17,8 +17,9 @@ export const syncTwitchEventSub = createServerFn({ method: "POST" })
     if (!clientId || !clientSecret) return { ok: false as const, error: "twitch_not_configured" };
     if (!secret) return { ok: false as const, error: "eventsub_secret_missing" };
 
+    const { publicSiteUrl } = await import("@/lib/siteUrl.server");
     const { getRequest } = await import("@tanstack/react-start/server");
-    const origin = new URL(getRequest().url).origin;
+    const origin = publicSiteUrl(getRequest());
     const callback = `${origin}/api/public/webhooks/twitch`;
 
     const { supabaseAdmin } = await import("@/lib/supabase/client.server");

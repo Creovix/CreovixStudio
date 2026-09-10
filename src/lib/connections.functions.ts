@@ -14,7 +14,7 @@ export const startPlatformLink = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { signLinkState } = await import("@/lib/oauth.server");
     const state = signLinkState(context.userId);
-    return { url: `/api/public/auth/${data.provider}/start?link=${encodeURIComponent(state)}` };
+    return { url: `/api/auth/${data.provider}/start?link=${encodeURIComponent(state)}` };
   });
 
 /** Verifies a StreamElements account JWT and stores it for the signed-in user. */

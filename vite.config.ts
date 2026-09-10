@@ -37,6 +37,9 @@ export default defineConfig({
       },
     }),
     nitro({
+      // Vercel → `.vercel/output` (Build Output API). Netlify → `dist` + functions-internal.
+      // Local `npm start` → `.output/public` + `.output/server`. Never set Vercel/Netlify
+      // publish/output to `.output/public` — that is static-only and every SSR route 404s.
       preset: nitroDeployPreset(),
     }),
     viteReact(),

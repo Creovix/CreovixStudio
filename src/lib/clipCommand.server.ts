@@ -1,5 +1,6 @@
-import { supabaseAdmin } from "@/lib/supabase/client.server";
 import { captureKickClip, fetchKickChannel, refreshKickBuffer } from "@/lib/kickClip.server";
+import { publicSiteUrl } from "@/lib/siteUrl.server";
+import { supabaseAdmin } from "@/lib/supabase/client.server";
 
 
 export type ClipCommandSettings = {
@@ -153,10 +154,7 @@ type CreatedClip = {
 
 /** Base URL used for the public, playable clip page linked in chat. */
 function siteOrigin(): string {
-  const configured = process.env["PUBLIC_SITE_URL"] ?? process.env["SITE_URL"];
-  const origin =
-    configured && configured.startsWith("http") ? configured : "http://localhost:3000";
-  return origin.replace(/\/$/, "");
+  return publicSiteUrl();
 }
 
 

@@ -1,5 +1,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
+import { publicSiteUrl } from "@/lib/siteUrl.server";
+
 export type OAuthProvider = "twitch" | "kick" | "streamelements" | "streamlabs" | "tiktok";
 
 export type ProviderProfile = {
@@ -213,15 +215,13 @@ export const createState = () => base64Url(randomBytes(24));
 export const challengeFor = (verifier: string) =>
   base64Url(createHash("sha256").update(verifier).digest());
 
-export const redirectUriFor = (request: Request, provider: OAuthProvider) => {
-  const url = new URL(request.url);
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const origin = `${forwardedProto ?? url.protocol.replace(":", "")}://${forwardedHost ?? url.host}`;
-  // TikTok apps register the shorter callback path; it forwards to the handler.
-  if (provider === "tiktok") return `${origin}/api/auth/callback/tiktok`;
-  return `${origin}/api/public/auth/${provider}/callback`;
+export const oauthCallbackPath = (provider: OAuthProvider) => {
+  if (provider === "tiktok") return "/api/auth/callback/tiktok";
+  return `/api/auth/${provider}/callback`;
 };
+
+export const redirectUriFor = (request: Request, provider: OAuthProvider) =>
+  `${publicSiteUrl(request)}${oauthCallbackPath(provider)}`;
 
 function requestIsHttps(request: Request): boolean {
   const url = new URL(request.url);
