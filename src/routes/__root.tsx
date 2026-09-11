@@ -13,7 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { LanguageProvider } from "@/lib/i18n";
-import appCss from "../styles.css?url";
+import "@/styles.css";
 
 function NotFoundComponent() {
   return (
@@ -98,10 +98,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Press+Start+2P&display=swap",
-      },
-      {
-        rel: "stylesheet",
-        href: appCss,
       },
       { rel: "icon", href: "/favicon.svg" },
     ],

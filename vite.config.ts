@@ -17,6 +17,7 @@ function nitroDeployPreset(): "netlify" | "vercel" | "node-server" {
 }
 
 export default defineConfig({
+  base: "/",
   server: {
     port: 3000,
     host: true,
@@ -34,6 +35,11 @@ export default defineConfig({
       server: {
         // Resolved from srcDirectory → src/server.ts
         entry: "server",
+        build: {
+          // Embed route CSS in the SSR HTML so a hashed /assets/*.css 404 cannot
+          // leave production unstyled (common with styles.css?url + Nitro/Vercel).
+          inlineCss: true,
+        },
       },
     }),
     nitro({
