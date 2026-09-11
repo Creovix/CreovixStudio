@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Creovix Studio — Live Stream Widgets & Overlays" },
+      { title: "Creovix Studio — Control Room" },
       {
         name: "description",
         content:
           "Creovix Studio builds live stream overlays: subathon timer, goals, chat box and more for Twitch, Kick and TikTok.",
       },
       { name: "author", content: "Creovix Studio" },
-      { property: "og:title", content: "Creovix Studio — Live Stream Widgets & Overlays" },
+      { property: "og:title", content: "Creovix Studio — Control Room" },
       {
         property: "og:description",
         content: "Subathon timer, goals, chat box and overlays for Twitch, Kick and TikTok.",
@@ -103,7 +103,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "shortcut icon", href: "/favicon.svg" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
     ],
   }),
   shellComponent: RootShell,
