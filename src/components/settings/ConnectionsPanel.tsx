@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, Eye, EyeOff, ExternalLink, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/lib/supabase/client";
@@ -23,15 +23,17 @@ const OAUTH_PLATFORMS: Array<{
   description: string;
   descriptionAr: string;
   buttonClass: string;
+  accent: string;
 }> = [
   {
     platform: "TWITCH",
     provider: "twitch",
     label: "Twitch",
     dot: "bg-twitch",
-    description: "Follows, subs (tier 1/2/3), gift subs and bits via EventSub.",
+    description: "Follows, subs, gift subs and bits via EventSub.",
     descriptionAr: "المتابعات والاشتراكات والهدايا والبِتس عبر EventSub.",
     buttonClass: "bg-twitch text-twitch-foreground",
+    accent: "border-twitch/45 shadow-[0_16px_40px_-28px_var(--twitch)]",
   },
   {
     platform: "KICK",
@@ -41,23 +43,22 @@ const OAUTH_PLATFORMS: Array<{
     description: "Follows, subscriptions and gift subs via Kick webhooks.",
     descriptionAr: "المتابعات والاشتراكات والهدايا عبر ويبهوك Kick.",
     buttonClass: "bg-kick text-kick-foreground",
+    accent: "border-kick/45 shadow-[0_16px_40px_-28px_var(--kick)]",
   },
   {
     platform: "TIKTOK",
     provider: "tiktok",
     label: "TikTok",
     dot: "bg-[#FE2C55]",
-    description: "Profile, avatar and live follower stats via TikTok Login Kit.",
-    descriptionAr: "الملف الشخصي والصورة وعدد المتابعين المباشر عبر TikTok Login Kit.",
+    description: "Profile, avatar and live follower stats via Login Kit.",
+    descriptionAr: "الملف الشخصي والصورة وعدد المتابعين عبر TikTok Login Kit.",
     buttonClass: "bg-[#FE2C55] text-white",
+    accent: "border-[#FE2C55]/45 shadow-[0_16px_40px_-28px_#FE2C55]",
   },
 ];
 
-const JWT_STEPS: Array<[string, string]> = [
-  ["Go to StreamElements.com and click your profile icon.", "افتح StreamElements.com واضغط صورة حسابك."],
-  ['Open "Account Settings".', "افتح «Account Settings»."],
-  ['Click "Show Secrets" and copy your JWT Token.', "اضغط «Show Secrets» وانسخ JWT Token."],
-];
+const CARD =
+  "glass-3d flex h-[22.5rem] w-full min-w-0 flex-col overflow-hidden rounded-2xl border p-4";
 
 export function ConnectionsPanel({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
@@ -71,7 +72,6 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
 
   const [jwtDraft, setJwtDraft] = useState("");
   const [showJwt, setShowJwt] = useState(false);
-  const [helperOpen, setHelperOpen] = useState(false);
   const [seError, setSeError] = useState<string | null>(null);
   const [slDraft, setSlDraft] = useState("");
   const [showSl, setShowSl] = useState(false);
@@ -111,7 +111,6 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
   };
 
   const saveStreamElements = async () => {
-    // Accept any pasted value; strip an accidental "Bearer " prefix or quotes.
     const token = jwtDraft.trim().replace(/^bearer\s+/i, "").replace(/^["']|["']$/g, "").trim();
     if (!token) return;
     setBusy("STREAMELEMENTS");
@@ -181,26 +180,24 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
     void refresh();
   };
 
-  const cardClass = "glass-3d rounded-2xl p-5";
-
   const StatusBadge = ({ connection }: { connection: { is_active: boolean } | undefined }) =>
     connection ? (
       <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
           connection.is_active
             ? "bg-emerald-500/15 text-emerald-400"
             : "bg-secondary text-secondary-foreground"
         }`}
       >
         <span
-          className={`h-2 w-2 rounded-full ${
+          className={`h-1.5 w-1.5 rounded-full ${
             connection.is_active ? "animate-pulse bg-emerald-400" : "bg-muted-foreground"
           }`}
         />
         {connection.is_active ? (ar ? "متصل" : "CONNECTED") : ar ? "متوقف" : "PAUSED"}
       </span>
     ) : (
-      <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+      <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-secondary-foreground">
         {ar ? "غير متصل" : "Not connected"}
       </span>
     );
@@ -213,123 +210,97 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
   );
 
   return (
-    <div>
+    <div className="w-full">
       {error ? (
         <p className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {OAUTH_PLATFORMS.map((entry) => {
-          const connection = findConnection(entry.platform);
-          return (
-            <section key={entry.platform} className={cardClass}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  {connection?.metadata &&
-                  (connection.metadata as { avatar_url?: string | null }).avatar_url ? (
-                    <img
-                      src={(connection.metadata as { avatar_url?: string }).avatar_url}
-                      alt={`${entry.label} account avatar`}
-                      className="h-9 w-9 rounded-full object-cover ring-2 ring-white/10"
-                    />
-                  ) : (
-                    <span className={`mt-1 h-3 w-3 rounded-full ${entry.dot}`} />
-                  )}
-                  <div>
-                    <h3 className="text-base font-semibold">{entry.label}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {ar ? entry.descriptionAr : entry.description}
-                    </p>
+      <div className="flex w-full justify-center overflow-x-auto pb-1">
+        <div className="grid w-full min-w-[68rem] max-w-7xl grid-cols-5 items-stretch gap-4">
+          {OAUTH_PLATFORMS.map((entry) => {
+            const connection = findConnection(entry.platform);
+            return (
+              <section key={entry.platform} className={`${CARD} ${entry.accent}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    {connection?.metadata &&
+                    (connection.metadata as { avatar_url?: string | null }).avatar_url ? (
+                      <img
+                        src={(connection.metadata as { avatar_url?: string }).avatar_url}
+                        alt=""
+                        className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-white/10"
+                      />
+                    ) : (
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${entry.dot}`} />
+                    )}
+                    <h3 className="truncate text-sm font-semibold">{entry.label}</h3>
                   </div>
+                  <StatusBadge connection={connection} />
                 </div>
-                <StatusBadge connection={connection} />
-              </div>
-
-              {connection ? (
-                <dl className="mt-4 space-y-1 text-sm text-muted-foreground">
-                  <div className="flex justify-between gap-4">
-                    <dt>{ar ? "الحساب" : "Account"}</dt>
-                    <dd className="text-foreground">{connection.username ?? "—"}</dd>
-                  </div>
-                  {typeof (connection.metadata as { follower_count?: number } | null)
-                    ?.follower_count === "number" ? (
-                    <div className="flex justify-between gap-4">
-                      <dt>{ar ? "المتابعون" : "Followers"}</dt>
-                      <dd className="text-foreground">
-                        {(
-                          connection.metadata as { follower_count: number }
-                        ).follower_count.toLocaleString()}
-                      </dd>
-                    </div>
-                  ) : null}
-                  <div className="flex justify-between gap-4">
-                    <dt>{ar ? "الصلاحيات" : "Scopes"}</dt>
-                    <dd className="text-foreground">{connection.scopes.length}</dd>
-                  </div>
-                </dl>
-              ) : null}
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={busy === entry.provider}
-                  onClick={() => startOAuth(entry.provider)}
-                  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${entry.buttonClass}`}
-                >
-                  {busy === entry.provider ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {connection ? (ar ? "إعادة الربط" : "Reconnect") : ar ? "ربط" : "Connect"}{" "}
-                  {entry.label}
-                </button>
-                {connection ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => toggleActive(connection.id, !connection.is_active)}
-                      className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-secondary"
-                    >
-                      {connection.is_active
-                        ? ar
-                          ? "إيقاف مؤقت"
-                          : "Pause"
-                        : ar
-                          ? "استئناف"
-                          : "Resume"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => disconnect(connection.id)}
-                      className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
-                    >
-                      {ar ? "فصل" : "Disconnect"}
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            </section>
-          );
-        })}
-
-        {/* Streamlabs — direct Socket API token card */}
-        <section className={`${cardClass} border-[#31C48D]/30 shadow-[0_18px_50px_-24px_#31C48D]`}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="mt-1 h-3 w-3 rounded-full bg-[#31C48D]" />
-              <div>
-                <h3 className="text-base font-semibold">Streamlabs Socket API Token</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {ar
-                    ? "اربط Streamlabs فوراً بدون OAuth: الصق توكن Socket API لاستقبال التبرعات والاشتراكات والبِتس مباشرة."
-                    : "Connect Streamlabs instantly without OAuth: paste your Socket API Token to receive tips, subs, bits, follows and raids live."}
+                <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                  {ar ? entry.descriptionAr : entry.description}
                 </p>
-              </div>
-            </div>
-            <StatusBadge connection={slSocketConnection} />
-          </div>
+                <p className="mt-3 min-h-10 text-xs text-muted-foreground">
+                  {connection?.username ? (
+                    <>
+                      <span>{ar ? "الحساب" : "Account"}: </span>
+                      <span className="font-medium text-foreground">{connection.username}</span>
+                    </>
+                  ) : (
+                    <span className="opacity-0">.</span>
+                  )}
+                </p>
+                <div className="mt-auto flex flex-col gap-2">
+                  <button
+                    type="button"
+                    disabled={busy === entry.provider}
+                    onClick={() => startOAuth(entry.provider)}
+                    className={`inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${entry.buttonClass}`}
+                  >
+                    {busy === entry.provider ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    {connection ? (ar ? "إعادة الربط" : "Reconnect") : ar ? "ربط" : "Connect"} {entry.label}
+                  </button>
+                  {connection ? (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleActive(connection.id, !connection.is_active)}
+                        className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium hover:bg-secondary"
+                      >
+                        {connection.is_active ? (ar ? "إيقاف" : "Pause") : ar ? "استئناف" : "Resume"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => disconnect(connection.id)}
+                        className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium text-destructive hover:bg-destructive/10"
+                      >
+                        {ar ? "فصل" : "Disconnect"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="h-8" aria-hidden />
+                  )}
+                </div>
+              </section>
+            );
+          })}
 
-          <div className="mt-4">
-            <div className="relative">
+          <section className={`${CARD} border-[#31C48D]/45 shadow-[0_16px_40px_-28px_#31C48D]`}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#31C48D]" />
+                <h3 className="truncate text-sm font-semibold">Streamlabs</h3>
+              </div>
+              <StatusBadge connection={slSocketConnection} />
+            </div>
+            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+              {ar
+                ? "الصق توكن Socket API لاستقبال التبرعات والتنبيهات مباشرة."
+                : "Paste your Socket API token to receive tips, subs and raids live."}
+            </p>
+            <div className="relative mt-3">
               <input
                 type={showSl ? "text" : "password"}
                 value={slDraft}
@@ -337,107 +308,79 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                   setSlDraft(event.target.value);
                   setSlError(null);
                 }}
-                placeholder={ar ? "أدخل توكن Socket API الخاص بـ Streamlabs..." : "Enter your Streamlabs Socket API Token..."}
+                placeholder="Socket API Token"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 pe-11 font-mono text-sm outline-none transition-colors focus:border-[#31C48D]"
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#31C48D]"
               />
               <button
                 type="button"
                 onClick={() => setShowSl((v) => !v)}
                 aria-label={showSl ? "Hide token" : "Show token"}
-                className="absolute inset-y-0 end-2 my-auto flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+                className="absolute inset-y-0 end-1 my-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
               >
-                {showSl ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showSl ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
-
-            {slError ? <p className="mt-2 text-sm text-destructive">{slError}</p> : null}
-
-            <p className="mt-3 text-xs text-muted-foreground">
-              {ar
-                ? "Streamlabs ← Settings ← API Settings ← API Tokens ← Socket API Token"
-                : "Streamlabs → Settings → API Settings → API Tokens → Socket API Token"}
-            </p>
-
+            {slError ? (
+              <p className="mt-1 line-clamp-1 text-[11px] text-destructive">{slError}</p>
+            ) : null}
             <a
               href="https://streamlabs.com/dashboard#/settings/api-settings"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
             >
-              <ExternalLink className="h-4 w-4" />
-              {ar ? "فتح إعدادات API في Streamlabs" : "Open Streamlabs API settings"}
+              <ExternalLink className="h-3 w-3" />
+              {ar ? "إعدادات API" : "API settings"}
             </a>
-
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-auto flex flex-col gap-2">
               <button
                 type="button"
                 disabled={busy === "STREAMLABS_TOKEN" || !slDraft.trim()}
                 onClick={saveStreamlabsToken}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#31C48D] px-4 py-2 text-sm font-semibold text-[#04231a] transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#31C48D] px-3 text-xs font-semibold text-[#04231a] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {busy === "STREAMLABS_TOKEN" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {busy === "STREAMLABS_TOKEN" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 {ar ? "حفظ وربط" : "Save & Connect"}
               </button>
               {slSocketConnection ? (
-                <>
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => toggleActive(slSocketConnection.id, !slSocketConnection.is_active)}
-                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-secondary"
+                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium hover:bg-secondary"
                   >
-                    {slSocketConnection.is_active
-                      ? ar
-                        ? "إيقاف مؤقت"
-                        : "Pause"
-                      : ar
-                        ? "استئناف"
-                        : "Resume"}
+                    {slSocketConnection.is_active ? (ar ? "إيقاف" : "Pause") : ar ? "استئناف" : "Resume"}
                   </button>
                   <button
                     type="button"
                     onClick={() => disconnect(slSocketConnection.id)}
-                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
+                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium text-destructive hover:bg-destructive/10"
                   >
                     {ar ? "فصل" : "Disconnect"}
                   </button>
-                </>
-              ) : null}
+                </div>
+              ) : (
+                <div className="h-8" aria-hidden />
+              )}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* StreamElements — JWT token card */}
-        <section className={`${cardClass} border-[#0066FF]/30 shadow-[0_18px_50px_-24px_#0066FF]`}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="mt-1 h-3 w-3 rounded-full bg-[#0066FF]" />
-              <div>
-                <h3 className="text-base font-semibold">
-                  {ar ? "ربط StreamElements" : "StreamElements Connection"}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {ar
-                    ? "أدخل توكن JWT الخاص بحسابك في StreamElements لمزامنة التبرعات والتنبيهات."
-                    : "Enter your StreamElements Account JWT Token to sync donations and alerts."}
-                </p>
+          <section className={`${CARD} border-[#0066FF]/45 shadow-[0_16px_40px_-28px_#0066FF]`}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#0066FF]" />
+                <h3 className="truncate text-sm font-semibold">StreamElements</h3>
               </div>
+              <StatusBadge connection={seConnection} />
             </div>
-            <StatusBadge connection={seConnection} />
-          </div>
-
-          {seConnection ? (
-            <dl className="mt-4 space-y-1 text-sm text-muted-foreground">
-              <div className="flex justify-between gap-4">
-                <dt>{ar ? "القناة" : "Channel"}</dt>
-                <dd className="text-foreground">{seConnection.username ?? "—"}</dd>
-              </div>
-            </dl>
-          ) : null}
-
-          <div className="mt-4">
-            <div className="relative">
+            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+              {ar
+                ? "أدخل توكن JWT لمزامنة التبرعات والتنبيهات."
+                : "Enter your account JWT token to sync donations and alerts."}
+            </p>
+            <div className="relative mt-3">
               <input
                 type={showJwt ? "text" : "password"}
                 value={jwtDraft}
@@ -445,90 +388,65 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                   setJwtDraft(event.target.value);
                   setSeError(null);
                 }}
-                placeholder="••••••••••••••••"
+                placeholder="JWT Token"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 pe-11 font-mono text-sm outline-none transition-colors focus:border-[#0066FF]"
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#0066FF]"
               />
               <button
                 type="button"
                 onClick={() => setShowJwt((v) => !v)}
                 aria-label={showJwt ? "Hide token" : "Show token"}
-                className="absolute inset-y-0 end-2 my-auto flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+                className="absolute inset-y-0 end-1 my-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
               >
-                {showJwt ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showJwt ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
-
-            {seError ? <p className="mt-2 text-sm text-destructive">{seError}</p> : null}
-
-            <button
-              type="button"
-              onClick={() => setHelperOpen((v) => !v)}
-              className="mt-3 flex w-full items-center justify-between rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm font-medium hover:bg-secondary"
-            >
-              {ar ? "أين أجد توكن JWT؟" : "Where do I find my JWT Token?"}
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${helperOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-            {helperOpen ? (
-              <ol className="mt-2 space-y-1 rounded-lg border border-border bg-background/60 p-3 text-sm text-muted-foreground">
-                {JWT_STEPS.map((step, index) => (
-                  <li key={step[0]}>
-                    {ar ? `${index + 1}. ${step[1]}` : `Step ${index + 1}: ${step[0]}`}
-                  </li>
-                ))}
-              </ol>
+            {seError ? (
+              <p className="mt-1 line-clamp-1 text-[11px] text-destructive">{seError}</p>
             ) : null}
-
             <a
               href="https://streamelements.com/dashboard/account/channels"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
             >
-              <ExternalLink className="h-4 w-4" />
-              {ar ? "فتح إعدادات حساب StreamElements" : "Open StreamElements account settings"}
+              <ExternalLink className="h-3 w-3" />
+              {ar ? "أين أجد JWT؟" : "Where is my JWT?"}
             </a>
-
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-auto flex flex-col gap-2">
               <button
                 type="button"
                 disabled={busy === "STREAMELEMENTS" || !jwtDraft.trim()}
                 onClick={saveStreamElements}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#0066FF] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#0066FF] px-3 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {busy === "STREAMELEMENTS" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {busy === "STREAMELEMENTS" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 {ar ? "حفظ وربط" : "Save & Connect"}
               </button>
               {seConnection ? (
-                <>
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => toggleActive(seConnection.id, !seConnection.is_active)}
-                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-secondary"
+                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium hover:bg-secondary"
                   >
-                    {seConnection.is_active
-                      ? ar
-                        ? "إيقاف مؤقت"
-                        : "Pause"
-                      : ar
-                        ? "استئناف"
-                        : "Resume"}
+                    {seConnection.is_active ? (ar ? "إيقاف" : "Pause") : ar ? "استئناف" : "Resume"}
                   </button>
                   <button
                     type="button"
                     onClick={() => disconnect(seConnection.id)}
-                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
+                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium text-destructive hover:bg-destructive/10"
                   >
                     {ar ? "فصل" : "Disconnect"}
                   </button>
-                </>
-              ) : null}
+                </div>
+              ) : (
+                <div className="h-8" aria-hidden />
+              )}
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     </div>
   );
