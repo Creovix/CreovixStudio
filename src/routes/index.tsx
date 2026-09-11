@@ -8,7 +8,7 @@ export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Creovix Studio — Control Room" },
+      { title: "CreovixStudio — Control Room" },
       {
         name: "tiktok-developers-site-verification",
         content: "k1s5lp842wjBLAa3X1QlqR1A2cNY2Kzi",
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
         content:
           "Multi-platform subathon timer: Twitch and Kick events, rule-based time rewards, deduplicated payloads and public overlays.",
       },
-      { property: "og:title", content: "Creovix Studio — Control Room" },
+      { property: "og:title", content: "CreovixStudio — Control Room" },
       {
         property: "og:description",
         content: "Sign in with Twitch or Kick to run a rule-driven subathon timer.",
