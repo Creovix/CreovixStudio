@@ -7,6 +7,8 @@ import { StreamlabsBridge } from "@/components/layout/StreamlabsBridge";
 import { StreamElementsBridge } from "@/components/layout/StreamElementsBridge";
 import { SubscriptionStatusPill } from "@/components/settings/SubscriptionPanel";
 import { supabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { disableTestMode, isTestMode } from "@/lib/testMode";
 import { useLanguage, type Lang, type TranslationKey } from "@/lib/i18n";
 import type { Subathon } from "@/hooks/useWorkspace";
 
@@ -62,7 +64,8 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
   const signOut = async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    disableTestMode();
+    if (isSupabaseConfigured()) await supabase.auth.signOut();
     navigate({ to: "/login", replace: true });
   };
 
@@ -74,8 +77,12 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
 
   return (
     <div dir={dir} className="ambient-field min-h-screen bg-background text-foreground">
-      <StreamlabsBridge userId={user.id} />
-      <StreamElementsBridge userId={user.id} />
+      {isTestMode() ? null : (
+        <>
+          <StreamlabsBridge userId={user.id} />
+          <StreamElementsBridge userId={user.id} />
+        </>
+      )}
       <header className="sticky top-0 z-30 px-4">
         <div
           className="mx-auto mt-4 flex w-[94%] max-w-7xl flex-wrap items-center gap-3 rounded-2xl px-6 py-3.5"

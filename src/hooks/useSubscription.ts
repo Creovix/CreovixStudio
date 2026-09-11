@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/lib/supabase/client";
+import { isTestMode } from "@/lib/testMode";
 
 export type SubscriptionState = {
   status: "active" | "expired" | "inactive";
@@ -18,6 +19,16 @@ export function useSubscription(userId: string) {
   return useQuery({
     queryKey: ["subscription", userId],
     queryFn: async (): Promise<SubscriptionState> => {
+      if (isTestMode()) {
+        return {
+          status: "active",
+          expiresAt: null,
+          activeCode: "TEST-MODE",
+          daysLeft: 36500,
+          lifetime: true,
+          isActive: true,
+        };
+      }
       const { data, error } = await supabase
         .from("user_subscriptions")
         .select("subscription_status, expires_at, active_code, is_lifetime")

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isTestMode } from "@/lib/testMode";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -32,6 +33,10 @@ function AuthGate() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isTestMode()) {
+      navigate({ to: "/dashboard", replace: true });
+      return;
+    }
     if (!isSupabaseConfigured()) {
       navigate({ to: "/login", replace: true });
       return;

@@ -46,6 +46,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { createWidget } from "@/lib/createWidget";
 import type { WidgetType } from "@/lib/widgets";
 import { useLanguage } from "@/lib/i18n";
+import { isTestMode } from "@/lib/testMode";
 import { DarkSelect } from "@/components/ui/dark-select";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -235,6 +236,7 @@ function HomePage() {
     queryKey: ["media-requests"],
     queryFn: () => getMediaRequestDashboard(),
     staleTime: 60_000,
+    enabled: !isTestMode(),
   });
   const mediaOverlayUrl =
     typeof window !== "undefined" && mediaRequests.data?.settings?.overlay_token

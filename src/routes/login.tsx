@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { enableTestMode, isTestMode } from "@/lib/testMode";
 
 type LoginSearch = { error?: string | undefined; detail?: string | undefined };
 
@@ -44,6 +45,10 @@ function LoginPage() {
   const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isTestMode()) {
+      navigate({ to: "/dashboard", replace: true });
+      return;
+    }
     if (!isSupabaseConfigured()) return;
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard", replace: true });
@@ -53,6 +58,12 @@ function LoginPage() {
   const signIn = (provider: "twitch" | "kick" | "tiktok") => {
     setPending(provider);
     window.location.href = `/api/auth/${provider}/start`;
+  };
+
+  const continueAsGuest = () => {
+    setPending("test");
+    enableTestMode();
+    navigate({ to: "/dashboard", replace: true });
   };
 
 
@@ -134,6 +145,15 @@ function LoginPage() {
               <path d="M16.5 2h-3v13.1a2.6 2.6 0 1 1-2.2-2.6v-3a5.6 5.6 0 1 0 5.2 5.6V9.3a7 7 0 0 0 4 1.3v-3a4 4 0 0 1-4-4Z" />
             </svg>
             {pending === "tiktok" ? "Redirecting…" : "Continue with TikTok"}
+          </button>
+
+          <button
+            type="button"
+            onClick={continueAsGuest}
+            disabled={pending !== null}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-transparent px-5 py-3.5 text-base font-semibold text-muted-foreground transition-colors hover:border-white/30 hover:bg-white/5 hover:text-foreground disabled:opacity-60"
+          >
+            {pending === "test" ? "Opening…" : "Continue without login (Test Mode)"}
           </button>
         </div>
 

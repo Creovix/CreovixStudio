@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/lib/supabase/client";
+import { isTestMode } from "@/lib/testMode";
 
 export type Subathon = {
   id: string;
@@ -17,6 +18,18 @@ export function useWorkspace(userId: string) {
   return useQuery({
     queryKey: ["workspace", userId],
     queryFn: async () => {
+      if (isTestMode()) {
+        return {
+          profile: {
+            name: "Test User",
+            email: "test@creovixstudio.local",
+            image: null,
+            timezone: null,
+          },
+          connections: [],
+          subathons: [] as Subathon[],
+        };
+      }
       const [profile, connections, subathons] = await Promise.all([
         supabase.from("users").select("name, email, image, timezone").eq("id", userId).maybeSingle(),
         supabase

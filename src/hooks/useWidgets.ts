@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/lib/supabase/client";
 import type { WidgetType } from "@/lib/widgets";
+import { isTestMode } from "@/lib/testMode";
 
 export type WidgetRow = {
   id: string;
@@ -28,6 +29,7 @@ export function useWidgets() {
   return useQuery({
     queryKey: ["widgets"],
     queryFn: async () => {
+      if (isTestMode()) return { widgets: [] as WidgetRow[], goals: [] as GoalRow[] };
       const [widgets, goals] = await Promise.all([
         supabase
           .from("widgets")
