@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CreovixStudio — Control Room" },
+      { title: "CreovixStudio" },
       {
         name: "description",
         content:
           "Creovix Studio builds live stream overlays: subathon timer, goals, chat box and more for Twitch, Kick and TikTok.",
       },
       { name: "author", content: "Creovix Studio" },
-      { property: "og:title", content: "CreovixStudio — Control Room" },
+      { property: "og:title", content: "CreovixStudio" },
       {
         property: "og:description",
         content: "Subathon timer, goals, chat box and overlays for Twitch, Kick and TikTok.",

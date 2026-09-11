@@ -23,12 +23,12 @@ export const Route = createFileRoute("/login")({
   }),
   head: () => ({
     meta: [
-      { title: "CreovixStudio — Control Room" },
+      { title: "CreovixStudio" },
       {
         name: "description",
         content: "Sign in with Twitch or Kick to run your subathon timer, rules and overlays.",
       },
-      { property: "og:title", content: "CreovixStudio — Control Room" },
+      { property: "og:title", content: "CreovixStudio" },
       {
         property: "og:description",
         content: "Connect Twitch or Kick to control your subathon timer.",
