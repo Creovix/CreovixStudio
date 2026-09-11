@@ -105,7 +105,7 @@ export function SubathonTimerSidebar({
             >
               <span
                 className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${
-                  theme.showLabel ? "left-[22px]" : "left-0.5"
+                  theme.showLabel ? "start-[22px]" : "start-0.5"
                 }`}
               />
             </button>
@@ -202,7 +202,7 @@ export function SubathonTimerSidebar({
             >
               <span
                 className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${
-                  theme.hideBackground ? "left-[22px]" : "left-0.5"
+                  theme.hideBackground ? "start-[22px]" : "start-0.5"
                 }`}
               />
             </button>

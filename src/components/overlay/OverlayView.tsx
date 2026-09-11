@@ -152,7 +152,7 @@ export function OverlayView({
             {timeText}
           </span>
         </div>
-        <span className="absolute -top-2 -right-2 flex items-center justify-center rounded-full bg-white p-1.5 shadow-lg">
+        <span className="absolute -top-2 -end-2 flex items-center justify-center rounded-full bg-white p-1.5 shadow-lg">
           <Heart className="size-5" style={{ color: theme.accentColor }} fill="currentColor" aria-hidden />
         </span>
       </div>

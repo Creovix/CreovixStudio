@@ -20,6 +20,7 @@ import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
+import { ExpandableToolSection } from "@/components/hub/ExpandableToolSection";
 
 import {
   ChatPreview,
@@ -390,79 +391,62 @@ function HomePage() {
         {PLATFORM_SECTIONS.map((section) => {
           const tools = TOOLS.filter((tool) => tool.platforms.includes(section.id));
           if (tools.length === 0) return null;
-          const isGeneral = section.id === "GENERAL";
           return (
-            <section key={section.id} className={isGeneral ? "col-span-1 lg:col-span-2" : undefined}>
-              <header className="flex items-center gap-4 py-2">
-                <span
-                  aria-hidden
-                  className="h-px flex-1 rounded-full"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${section.accent})`,
-                  }}
-                />
-                <h2 className={`shrink-0 text-center text-lg font-semibold tracking-tight ${section.titleClass}`}>
-                  {lang === "ar" ? section.title.ar : section.title.en}
-                </h2>
-                <span
-                  aria-hidden
-                  className="h-px flex-1 rounded-full"
-                  style={{
-                    background: `linear-gradient(270deg, transparent, ${section.accent})`,
-                  }}
-                />
-              </header>
-
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {tools.map((tool) => {
-                  const existing = existingFor(tool);
-                  const Preview = tool.preview;
-                  return (
-                    <ToolCard
-                      key={`${section.id}-${tool.id}`}
-                      name={tool.name}
-                      description={tool.description}
-                      category={tool.category}
-                      icon={tool.icon}
-                      accent={section.accent}
-                      preview={<Preview />}
-                      status={
-                        tool.id === "kick-media-requests"
-                          ? "Live"
-                          : existing?.is_enabled
+            <ExpandableToolSection
+              key={section.id}
+              title={lang === "ar" ? section.title.ar : section.title.en}
+              accent={section.accent}
+              titleClass={section.titleClass}
+              wide={section.id === "GENERAL"}
+              items={tools}
+              itemKey={(tool) => `${section.id}-${tool.id}`}
+              renderItem={(tool) => {
+                const existing = existingFor(tool);
+                const Preview = tool.preview;
+                return (
+                  <ToolCard
+                    name={tool.name}
+                    description={tool.description}
+                    category={tool.category}
+                    icon={tool.icon}
+                    accent={section.accent}
+                    preview={<Preview />}
+                    status={
+                      tool.id === "kick-media-requests"
+                        ? "Live"
+                        : existing?.is_enabled
                           ? "Live"
                           : existing
-                          ? "Paused"
-                          : "Ready"
-                      }
-                      live={Boolean(existing?.is_enabled)}
-                      publicToken={existing?.public_token}
-                      overlayUrl={tool.id === "kick-media-requests" ? mediaOverlayUrl : undefined}
-                      disabled={busy === tool.id}
-                      actionLabel={
-                        tool.id === "kick-media-requests"
-                          ? "Open queue"
-                          : busy === tool.id
+                            ? "Paused"
+                            : "Ready"
+                    }
+                    live={Boolean(existing?.is_enabled)}
+                    publicToken={existing?.public_token}
+                    overlayUrl={tool.id === "kick-media-requests" ? mediaOverlayUrl : undefined}
+                    disabled={busy === tool.id}
+                    actionLabel={
+                      tool.id === "kick-media-requests"
+                        ? "Open queue"
+                        : busy === tool.id
                           ? "Opening…"
                           : existing
-                          ? "Customize"
-                          : "Open"
-                      }
-                      onOpen={() => void open(tool)}
-                      removing={Boolean(existing && removingId === existing.id)}
-                      deleteLabel={t("home.delete")}
-                      locked={locked}
-                      lockLabel={lockLabel}
-                      onDelete={
-                        existing && !locked
-                          ? () => setPendingDelete({ id: existing.id, name: existing.name })
-                          : undefined
-                      }
-                    />
-                  );
-                })}
-              </div>
-            </section>
+                            ? "Customize"
+                            : "Open"
+                    }
+                    onOpen={() => void open(tool)}
+                    removing={Boolean(existing && removingId === existing.id)}
+                    deleteLabel={t("home.delete")}
+                    locked={locked}
+                    lockLabel={lockLabel}
+                    onDelete={
+                      existing && !locked
+                        ? () => setPendingDelete({ id: existing.id, name: existing.name })
+                        : undefined
+                    }
+                  />
+                );
+              }}
+            />
           );
         })}
       </div>

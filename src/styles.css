@@ -304,6 +304,10 @@ body {
 }
 :lang(ar), [dir="rtl"] { font-family: var(--font-arabic); }
 
+html[dir="rtl"] {
+  text-align: start;
+}
+
 @utility surface-panel {
   background: color-mix(in oklab, var(--surface) 82%, transparent);
   border: 1px solid var(--border);

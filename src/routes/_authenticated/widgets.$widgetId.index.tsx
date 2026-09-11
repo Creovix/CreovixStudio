@@ -876,7 +876,7 @@ function ToggleField({
       >
         <span
           className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${
-            checked ? "left-[22px]" : "left-0.5"
+            checked ? "start-[22px]" : "start-0.5"
           }`}
         />
       </button>

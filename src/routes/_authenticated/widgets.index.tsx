@@ -174,7 +174,7 @@ function WidgetHub() {
                         toggle.mutate({ id: widget.id, enabled: event.target.checked })
                       }
                     />
-                    <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5" />
+                    <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:start-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5" />
                   </label>
                 </div>
 
@@ -215,7 +215,7 @@ function WidgetHub() {
                     type="button"
                     aria-label={`Delete ${widget.name}`}
                     onClick={() => remove.mutate(widget.id)}
-                    className="ml-auto rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
+                    className="ms-auto rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="size-4" aria-hidden />
                   </button>

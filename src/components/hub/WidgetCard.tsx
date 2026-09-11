@@ -81,7 +81,7 @@ export function WidgetCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3 text-sm">
-        <span className="mr-auto text-xs text-muted-foreground">
+        <span className="me-auto text-xs text-muted-foreground">
           {widget.is_enabled ? stream.status : "disabled"}
         </span>
         <button

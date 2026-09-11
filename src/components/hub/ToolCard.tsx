@@ -60,7 +60,7 @@ export function ToolCard({
 
   return (
     <div
-      className={`glass-3d glass-lift group relative flex h-full flex-col overflow-hidden rounded-2xl p-3 text-left transition-all duration-300 ${
+      className={`glass-3d glass-lift group relative flex h-full flex-col overflow-hidden rounded-2xl p-3 text-start transition-all duration-300 ${
         removing ? "pointer-events-none scale-95 opacity-0" : "scale-100 opacity-100"
       }`}
       style={accent ? ({ "--tool-accent": accent } as CSSProperties) : undefined}

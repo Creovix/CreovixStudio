@@ -290,7 +290,7 @@ function RulesPage() {
                       })
                     }
                   />
-                  <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5" />
+                  <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:start-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5" />
                   <span className="text-muted-foreground">
                     {rule.is_enabled ? "Enabled" : "Disabled"}
                   </span>

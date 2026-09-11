@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { LanguageProvider } from "@/lib/i18n";
+import { LanguageProvider, LANG_STORAGE_KEY } from "@/lib/i18n";
 import "@/styles.css";
 
 function NotFoundComponent() {
@@ -108,14 +108,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const LANG_BOOTSTRAP = `(function(){try{var l=localStorage.getItem("${LANG_STORAGE_KEY}");var ar=l==="ar";var html=document.documentElement;html.setAttribute("lang",ar?"ar":"en");html.setAttribute("dir",ar?"rtl":"ltr");}catch(e){}})();`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: LANG_BOOTSTRAP }} />
         <HeadContent />
       </head>
       <body>
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         <Scripts />
       </body>
     </html>
@@ -138,11 +141,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster position="top-center" />
-      </LanguageProvider>
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Outlet />
+      <Toaster position="top-center" />
     </QueryClientProvider>
   );
 }

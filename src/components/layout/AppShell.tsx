@@ -149,7 +149,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
 
   return (
     <TooltipProvider delayDuration={80}>
-      <div dir={dir} className="ambient-field min-h-screen bg-background text-foreground">
+      <div className="ambient-field min-h-screen bg-background text-foreground">
         {isTestMode() ? null : (
           <>
             <StreamlabsBridge userId={user.id} />

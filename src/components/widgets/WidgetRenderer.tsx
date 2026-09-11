@@ -233,7 +233,7 @@ function BadgeImg({
         flexShrink: 0,
         display: "inline-block",
         verticalAlign: "middle",
-        marginRight,
+        marginInlineEnd: marginRight,
       }}
     />
   );
@@ -378,7 +378,7 @@ export function ChatBoxView({
     display: "inline-flex",
     alignItems: "center",
     gap: 6,
-    marginRight: 6,
+    marginInlineEnd: 6,
     flexShrink: 0,
   };
 
@@ -456,7 +456,7 @@ export function ChatBoxView({
               role={role}
               platform={message.platform}
               size={22}
-              style={{ marginRight: 5 }}
+              style={{ marginInlineEnd: 5 }}
               imageUrl={
                 normalizePlatform(message.platform) === "TWITCH"
                   ? (twitchBadgeUrls[TWITCH_BADGE_SET[role] ?? role] ?? null)
@@ -1590,7 +1590,7 @@ export function TikTokTapGoalView({
           style={{ background: "rgba(255,255,255,0.14)" }}
         >
           <span
-            className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out"
+            className="absolute inset-y-0 start-0 rounded-full transition-[width] duration-500 ease-out"
             style={{
               width: `${Math.max(percent, 2)}%`,
               background: gradient,

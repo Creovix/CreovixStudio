@@ -195,7 +195,7 @@ function OverlayBuilder() {
                       key={option.value}
                       type="button"
                       onClick={() => set("layout", option.value)}
-                      className={`rounded-xl border p-3 text-left text-sm transition-colors ${
+                      className={`rounded-xl border p-3 text-start text-sm transition-colors ${
                         theme.layout === option.value
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-background hover:border-primary/60"
@@ -395,7 +395,7 @@ function OverlayBuilder() {
                   onChange={(value) => togglePublic.mutate(value)}
                 />
               </div>
-              <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+              <ol className="mt-4 list-decimal space-y-1 ps-5 text-sm text-muted-foreground">
                 <li>In OBS add a Browser source and paste the URL above.</li>
                 <li>Set width 1920, height 1080 and leave the background transparent.</li>
                 <li>Enable “Shutdown source when not visible” off so the timer stays connected.</li>
@@ -449,7 +449,7 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm"
+      className="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-start text-sm"
     >
       <span>{label}</span>
       <span
@@ -459,7 +459,7 @@ function Toggle({
       >
         <span
           className={`absolute top-0.5 size-4 rounded-full bg-background transition-all ${
-            checked ? "left-[1.125rem]" : "left-0.5"
+            checked ? "start-[1.125rem]" : "start-0.5"
           }`}
         />
       </span>

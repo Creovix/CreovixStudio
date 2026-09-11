@@ -498,7 +498,7 @@ export function RoleBadgeIcon({
     display: "inline-block",
     verticalAlign: "middle",
     flexShrink: 0,
-    marginRight: 4,
+    marginInlineEnd: 4,
     ...style,
   };
 

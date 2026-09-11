@@ -54,7 +54,7 @@ export function SpatialScene({
         }}
       >
         <div
-          className="spatial-float absolute left-[8%] top-[14%] size-40 rounded-full border border-primary/30"
+          className="spatial-float absolute start-[8%] top-[14%] size-40 rounded-full border border-primary/30"
           style={{
             transform: "translateZ(60px)",
             background:
@@ -64,7 +64,7 @@ export function SpatialScene({
           }}
         />
         <div
-          className="spatial-float absolute right-[12%] top-[22%] h-28 w-44 rounded-2xl border border-white/10"
+          className="spatial-float absolute end-[12%] top-[22%] h-28 w-44 rounded-2xl border border-white/10"
           style={{
             animationDelay: "1.4s",
             transform: "translateZ(90px) rotate(-8deg)",
@@ -75,7 +75,7 @@ export function SpatialScene({
           }}
         />
         <div
-          className="spatial-float absolute bottom-[16%] left-[26%] h-14 w-36 rounded-full border border-cyan/25"
+          className="spatial-float absolute bottom-[16%] start-[26%] h-14 w-36 rounded-full border border-cyan/25"
           style={{
             animationDelay: "2.6s",
             transform: "translateZ(40px)",
@@ -84,7 +84,7 @@ export function SpatialScene({
           }}
         />
         <div
-          className="spatial-spin absolute bottom-[10%] right-[22%] size-24 rounded-full border border-white/10"
+          className="spatial-spin absolute bottom-[10%] end-[22%] size-24 rounded-full border border-white/10"
           style={{ transform: "translateZ(20px)" }}
         />
       </div>

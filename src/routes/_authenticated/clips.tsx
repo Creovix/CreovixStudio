@@ -143,13 +143,13 @@ function ClipsPage() {
 
         <div className={`${card} mb-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center`}>
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/35" aria-hidden />
+            <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-white/35" aria-hidden />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by clip title or username"
               aria-label="Search clips"
-              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-emerald-400/50"
+              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 ps-9 pe-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-emerald-400/50"
             />
           </div>
           <select
@@ -200,7 +200,7 @@ function ClipsPage() {
                   <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                     <Play className="size-9 rounded-full bg-emerald-400/90 p-2 text-black" aria-hidden />
                   </span>
-                  <span className="absolute bottom-2 right-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[0.7rem] font-medium text-white">
+                  <span className="absolute bottom-2 end-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[0.7rem] font-medium text-white">
                     {formatDuration(clip.duration)}
                   </span>
                 </button>

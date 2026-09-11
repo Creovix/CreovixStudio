@@ -186,7 +186,7 @@ function ManualTestBox(){
 const LayoutPreviews=memo(function LayoutPreviews({layout,onSelect,track}:{layout:PlayerLayout;onSelect:(v:PlayerLayout)=>void;track:React.ComponentProps<typeof MediaPlayerCard>["track"]}){
   return <div className="space-y-3">
     <p className="text-xs text-muted-foreground">Live preview — colors follow the current track artwork.</p>
-    {PLAYER_LAYOUT_OPTIONS.map(o=><button key={o.value} type="button" onClick={()=>onSelect(o.value as PlayerLayout)} className={`block w-full rounded-2xl border p-3 text-left transition ${layout===o.value?"border-[#53fc18]/60 bg-[#53fc18]/5":"border-white/10 bg-black/25 hover:border-white/25"}`}>
+    {PLAYER_LAYOUT_OPTIONS.map(o=><button key={o.value} type="button" onClick={()=>onSelect(o.value as PlayerLayout)} className={`block w-full rounded-2xl border p-3 text-start transition ${layout===o.value?"border-[#53fc18]/60 bg-[#53fc18]/5":"border-white/10 bg-black/25 hover:border-white/25"}`}>
       <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{o.label}</span>
       <span className="block overflow-hidden rounded-xl bg-[url('https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg')] bg-cover bg-center p-3"><span className="block backdrop-blur-md"><MediaPlayerCard layout={o.value as PlayerLayout} track={track}/></span></span>
     </button>)}

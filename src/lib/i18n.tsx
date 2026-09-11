@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -10,7 +10,27 @@ import {
 
 export type Lang = "en" | "ar";
 
-const STORAGE_KEY = "creovix.lang";
+export const LANG_STORAGE_KEY = "creovix.lang";
+
+function readStoredLang(): Lang {
+  if (typeof window === "undefined") return "en";
+  try {
+    const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
+    if (stored === "ar" || stored === "en") return stored;
+  } catch {
+    /* ignore */
+  }
+  return "en";
+}
+
+export function applyDocumentLang(lang: Lang) {
+  if (typeof document === "undefined") return;
+  const dir = lang === "ar" ? "rtl" : "ltr";
+  document.documentElement.setAttribute("dir", dir);
+  document.documentElement.setAttribute("lang", lang);
+}
+
+const STORAGE_KEY = LANG_STORAGE_KEY;
 
 const DICT = {
   en: {
@@ -29,6 +49,8 @@ const DICT = {
     "home.count": "tools available",
     "home.empty": "No tools match your search.",
     "home.delete": "Delete widget",
+    "home.viewMore": "View more widgets",
+    "home.viewLess": "Show less",
     "cat.All": "All",
     "cat.Subathon": "Subathon",
     "cat.Goals": "Goals",
@@ -53,6 +75,8 @@ const DICT = {
     "home.count": "أداة متاحة",
     "home.empty": "لا توجد أدوات مطابقة لبحثك.",
     "home.delete": "حذف الودجت",
+    "home.viewMore": "عرض المزيد من الويجتات",
+    "home.viewLess": "عرض أقل",
     "cat.All": "الكل",
     "cat.Subathon": "سباثون",
     "cat.Goals": "الأهداف",
@@ -78,20 +102,26 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "ar" || stored === "en") setLangState(stored);
-  }, []);
+  useLayoutEffect(() => {
+    const stored = readStoredLang();
+    setLangState(stored);
+    applyDocumentLang(stored);
 
-  useEffect(() => {
-    const dir = lang === "ar" ? "rtl" : "ltr";
-    document.documentElement.setAttribute("dir", dir);
-    document.documentElement.setAttribute("lang", lang);
-  }, [lang]);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      if (event.newValue === "ar" || event.newValue === "en") {
+        setLangState(event.newValue);
+        applyDocumentLang(event.newValue);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const setLang = useCallback((next: Lang) => {
     setLangState(next);
     window.localStorage.setItem(STORAGE_KEY, next);
+    applyDocumentLang(next);
   }, []);
 
   const value = useMemo<LanguageContextValue>(

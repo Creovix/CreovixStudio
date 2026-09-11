@@ -319,13 +319,13 @@ function WidgetRules() {
               <input
                 type="number"
                 min={0}
-                className={`${fieldClass} pr-12`}
+                className={`${fieldClass} pe-12`}
                 value={draft.seconds_per_unit}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, seconds_per_unit: Number(event.target.value) }))
                 }
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                 sec
               </span>
             </div>
@@ -413,7 +413,7 @@ function WidgetRules() {
                       })
                     }
                   />
-                  <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:left-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5" />
+                  <span className="relative h-6 w-11 rounded-full bg-secondary transition-colors peer-checked:bg-primary after:absolute after:start-1 after:top-1 after:size-4 after:rounded-full after:bg-foreground after:transition-transform peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5" />
                   <span className="text-muted-foreground">
                     {rule.is_enabled ? "Active" : "Disabled"}
                   </span>
