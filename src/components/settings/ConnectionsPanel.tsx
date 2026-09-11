@@ -58,7 +58,7 @@ const OAUTH_PLATFORMS: Array<{
 ];
 
 const CARD =
-  "glass-3d flex h-[22.5rem] w-full min-w-0 flex-col overflow-hidden rounded-2xl border p-4";
+  "glass-3d flex h-[28rem] w-full min-w-0 flex-col overflow-hidden rounded-3xl border p-6";
 
 export function ConnectionsPanel({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
@@ -218,7 +218,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
       ) : null}
 
       <div className="flex w-full justify-center overflow-x-auto pb-1">
-        <div className="grid w-full min-w-[68rem] max-w-7xl grid-cols-5 items-stretch gap-4">
+        <div className="grid w-full min-w-[80rem] max-w-[96rem] grid-cols-5 items-stretch gap-8">
           {OAUTH_PLATFORMS.map((entry) => {
             const connection = findConnection(entry.platform);
             return (
@@ -235,14 +235,14 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                     ) : (
                       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${entry.dot}`} />
                     )}
-                    <h3 className="truncate text-sm font-semibold">{entry.label}</h3>
+                    <h3 className="truncate text-base font-semibold">{entry.label}</h3>
                   </div>
                   <StatusBadge connection={connection} />
                 </div>
-                <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                   {ar ? entry.descriptionAr : entry.description}
                 </p>
-                <p className="mt-3 min-h-10 text-xs text-muted-foreground">
+                <p className="mt-4 min-h-12 text-sm text-muted-foreground">
                   {connection?.username ? (
                     <>
                       <span>{ar ? "الحساب" : "Account"}: </span>
@@ -257,7 +257,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                     type="button"
                     disabled={busy === entry.provider}
                     onClick={() => startOAuth(entry.provider)}
-                    className={`inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${entry.buttonClass}`}
+                    className={`inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${entry.buttonClass}`}
                   >
                     {busy === entry.provider ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                     {connection ? (ar ? "إعادة الربط" : "Reconnect") : ar ? "ربط" : "Connect"} {entry.label}
@@ -291,16 +291,16 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#31C48D]" />
-                <h3 className="truncate text-sm font-semibold">Streamlabs</h3>
+                <h3 className="truncate text-base font-semibold">Streamlabs</h3>
               </div>
               <StatusBadge connection={slSocketConnection} />
             </div>
-            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
               {ar
                 ? "الصق توكن Socket API لاستقبال التبرعات والتنبيهات مباشرة."
                 : "Paste your Socket API token to receive tips, subs and raids live."}
             </p>
-            <div className="relative mt-3">
+            <div className="relative mt-4">
               <input
                 type={showSl ? "text" : "password"}
                 value={slDraft}
@@ -311,7 +311,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                 placeholder="Socket API Token"
                 autoComplete="off"
                 spellCheck={false}
-                className="h-9 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#31C48D]"
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#31C48D]"
               />
               <button
                 type="button"
@@ -339,7 +339,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                 type="button"
                 disabled={busy === "STREAMLABS_TOKEN" || !slDraft.trim()}
                 onClick={saveStreamlabsToken}
-                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#31C48D] px-3 text-xs font-semibold text-[#04231a] transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#31C48D] px-3 text-sm font-semibold text-[#04231a] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {busy === "STREAMLABS_TOKEN" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 {ar ? "حفظ وربط" : "Save & Connect"}
@@ -371,16 +371,16 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#0066FF]" />
-                <h3 className="truncate text-sm font-semibold">StreamElements</h3>
+                <h3 className="truncate text-base font-semibold">StreamElements</h3>
               </div>
               <StatusBadge connection={seConnection} />
             </div>
-            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
               {ar
                 ? "أدخل توكن JWT لمزامنة التبرعات والتنبيهات."
                 : "Enter your account JWT token to sync donations and alerts."}
             </p>
-            <div className="relative mt-3">
+            <div className="relative mt-4">
               <input
                 type={showJwt ? "text" : "password"}
                 value={jwtDraft}
@@ -391,7 +391,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                 placeholder="JWT Token"
                 autoComplete="off"
                 spellCheck={false}
-                className="h-9 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#0066FF]"
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#0066FF]"
               />
               <button
                 type="button"
@@ -419,7 +419,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
                 type="button"
                 disabled={busy === "STREAMELEMENTS" || !jwtDraft.trim()}
                 onClick={saveStreamElements}
-                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#0066FF] px-3 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#0066FF] px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {busy === "STREAMELEMENTS" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                 {ar ? "حفظ وربط" : "Save & Connect"}
