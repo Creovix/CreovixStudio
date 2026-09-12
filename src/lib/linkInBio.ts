@@ -480,7 +480,7 @@ export function sanitizeGalleryImages(raw: unknown): GalleryImage[] {
 export function platformAccent(platform: LinkPlatform): { color: string; css: string } {
   if (platform === "kick") return { color: "#53FC18", css: "#53FC18" };
   if (platform === "twitch") return { color: "#6B21A8", css: "#6B21A8" };
-  if (platform === "youtube") return { color: "#E62117", css: "#E62117" };
+  if (platform === "youtube") return { color: "#FF0000", css: "#4C0A0A" };
   if (platform === "instagram") return { color: "#C2185B", css: "#C2185B" };
   if (platform === "tiktok") return { color: "#25F4EE", css: "#141414" };
   if (platform === "x") return { color: "#E7E9EA", css: "#000000" };

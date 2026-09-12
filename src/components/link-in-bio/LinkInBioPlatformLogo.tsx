@@ -30,9 +30,18 @@ export function LinkInBioPlatformLogo({
   }
 
   if (platform === "youtube") {
+    const width = size;
+    const height = Math.round(size * (20 / 28));
     return (
-      <svg viewBox="0 0 24 24" style={style} aria-hidden>
-        <path fill="#fff" d="M8.4 6.8v10.4L18.2 12 8.4 6.8z" />
+      <svg
+        viewBox="0 0 28 20"
+        width={width}
+        height={height}
+        style={{ display: "block", flex: "0 0 auto", filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.35))" }}
+        aria-hidden
+      >
+        <rect x="0" y="0" width="28" height="20" rx="5.4" fill="#FF0000" />
+        <polygon points="11.1,5.55 11.1,14.45 19.5,10" fill="#fff" />
       </svg>
     );
   }
