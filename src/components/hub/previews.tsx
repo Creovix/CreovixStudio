@@ -149,7 +149,7 @@ function Bar({
 export function TimerPreview() {
   const { seconds: total, chip } = useSubathonPreview(1 * 3600 + 25 * 60 + 36);
   const days = Math.floor(total / 86400);
-  const [hours, minutes, seconds] = formatHms(days > 0 ? total % 86400 : total);
+  const [hours, minutes, seconds] = formatHms(total % 86400);
   return (
     <div className="relative grid h-full place-items-center overflow-hidden">
       {chip ? (
@@ -160,14 +160,24 @@ export function TimerPreview() {
           {chip.label}
         </span>
       ) : null}
-      <p className="relative rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-3 py-1.5 text-lg font-semibold tabular-nums tracking-tight">
-        {days > 0 ? <span className="me-1 text-[0.78rem] text-muted-foreground">{days}d</span> : null}
-        <span>{hours}</span>
-        <span className="px-0.5 text-muted-foreground">:</span>
-        <span>{minutes}</span>
-        <span className="px-0.5 text-muted-foreground">:</span>
-        <span>{seconds}</span>
-      </p>
+      <div className="relative rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-3 py-1.5">
+        <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto] items-baseline justify-items-center">
+          <span className="text-lg font-semibold tabular-nums tracking-tight">{days}</span>
+          <span className="px-0.5 text-lg font-semibold text-muted-foreground">:</span>
+          <span className="text-lg font-semibold tabular-nums tracking-tight">{hours}</span>
+          <span className="px-0.5 text-lg font-semibold text-muted-foreground">:</span>
+          <span className="text-lg font-semibold tabular-nums tracking-tight">{minutes}</span>
+          <span className="px-0.5 text-lg font-semibold text-muted-foreground">:</span>
+          <span className="text-lg font-semibold tabular-nums tracking-tight">{seconds}</span>
+          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">D</span>
+          <span />
+          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">H</span>
+          <span />
+          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">M</span>
+          <span />
+          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">S</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -629,33 +639,38 @@ export function MediaRequestPreview() {
   ];
   return (
     <div className="flex h-full flex-col justify-center overflow-hidden px-3">
-      <div className="rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.045)] px-2.5 py-2 backdrop-blur-sm">
-        <div className="flex items-center gap-2.5">
-          <span className="hub-media-art relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-[oklch(1_0_0/0.07)]">
+      <div className="rounded-[8px] border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.05)] px-2 py-1 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <span className="hub-media-art relative grid size-6 shrink-0 place-items-center overflow-hidden rounded-[6px] bg-[oklch(1_0_0/0.07)]">
             <span className="absolute inset-0 bg-primary/12" />
-            <span className="relative text-[0.58rem] text-foreground/85">▶</span>
+            <span className="relative text-[0.5rem] text-foreground/85">▶</span>
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[0.48rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="text-[0.42rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Now playing
             </p>
             <p
-              className="hub-fade truncate text-[0.7rem] font-medium tracking-tight"
+              className="hub-fade truncate text-[0.64rem] font-medium leading-tight tracking-tight"
               style={{ opacity: visible ? 1 : 0 }}
             >
               {track}
             </p>
           </div>
         </div>
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-[oklch(1_0_0/0.08)]">
-          <div className="hub-media-progress h-full w-full rounded-full bg-primary/70" />
+        <div className="relative mt-1 h-0.5 overflow-hidden rounded-full bg-[oklch(1_0_0/0.08)]">
+          <div className="hub-media-progress absolute inset-y-0 start-0 h-full rounded-full bg-primary/70" />
         </div>
       </div>
-      <div className="mt-1.5 space-y-1 px-0.5">
+      <div className="mt-2.5 flex flex-col gap-1">
         {queued.map((name, order) => (
-          <div key={`${name}-${order}`} className="flex items-center gap-2">
-            <span className="w-3 text-[0.5rem] tabular-nums text-muted-foreground/80">{order + 2}</span>
-            <span className="truncate text-[0.6rem] text-muted-foreground">{name}</span>
+          <div
+            key={`${name}-${order}`}
+            className="rounded-[8px] border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.02)] px-2 py-0.5"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-3 text-[0.48rem] tabular-nums text-muted-foreground/70">{order + 2}</span>
+              <span className="truncate text-[0.58rem] text-muted-foreground/80">{name}</span>
+            </div>
           </div>
         ))}
       </div>
