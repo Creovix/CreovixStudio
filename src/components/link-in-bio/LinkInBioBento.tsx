@@ -153,17 +153,8 @@ function BentoTile({
 }) {
   const accent = platformAccent(link.platform);
   const name = PLATFORM_NAME[link.platform];
-  const youtube = link.platform === "youtube";
   const large = link.colSpan >= 2 && link.rowSpan >= 2;
-  const logoSize = youtube
-    ? large
-      ? 168
-      : link.colSpan >= 2 || link.rowSpan >= 2
-        ? 132
-        : 112
-    : large
-      ? 48
-      : 40;
+  const logoSize = large ? 48 : 40;
 
   const inner =
     link.kind === "gallery" ? (
@@ -173,7 +164,7 @@ function BentoTile({
     ) : (
       <>
         <span className="sr-only">{name}</span>
-        <span className={youtube ? "absolute inset-0 grid place-items-center" : "absolute left-6 top-6"}>
+        <span className="absolute left-6 top-6">
           <LinkInBioPlatformLogo platform={link.platform} size={logoSize} onBrand />
         </span>
         {live ? <span className="absolute right-6 top-6 size-2 rounded-full bg-white" aria-hidden /> : null}
@@ -197,9 +188,7 @@ function BentoTile({
     background:
       link.kind === "gallery"
         ? "color-mix(in oklab, #ffffff 22%, var(--bio-bg))"
-        : youtube
-          ? "#4C0A0A"
-          : accent.css,
+        : accent.css,
     border: link.kind === "gallery" ? "1px solid color-mix(in oklab, var(--bio-fg) 10%, transparent)" : undefined,
     backdropFilter: link.kind === "gallery" ? "blur(18px)" : undefined,
     boxShadow:
