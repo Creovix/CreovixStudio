@@ -1,0 +1,294 @@
+import { useEffect, useState } from "react";
+
+import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
+import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
+import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
+import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
+import { fontById, resolveCardSize, type PublicLinkInBio } from "@/lib/linkInBio";
+import { cn } from "@/lib/utils";
+
+const PLATFORM_LABEL: Record<PublicLinkInBio["links"][number]["platform"], string> = {
+  kick: "Kick",
+  twitch: "Twitch",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  x: "X",
+  discord: "Discord",
+  custom: "Link",
+};
+
+function cardPadding(size: "s" | "m" | "l") {
+  if (size === "s") return "px-3 py-2.5 text-[0.82rem]";
+  if (size === "l") return "px-5 py-4 text-[1.02rem]";
+  return "px-4 py-3 text-sm";
+}
+
+export function LinkInBioPage({
+  data,
+  preview = false,
+}: {
+  data: PublicLinkInBio;
+  preview?: boolean;
+}) {
+  const { profile, theme, links, livePlatforms, stream, schedule } = data;
+  const font = fontById(theme.fontFamily);
+  const glass = theme.surfaceStyle === "glass";
+  const alpha = Math.round((theme.glassIntensity / 100) * 42);
+  const cardBg = glass
+    ? `rgba(255,255,255,${(alpha / 255).toFixed(3)})`
+    : "color-mix(in oklab, var(--bio-fg) 6%, var(--bio-bg))";
+  const border = theme.hairlineBorders
+    ? "1px solid color-mix(in oklab, var(--bio-fg) 16%, transparent)"
+    : "1px solid transparent";
+  const featured = links.find((link) => link.featured) ?? (theme.layout === "spotlight" ? links[0] : undefined);
+  const rest = featured && theme.layout === "spotlight" ? links.filter((link) => link.id !== featured.id) : links;
+
+  return (
+    <div
+      className={cn("relative min-h-full overflow-hidden", preview ? "h-full min-h-[32rem]" : "min-h-screen")}
+      style={{
+        fontFamily: font.stack,
+        background: theme.paletteBg,
+        color: theme.paletteFg,
+        ["--bio-bg" as string]: theme.paletteBg,
+        ["--bio-fg" as string]: theme.paletteFg,
+        ["--bio-accent" as string]: theme.paletteAccent,
+        ["--bio-muted" as string]: theme.paletteMuted,
+      }}
+    >
+      <link rel="stylesheet" href={font.href} />
+      <LinkInBioAmbient theme={theme} />
+      <div
+        className={cn(
+          "relative mx-auto flex w-full flex-col px-5 py-12 md:py-16",
+          theme.layout === "bento" ? "max-w-3xl" : "max-w-lg",
+        )}
+      >
+        <Header profile={profile} compact={theme.layout === "grid"} bannerLayout={theme.layout === "banner"} border={border} glass={glass} accent={theme.paletteAccent} />
+        <LinkInBioStreamCard stream={stream} glass={glass} border={border} />
+        {theme.widgetBannerUrl ? (
+          <img src={theme.widgetBannerUrl} alt="" className="mt-6 w-full rounded-2xl object-cover" style={{ border, maxHeight: 180 }} />
+        ) : null}
+        {theme.countdownEnabled ? <CountdownCard theme={theme} border={border} glass={glass} /> : null}
+        {schedule ? (
+          <a
+            href={schedule.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 rounded-2xl px-4 py-3 text-sm font-semibold"
+            style={{
+              background: cardBg,
+              border,
+              color: "var(--bio-accent)",
+            }}
+          >
+            <LinkInBioText as="span">{schedule.title}</LinkInBioText>
+          </a>
+        ) : null}
+
+        {links.length === 0 ? (
+          <p className="mt-8 text-center text-sm" style={{ color: theme.paletteMuted }}>
+            No links yet.
+          </p>
+        ) : theme.layout === "bento" ? (
+          <div className="mt-8">
+            <LinkInBioBento links={links} theme={theme} livePlatforms={livePlatforms} />
+          </div>
+        ) : (
+          <div className={cn("mt-8", theme.layout === "grid" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-2.5")}>
+            {featured && theme.layout === "spotlight" ? (
+              <BioLinkCard
+                link={featured}
+                theme={theme}
+                size="l"
+                cardBg={cardBg}
+                border={border}
+                glass={glass}
+                live={Boolean(livePlatforms[featured.platform as keyof typeof livePlatforms])}
+                spotlight
+              />
+            ) : null}
+            {rest.map((link) => (
+              <BioLinkCard
+                key={link.id}
+                link={link}
+                theme={theme}
+                size={resolveCardSize(link, theme)}
+                cardBg={cardBg}
+                border={border}
+                glass={glass}
+                live={Boolean(livePlatforms[link.platform as keyof typeof livePlatforms])}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Header({
+  profile,
+  compact,
+  bannerLayout,
+  border,
+  glass,
+  accent,
+}: {
+  profile: PublicLinkInBio["profile"];
+  compact?: boolean;
+  bannerLayout: boolean;
+  border: string;
+  glass: boolean;
+  accent: string;
+}) {
+  const initials = (profile.displayName || profile.slug || "?").slice(0, 2).toUpperCase();
+  return (
+    <header className={cn("flex flex-col items-center text-center", compact && "mb-2")}>
+      <div
+        className={cn("relative mb-10 w-full overflow-hidden rounded-3xl", bannerLayout ? "min-h-40" : profile.headerUrl ? "min-h-32" : "")}
+        style={
+          profile.headerUrl || bannerLayout
+            ? {
+                background: profile.headerUrl
+                  ? `center / cover no-repeat url(${profile.headerUrl})`
+                  : `linear-gradient(160deg, color-mix(in oklab, ${accent} 40%, var(--bio-bg)), var(--bio-bg))`,
+                border,
+                backdropFilter: glass ? "blur(10px)" : undefined,
+              }
+            : undefined
+        }
+      >
+        {profile.headerUrl || bannerLayout ? <div className="h-36 w-full" /> : null}
+        <span
+          className={cn(
+            "grid size-24 place-items-center overflow-hidden rounded-full",
+            profile.headerUrl || bannerLayout ? "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2" : "mx-auto",
+          )}
+          style={{
+            border: "1px solid color-mix(in oklab, var(--bio-fg) 18%, transparent)",
+            background: "color-mix(in oklab, var(--bio-fg) 8%, var(--bio-bg))",
+          }}
+        >
+          {profile.avatarUrl ? (
+            <img src={profile.avatarUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="text-lg font-semibold">{initials}</span>
+          )}
+        </span>
+      </div>
+      <LinkInBioText as="h1" className="mx-auto mt-4 w-full min-w-0 max-w-md text-2xl font-semibold tracking-tight">
+        {profile.displayName || profile.slug || "Your page"}
+      </LinkInBioText>
+      {profile.bio ? (
+        <LinkInBioText className="mx-auto mt-2 w-full min-w-0 max-w-md text-sm leading-relaxed" style={{ color: "var(--bio-muted)" }}>
+          {profile.bio}
+        </LinkInBioText>
+      ) : null}
+    </header>
+  );
+}
+
+function CountdownCard({
+  theme,
+  border,
+  glass,
+}: {
+  theme: PublicLinkInBio["theme"];
+  border: string;
+  glass: boolean;
+}) {
+  const ends = theme.countdownEndsAt ? new Date(theme.countdownEndsAt).getTime() : NaN;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!Number.isFinite(ends)) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [ends]);
+  const remain = Number.isFinite(ends) ? Math.max(0, ends - now) : 0;
+  const ended = Number.isFinite(ends) && remain <= 0;
+  const total = Math.floor(remain / 1000);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return (
+    <div
+      className="mt-3 rounded-2xl px-4 py-3 text-center"
+      style={{
+        border,
+        background: glass ? "rgba(255,255,255,0.06)" : "color-mix(in oklab, var(--bio-fg) 7%, var(--bio-bg))",
+      }}
+    >
+      <LinkInBioText className="text-[0.7rem] uppercase tracking-wide" style={{ color: "var(--bio-muted)" }}>
+        {theme.countdownLabel}
+      </LinkInBioText>
+      {!Number.isFinite(ends) ? (
+        <p className="mt-1 text-sm">No end time set.</p>
+      ) : ended ? (
+        <p className="mt-1 text-sm font-semibold">The countdown has ended.</p>
+      ) : (
+        <p className="mt-1 font-semibold tabular-nums">
+          {days > 0 ? `${days}d ` : ""}
+          {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BioLinkCard({
+  link,
+  theme,
+  size,
+  cardBg,
+  border,
+  glass,
+  live,
+  spotlight,
+}: {
+  link: PublicLinkInBio["links"][number];
+  theme: PublicLinkInBio["theme"];
+  size: "s" | "m" | "l";
+  cardBg: string;
+  border: string;
+  glass: boolean;
+  live: boolean;
+  spotlight?: boolean;
+}) {
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "group flex items-center justify-between gap-3 rounded-2xl transition-transform hover:-translate-y-0.5",
+        cardPadding(spotlight ? "l" : size),
+        spotlight && "col-span-full",
+      )}
+      style={{
+        background: cardBg,
+        border,
+        backdropFilter: glass ? `blur(${6 + theme.glassIntensity / 10}px)` : undefined,
+        boxShadow: theme.glowStrength
+          ? `0 10px ${12 + theme.glowStrength / 4}px color-mix(in oklab, var(--bio-accent) ${Math.round(theme.glowStrength / 5)}%, transparent)`
+          : undefined,
+      }}
+    >
+      <span className="min-w-0 text-start">
+        <span className="block truncate font-semibold" dir="auto">
+          {link.title}
+        </span>
+        <span className="mt-0.5 block truncate text-[0.7rem]" style={{ color: "var(--bio-muted)" }}>
+          {PLATFORM_LABEL[link.platform]}
+          {link.platform === "tiktok" ? " · Coming Soon" : ""}
+          {live ? " · Live" : ""}
+        </span>
+      </span>
+      <span className="shrink-0 text-[0.7rem] font-medium" style={{ color: "var(--bio-accent)" }} aria-hidden>
+        Open
+      </span>
+    </a>
+  );
+}

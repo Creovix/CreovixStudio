@@ -218,6 +218,10 @@ const DICT = {
   "error.devDetails": "Developer details",
   "login.testMode": "Continue without login (Test Mode)",
   "login.testOpening": "Opening…",
+  "login.legalConsent":
+    "By continuing you allow this app to read your channel events so the timer can award time according to your rules. You also agree to the",
+  "login.privacy": "Privacy Policy",
+  "login.terms": "Terms of Service",
 } as const;
 
 export type TranslationKey = keyof typeof DICT;

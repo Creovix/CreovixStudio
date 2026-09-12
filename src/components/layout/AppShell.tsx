@@ -11,6 +11,7 @@ import {
   Home,
   LogOut,
   MessageSquareCode,
+  Link2,
   Radio,
   Scissors,
   Settings,
@@ -52,6 +53,7 @@ const NAV = [
   { to: "/clip-command" as const, icon: Scissors, label: "Clip Command" },
   { to: "/schedule" as const, icon: CalendarDays, label: "Schedule" },
   { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points" },
+  { to: "/link-in-bio" as const, icon: Link2, label: "Link in Bio" },
 ];
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";

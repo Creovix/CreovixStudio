@@ -576,6 +576,183 @@ export type Database = {
         }
         Relationships: []
       }
+      link_in_bio_links: {
+        Row: {
+          card_size: string
+          col_span: number
+          created_at: string
+          enabled: boolean
+          featured: boolean
+          gallery_images: unknown
+          grid_x: number
+          grid_y: number
+          id: string
+          kind: string
+          platform: string
+          row_span: number
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          card_size?: string
+          col_span?: number
+          created_at?: string
+          enabled?: boolean
+          featured?: boolean
+          gallery_images?: unknown
+          grid_x?: number
+          grid_y?: number
+          id?: string
+          kind?: string
+          platform?: string
+          row_span?: number
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          card_size?: string
+          col_span?: number
+          created_at?: string
+          enabled?: boolean
+          featured?: boolean
+          gallery_images?: unknown
+          grid_x?: number
+          grid_y?: number
+          id?: string
+          kind?: string
+          platform?: string
+          row_span?: number
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      link_in_bio_profiles: {
+        Row: {
+          avatar_url: string
+          bio: string
+          created_at: string
+          display_name: string
+          header_url: string
+          published: boolean
+          published_at: string | null
+          setup_completed: boolean
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string
+          bio?: string
+          created_at?: string
+          display_name?: string
+          header_url?: string
+          published?: boolean
+          published_at?: string | null
+          setup_completed?: boolean
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string
+          bio?: string
+          created_at?: string
+          display_name?: string
+          header_url?: string
+          published?: boolean
+          published_at?: string | null
+          setup_completed?: boolean
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      link_in_bio_themes: {
+        Row: {
+          ambient_enabled: boolean
+          ambient_preset: string
+          countdown_enabled: boolean
+          countdown_ends_at: string | null
+          countdown_label: string
+          created_at: string
+          default_card_size: string
+          font_family: string
+          glass_intensity: number
+          glow_strength: number
+          gradient_style: string
+          hairline_borders: boolean
+          layout: string
+          palette_accent: string
+          palette_bg: string
+          palette_fg: string
+          palette_muted: string
+          schedule_enabled: boolean
+          surface_style: string
+          updated_at: string
+          user_id: string
+          widget_banner_url: string
+        }
+        Insert: {
+          ambient_enabled?: boolean
+          ambient_preset?: string
+          countdown_enabled?: boolean
+          countdown_ends_at?: string | null
+          countdown_label?: string
+          created_at?: string
+          default_card_size?: string
+          font_family?: string
+          glass_intensity?: number
+          glow_strength?: number
+          gradient_style?: string
+          hairline_borders?: boolean
+          layout?: string
+          palette_accent?: string
+          palette_bg?: string
+          palette_fg?: string
+          palette_muted?: string
+          schedule_enabled?: boolean
+          surface_style?: string
+          updated_at?: string
+          user_id: string
+          widget_banner_url?: string
+        }
+        Update: {
+          ambient_enabled?: boolean
+          ambient_preset?: string
+          countdown_enabled?: boolean
+          countdown_ends_at?: string | null
+          countdown_label?: string
+          created_at?: string
+          default_card_size?: string
+          font_family?: string
+          glass_intensity?: number
+          glow_strength?: number
+          gradient_style?: string
+          hairline_borders?: boolean
+          layout?: string
+          palette_accent?: string
+          palette_bg?: string
+          palette_fg?: string
+          palette_muted?: string
+          schedule_enabled?: boolean
+          surface_style?: string
+          updated_at?: string
+          user_id?: string
+          widget_banner_url?: string
+        }
+        Relationships: []
+      }
       media_playback_state: {
         Row: {
           created_at: string

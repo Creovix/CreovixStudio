@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -160,8 +160,15 @@ function LoginPage() {
         </div>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          By continuing you allow this app to read your channel events so the timer can award time
-          according to your rules.
+          {t("login.legalConsent")}{" "}
+          <Link to="/privacy" className="text-foreground underline-offset-4 hover:underline">
+            {t("login.privacy")}
+          </Link>{" "}
+          and{" "}
+          <Link to="/terms" className="text-foreground underline-offset-4 hover:underline">
+            {t("login.terms")}
+          </Link>
+          .
         </p>
 
         <p className="mt-6 text-center">
@@ -174,6 +181,16 @@ function LoginPage() {
             {pending === "test" ? t("login.testOpening") : t("login.testMode")}
           </button>
         </p>
+
+        <footer className="mt-8 flex items-center justify-center gap-3 border-t border-border/70 pt-4 text-xs text-muted-foreground">
+          <Link to="/privacy" className="transition-colors hover:text-foreground">
+            {t("login.privacy")}
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/terms" className="transition-colors hover:text-foreground">
+            {t("login.terms")}
+          </Link>
+        </footer>
       </div>
     </main>
   );
