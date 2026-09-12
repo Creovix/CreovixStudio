@@ -23,8 +23,6 @@ export function GlobalSimulator({
   const simulate = useServerFn(simulateStreamEvent);
   const testChat = useServerFn(sendTestChatMessage);
   const syncEvents = useServerFn(syncTwitchEventSub);
-  const ar = lang === "ar";
-
   const [target, setTarget] = useState<string>(widgets[0]?.id ?? "");
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -39,9 +37,7 @@ export function GlobalSimulator({
       if (result && result.ok === false) {
         setMessage(
           result.error === "no_subathon"
-            ? ar
-              ? "أنشئ سباثون أولاً حتى تعمل القواعد."
-              : "Create a subathon first so rules can apply."
+            ? "Create a subathon first so rules can apply."
             : `⚠️ ${result.error}`,
         );
       } else {
@@ -60,9 +56,7 @@ export function GlobalSimulator({
   if (widgets.length === 0) {
     return (
       <div className="glass-3d rounded-2xl p-6 text-sm text-muted-foreground">
-        {ar
-          ? "أنشئ ويدجت واحدة على الأقل من تبويب OBS Overlays حتى تستخدم المحاكي."
-          : "Create at least one overlay in the OBS Overlays tab to use the simulator."}
+        {"Create at least one overlay in the OBS Overlays tab to use the simulator."}
       </div>
     );
   }
@@ -72,18 +66,16 @@ export function GlobalSimulator({
       <div>
         <p className="flex items-center gap-2 text-sm font-medium">
           <FlaskConical className="size-4 text-primary" aria-hidden />
-          {ar ? "🧪 المحاكي الموحّد المباشر" : "🧪 Live Unified Simulator"}
+          {"🧪 Live Unified Simulator"}
         </p>
         <p className="mt-1 text-[0.78rem] text-muted-foreground">
-          {ar
-            ? "اختبر أحداث Twitch وKick وTikTok عبر جميع الأوفرلايات النشطة."
-            : "Test Twitch, Kick and TikTok events across all active overlays."}
+          {"Test Twitch, Kick and TikTok events across all active overlays."}
         </p>
       </div>
 
       <label className="block">
         <span className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {ar ? "الأوفرلاي المستهدف" : "Target overlay"}
+          {"Target overlay"}
         </span>
         <DarkSelect
           className="mt-2 w-full"
@@ -105,12 +97,12 @@ export function GlobalSimulator({
             void run(
               "twitch",
               () => simulate({ data: { widgetId, platform: "TWITCH", eventType: "FOLLOW" } }),
-              ar ? "تم إرسال متابعة Twitch ✅" : "Twitch follow sent ✅",
+              "Twitch follow sent ✅",
             )
           }
         >
           <Zap className="size-4" aria-hidden />
-          {busy === "twitch" ? "…" : ar ? "محاكاة متابعة Twitch" : "Simulate Twitch Follow"}
+          {busy === "twitch" ? "…" : "Simulate Twitch Follow"}
         </button>
 
         <button
@@ -121,12 +113,12 @@ export function GlobalSimulator({
             void run(
               "kick",
               () => simulate({ data: { widgetId, platform: "KICK", eventType: "SUBSCRIPTION" } }),
-              ar ? "تم إرسال اشتراك Kick ✅" : "Kick sub sent ✅",
+              "Kick sub sent ✅",
             )
           }
         >
           <Zap className="size-4" aria-hidden />
-          {busy === "kick" ? "…" : ar ? "محاكاة اشتراك Kick" : "Simulate Kick Sub"}
+          {busy === "kick" ? "…" : "Simulate Kick Sub"}
         </button>
 
         <button
@@ -140,12 +132,12 @@ export function GlobalSimulator({
                 simulate({
                   data: { widgetId, platform: "TIKTOK", eventType: "GIFT_SUB", amount: 1 },
                 }),
-              ar ? "تم إرسال هدية TikTok ✅" : "TikTok gift sent ✅",
+              "TikTok gift sent ✅",
             )
           }
         >
           <Zap className="size-4" aria-hidden />
-          {busy === "tiktok" ? "…" : ar ? "محاكاة هدية TikTok" : "Simulate TikTok Gift"}
+          {busy === "tiktok" ? "…" : "Simulate TikTok Gift"}
         </button>
 
         <button
@@ -156,12 +148,12 @@ export function GlobalSimulator({
             void run(
               "chat",
               () => testChat({ data: { widgetId } }),
-              ar ? "تم إرسال رسالة تجريبية ✅" : "Test chat message sent ✅",
+              "Test chat message sent ✅",
             )
           }
         >
           <MessageSquare className="size-4" aria-hidden />
-          {busy === "chat" ? "…" : ar ? "رسالة دردشة تجريبية" : "Send Test Chat Message"}
+          {busy === "chat" ? "…" : "Send Test Chat Message"}
         </button>
 
         <button
@@ -172,24 +164,20 @@ export function GlobalSimulator({
             void run(
               "eventsub",
               () => syncEvents({}),
-              ar ? "تم تفعيل أحداث Twitch المباشرة ✅" : "Twitch live events enabled ✅",
+              "Twitch live events enabled ✅",
             )
           }
         >
           <Radio className="size-4" aria-hidden />
           {busy === "eventsub"
             ? "…"
-            : ar
-              ? "تفعيل أحداث Twitch المباشرة"
-              : "Enable Twitch live events"}
+            : "Enable Twitch live events"}
         </button>
       </div>
 
       {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
       <p className="text-[11px] text-muted-foreground">
-        {ar
-          ? "كل زر يمر عبر نفس مسار الأحداث الحقيقي ويبث التحديث فوراً إلى OBS."
-          : "Every button runs the real ingest pipeline and broadcasts instantly to OBS."}
+        {"Every button runs the real ingest pipeline and broadcasts instantly to OBS."}
       </p>
     </div>
   );

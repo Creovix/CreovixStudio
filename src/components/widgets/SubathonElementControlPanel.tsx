@@ -35,7 +35,7 @@ export function SubathonElementControlPanel({
   frame,
   remaining,
   compact = false,
-  lang = "en",
+  lang = "ar",
 }: {
   widgetId: string;
   subathonId: string | null;
@@ -47,7 +47,6 @@ export function SubathonElementControlPanel({
   compact?: boolean;
   lang?: "ar" | "en";
 }) {
-  const ar = lang === "ar";
   const start = useServerFn(startTimer);
   const pause = useServerFn(pauseTimer);
   const reset = useServerFn(resetTimer);
@@ -124,10 +123,10 @@ export function SubathonElementControlPanel({
   const status = localFrame?.status ?? "IDLE";
   const primaryLabel =
     status === "RUNNING"
-      ? ar ? "إيقاف مؤقت" : "Pause"
+      ? "Pause"
       : status === "PAUSED"
-        ? ar ? "استئناف" : "Resume"
-        : ar ? "تشغيل" : "Start";
+        ? "Resume"
+        : "Start";
 
   const digitInput =
     "w-full rounded-md bg-transparent text-center font-mono text-4xl font-bold tabular-nums text-foreground outline-none transition focus:bg-primary/10 focus:ring-1 focus:ring-primary sm:text-5xl";
@@ -137,7 +136,7 @@ export function SubathonElementControlPanel({
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-primary">Element Control Panel</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{ar ? "مؤقت الساباثون" : "Subathon Timer"}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{"Subathon Timer"}</p>
         </div>
         {!compact ? (
           <Button type="button" variant="ghost" size="icon" onClick={() => window.open(`/widgets/${widgetId}/control`, `creovix-timer-${widgetId}`, "popup=yes,width=520,height=820,resizable=yes,scrollbars=yes")} title="Open in separate window" aria-label="Open control panel in separate window">
@@ -151,7 +150,7 @@ export function SubathonElementControlPanel({
           <span className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-muted-foreground">{status}</span>
           <div className="mt-2 flex items-center justify-center gap-1" dir="ltr">
             <input
-              aria-label={ar ? "الساعات" : "Hours"}
+              aria-label={"Hours"}
               inputMode="numeric"
               className={`${digitInput} max-w-[2.4ch]`}
               value={hours}
@@ -161,7 +160,7 @@ export function SubathonElementControlPanel({
             />
             <span className="font-mono text-4xl font-bold text-muted-foreground sm:text-5xl">:</span>
             <input
-              aria-label={ar ? "الدقائق" : "Minutes"}
+              aria-label={"Minutes"}
               inputMode="numeric"
               className={`${digitInput} max-w-[2.2ch]`}
               value={minutes}
@@ -171,7 +170,7 @@ export function SubathonElementControlPanel({
             />
             <span className="font-mono text-4xl font-bold text-muted-foreground sm:text-5xl">:</span>
             <input
-              aria-label={ar ? "الثواني" : "Seconds"}
+              aria-label={"Seconds"}
               inputMode="numeric"
               className={`${digitInput} max-w-[2.2ch]`}
               value={seconds}
@@ -189,11 +188,11 @@ export function SubathonElementControlPanel({
               disabled={busy || !subathonId}
               onClick={applyCustomTime}
             >
-              {ar ? "تعيين الوقت" : "Set Time"}
+              {"Set Time"}
             </Button>
           ) : (
             <p className="mt-2 text-[0.65rem] text-muted-foreground">
-              {ar ? "اضغط على الأرقام لتعديل الوقت يدوياً" : "Click the digits to set the time manually"}
+              {"Click the digits to set the time manually"}
             </p>
           )}
         </div>
@@ -209,7 +208,7 @@ export function SubathonElementControlPanel({
         </Button>
 
         <div>
-          <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{ar ? "تغيير المدة" : "Change Duration"}</p>
+          <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{"Change Duration"}</p>
           <div className="grid grid-cols-3 gap-2">
             {ADJUSTMENTS.map((entry) => (
               <Button key={entry.seconds} type="button" variant="outline" disabled={busy || !subathonId} onClick={() => void run(() => adjust({ data: { ...payload, seconds: entry.seconds } }))}>
@@ -220,10 +219,10 @@ export function SubathonElementControlPanel({
         </div>
 
         <div className="rounded-lg border border-destructive/35 bg-destructive/5 p-4">
-          <p className="font-semibold text-destructive">{ar ? "هل تحتاج لإعادة ضبط المؤقت؟" : "Need to reset timer?"}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{ar ? "سيعود المؤقت إلى مدته الأساسية." : "The timer returns to its original duration."}</p>
+          <p className="font-semibold text-destructive">{"Need to reset timer?"}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{"The timer returns to its original duration."}</p>
           <Button type="button" variant="destructive" className="mt-3 w-full" disabled={busy || !subathonId} onClick={() => setResetOpen(true)}>
-            <RotateCcw aria-hidden />{ar ? "إعادة ضبط المؤقت" : "Reset Timer"}
+            <RotateCcw aria-hidden />{"Reset Timer"}
           </Button>
         </div>
       </div>
@@ -233,12 +232,12 @@ export function SubathonElementControlPanel({
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{ar ? "إعادة ضبط المؤقت؟" : "Reset timer?"}</AlertDialogTitle>
-            <AlertDialogDescription>{ar ? "سيتم إيقاف المؤقت وإعادته إلى المدة الأساسية. لا يمكن التراجع تلقائياً عن هذا الإجراء." : "This stops the timer and restores its original duration. This action is not automatically reversible."}</AlertDialogDescription>
+            <AlertDialogTitle>{"Reset timer?"}</AlertDialogTitle>
+            <AlertDialogDescription>{"This stops the timer and restores its original duration. This action is not automatically reversible."}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{ar ? "إلغاء" : "Cancel"}</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void run(() => reset({ data: payload }))}>{ar ? "إعادة الضبط" : "Reset Timer"}</AlertDialogAction>
+            <AlertDialogCancel>{"Cancel"}</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => void run(() => reset({ data: payload }))}>{"Reset Timer"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

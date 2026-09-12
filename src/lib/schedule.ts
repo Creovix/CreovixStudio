@@ -193,8 +193,8 @@ export function monthGrid(year: number, month: number, weekdays: number[], today
   });
 }
 
-export function monthLabel(year: number, month: number, lang: "en" | "ar"): string {
-  return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", { month: "long", year: "numeric" }).format(
+export function monthLabel(year: number, month: number, _lang?: "en" | "ar"): string {
+  return new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(
     new Date(year, month, 1),
   );
 }
@@ -244,18 +244,15 @@ export function parseClock(raw: string): number | null {
   return hours * 60 + mins;
 }
 
-export function weekOrder(lang: "en" | "ar"): number[] {
-  return lang === "ar" ? [6, 0, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6, 0];
+export function weekOrder(_lang?: "en" | "ar"): number[] {
+  return [1, 2, 3, 4, 5, 6, 0];
 }
 
-export function weekdayLabel(weekday: number, lang: "en" | "ar", short = false): string {
+export function weekdayLabel(weekday: number, _lang?: "en" | "ar", short = false): string {
   const en = short
     ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     : ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const ar = short
-    ? ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"]
-    : ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-  return (lang === "ar" ? ar : en)[clampWeekday(weekday)] ?? "";
+  return en[clampWeekday(weekday)] ?? "";
 }
 
 function emptyTestState(): ScheduleState {

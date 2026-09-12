@@ -75,20 +75,12 @@ function PublicSchedule() {
     };
   }, [token]);
 
-  const copy =
-    lang === "ar"
-      ? {
-          empty: "لا مواعيد بث هذا الشهر.",
-          reminder: "تذكير محلي",
-          ics: "إضافة للتقويم (ICS)",
-          tz: "التوقيت",
-        }
-      : {
-          empty: "No streams listed this month.",
-          reminder: "Local reminder",
-          ics: "Add to calendar (ICS)",
-          tz: "Timezone",
-        };
+  const copy = {
+    empty: "No streams listed this month.",
+    reminder: "Local reminder",
+    ics: "Add to calendar (ICS)",
+    tz: "Timezone",
+  };
 
   const todayIso = zonedIsoDate(data?.timezone || "UTC");
 
@@ -99,14 +91,14 @@ function PublicSchedule() {
           <p className="text-sm text-muted-foreground">{copy.empty}</p>
         ) : (
           <>
-            <h1 className="text-2xl font-semibold tracking-tight">{data.title}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight" dir="auto">{data.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {copy.tz}: {data.timezone}
             </p>
             {data.reminderNote ? (
               <p className="mt-4 text-sm">
                 <span className="text-muted-foreground">{copy.reminder} — </span>
-                {data.reminderNote}
+                <span dir="auto">{data.reminderNote}</span>
               </p>
             ) : null}
             <div className="mt-8">

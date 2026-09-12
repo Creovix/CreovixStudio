@@ -587,11 +587,11 @@ function ActivityFeedPage() {
                   </span>
 
                   <div className="min-w-0 flex-1 text-start">
-                    <p className="truncate text-sm font-semibold" style={{ color }}>
+                    <p className="truncate text-sm font-semibold" style={{ color }} dir="auto">
                       {event.actor_name ?? t("activity.anonymous")}
                     </p>
                     {event.message ? (
-                      <p className="mt-0.5 break-words text-[0.8rem] text-muted-foreground">
+                      <p className="mt-0.5 break-words text-[0.8rem] text-muted-foreground" dir="auto">
                         “{event.message}”
                       </p>
                     ) : null}

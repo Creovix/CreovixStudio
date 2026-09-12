@@ -57,18 +57,18 @@ const METRIC_ORDER: MetricKey[] = ["followers", "subs", "tips", "bits"];
 function formatDay(dateKey: string, lang: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
   if (!year || !month || !day) return dateKey;
-  return new Date(year, month - 1, day).toLocaleDateString(lang === "ar" ? "ar" : "en-US", {
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
 }
 
 function formatCount(value: number, lang: string) {
-  return Math.round(value).toLocaleString(lang === "ar" ? "ar" : "en-US");
+  return Math.round(value).toLocaleString("en-US");
 }
 
 function formatMoney(value: number, lang: string) {
-  return `$${value.toLocaleString(lang === "ar" ? "ar" : "en-US", {
+  return `$${value.toLocaleString("en-US", {
     minimumFractionDigits: value % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   })}`;
@@ -92,7 +92,8 @@ export function QuickAnalyticsOverview({
   chartHeight?: number;
   showHeading?: boolean;
 }) {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
+  const lang = "en";
   const query = useDashboardAnalytics();
   const [openMetric, setOpenMetric] = useState<MetricKey | null>(null);
 
@@ -174,8 +175,8 @@ function MetricChartCard({
   chartHeight: number;
   onOpen: () => void;
 }) {
-  const { t, lang, dir } = useLanguage();
-  const rtl = dir === "rtl";
+  const { t } = useLanguage();
+  const lang = "en";
   const meta = METRIC_META[metric];
   const [preset, setPreset] = useState<RangePreset>("7");
   const [customFrom, setCustomFrom] = useState(() => isoDay(presetRange(14).start));
@@ -301,7 +302,7 @@ function MetricChartCard({
             <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
             <XAxis
               dataKey="label"
-              reversed={rtl}
+              reversed={false}
               tickLine={false}
               axisLine={false}
               tickMargin={8}

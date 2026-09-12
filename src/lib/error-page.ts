@@ -1,6 +1,6 @@
 export function renderErrorPage(): string {
   return `<!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
     <title>CreovixStudio</title>
@@ -13,7 +13,7 @@ export function renderErrorPage(): string {
         display: grid;
         place-items: center;
         padding: 1.5rem;
-        font: 15px/1.6 "IBM Plex Sans Arabic", Inter, system-ui, sans-serif;
+        font: 15px/1.6 Inter, "IBM Plex Sans Arabic", system-ui, sans-serif;
         background: #0b0d12;
         color: #f4f4f6;
       }
@@ -25,7 +25,7 @@ export function renderErrorPage(): string {
         border-radius: 1.15rem;
         background: linear-gradient(155deg, rgba(255,255,255,.055), rgba(255,255,255,.02) 46%, rgba(255,255,255,.03));
         border: 1px solid rgba(255,255,255,.08);
-        box-shadow: 0 20px 40px rgba(0,0,0,.6);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, .6);
         backdrop-filter: blur(22px);
       }
       h1 { font-size: 1.2rem; margin: 0 0 .5rem; }
@@ -46,25 +46,13 @@ export function renderErrorPage(): string {
   </head>
   <body>
     <div class="card">
-      <h1 data-ar="تعذر تحميل الصفحة" data-en="This page didn't load">تعذر تحميل الصفحة</h1>
-      <p data-ar="حدث خطأ غير متوقع في تحميل الصفحة، يمكنك المحاولة مرة أخرى أو العودة للرئيسية." data-en="An unexpected error occurred while loading this page. You can try again or go back home.">حدث خطأ غير متوقع في تحميل الصفحة، يمكنك المحاولة مرة أخرى أو العودة للرئيسية.</p>
+      <h1>This page didn't load</h1>
+      <p>An unexpected error occurred while loading this page. You can try again or go back home.</p>
       <div class="actions">
-        <button class="primary" onclick="location.reload()" data-ar="إعادة المحاولة" data-en="Try again">إعادة المحاولة</button>
-        <a class="secondary" href="/" data-ar="العودة للرئيسية" data-en="Go home">العودة للرئيسية</a>
+        <button class="primary" onclick="location.reload()">Try again</button>
+        <a class="secondary" href="/">Go home</a>
       </div>
     </div>
-    <script>
-      (function () {
-        try {
-          var ar = localStorage.getItem("creovix.lang") !== "en";
-          document.documentElement.lang = ar ? "ar" : "en";
-          document.documentElement.dir = ar ? "rtl" : "ltr";
-          document.querySelectorAll("[data-ar]").forEach(function (el) {
-            el.textContent = ar ? el.getAttribute("data-ar") : el.getAttribute("data-en");
-          });
-        } catch (e) {}
-      })();
-    </script>
   </body>
 </html>`;
 }

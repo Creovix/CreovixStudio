@@ -393,7 +393,7 @@ export function ChatBoxView({
 
   const renderMessage = (message: ChatMessage) => {
     const nameBlock = (
-      <span style={{ color: message.color ?? accent, fontWeight: 700, whiteSpace: "nowrap", ...skin.text }}>
+      <span dir="auto" style={{ color: message.color ?? accent, fontWeight: 700, whiteSpace: "nowrap", ...skin.text }}>
         {message.author}
       </span>
     );
@@ -492,7 +492,7 @@ export function ChatBoxView({
               {nameBlock}
               <span style={{ color: style.textColor, opacity: 0.7, ...skin.text }}>:</span>
             </span>
-            <span style={islandTextStyle}>{renderChatText(message.text)}</span>
+            <span dir="auto" style={islandTextStyle}>{renderChatText(message.text)}</span>
           </span>
         </div>
       );
@@ -509,7 +509,7 @@ export function ChatBoxView({
             {nameBlock}
             <span style={{ color: style.textColor, opacity: 0.7, ...skin.text }}>:</span>
           </span>
-          <span className="ms-1.5" style={{ ...textStyle, ...transparentTextStyle }}>
+          <span className="ms-1.5" dir="auto" style={{ ...textStyle, ...transparentTextStyle }}>
             {renderChatText(message.text)}
           </span>
         </span>
@@ -719,6 +719,12 @@ export function EmoteRainView({
  * an OBS browser-source refresh keeps rendering it until the creator clears
  * it (or the optional auto-hide timer elapses).
  */
+const SPOTLIGHT_FADE_MS = 500;
+
+function spotlightKey(message: SpotlightMessage | null) {
+  return message ? `${message.id}:${message.nonce}` : "";
+}
+
 export function ChatSpotlightView({
   config,
   spotlight,
@@ -735,8 +741,10 @@ export function ChatSpotlightView({
   const style = parseSpotlightConfig(config);
   const skin = widgetThemeSkin(parseWidgetThemeId(config));
   const accent = skin.accentColor ?? style.accentColor;
-  const [hidden, setHidden] = useState(false);
-  const [leaving, setLeaving] = useState(false);
+  const [dismissedKey, setDismissedKey] = useState("");
+  const [display, setDisplay] = useState<SpotlightMessage | null>(null);
+  const [motion, setMotion] = useState<"shown" | "exit" | "enter">("enter");
+  const shownKeyRef = useRef("");
 
   const livePin: SpotlightMessage | null = pinnedLive
     ? {
@@ -755,7 +763,7 @@ export function ChatSpotlightView({
       }
     : null;
 
-  const pinned: SpotlightMessage | null =
+  const incoming: SpotlightMessage | null =
     (livePin && (!spotlight || Date.parse(spotlight.pinnedAt) < pinnedLive!.at)
       ? livePin
       : spotlight) ??
@@ -773,28 +781,57 @@ export function ChatSpotlightView({
         }
       : null);
 
-  const nonce = pinned?.nonce ?? 0;
+  const incomingKey = spotlightKey(incoming);
+  const pinned = incoming && incomingKey !== dismissedKey ? incoming : null;
+  const pinKey = spotlightKey(pinned);
 
   useEffect(() => {
-    setHidden(false);
-    setLeaving(false);
-    if (!pinned || style.autoHideMs <= 0) return;
-    const fade = setTimeout(() => setLeaving(true), Math.max(400, style.autoHideMs - 400));
-    const hide = setTimeout(() => setHidden(true), style.autoHideMs);
+    if (pinKey === shownKeyRef.current) return;
+    const hadCard = Boolean(shownKeyRef.current);
+    if (hadCard) setMotion("exit");
+    const wait = window.setTimeout(
+      () => {
+        shownKeyRef.current = pinKey;
+        setDisplay(pinned);
+        if (!pinned) {
+          setMotion("exit");
+          return;
+        }
+        setMotion("enter");
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => setMotion("shown"));
+        });
+      },
+      hadCard ? SPOTLIGHT_FADE_MS : 16,
+    );
+    return () => window.clearTimeout(wait);
+  }, [pinKey, pinned]);
+
+  useEffect(() => {
+    if (!display || style.autoHideMs <= 0) return;
+    const fade = window.setTimeout(
+      () => setMotion("exit"),
+      Math.max(SPOTLIGHT_FADE_MS, style.autoHideMs - SPOTLIGHT_FADE_MS),
+    );
+    const hide = window.setTimeout(() => {
+      setDismissedKey(spotlightKey(display));
+      shownKeyRef.current = "";
+      setDisplay(null);
+    }, style.autoHideMs);
     return () => {
-      clearTimeout(fade);
-      clearTimeout(hide);
+      window.clearTimeout(fade);
+      window.clearTimeout(hide);
     };
-  }, [nonce, pinned?.id, style.autoHideMs, pinned]);
+  }, [display, style.autoHideMs]);
 
-  if (!pinned || hidden) return <div className="h-0 w-0" aria-hidden />;
+  if (!display) return <div className="h-0 w-0" aria-hidden />;
 
-  const roles = style.showBadges ? resolveBadgeRoles(pinned.badges, 6) : [];
+  const roles = style.showBadges ? resolveBadgeRoles(display.badges, 6) : [];
 
   return (
     <div
-      key={`${pinned.id}-${nonce}`}
-      className="overlay-spotlight-in flex w-full min-w-[360px] max-w-[560px] flex-col gap-2 rounded-2xl px-6 py-5"
+      className="overlay-spotlight-swap flex w-full min-w-[360px] max-w-[560px] flex-col gap-2 rounded-2xl px-6 py-5"
+      data-motion={motion}
       style={{
         boxSizing: "border-box",
         background: withAlpha(style.backgroundColor, Math.max(style.backgroundOpacity, 70)),
@@ -803,15 +840,13 @@ export function ChatSpotlightView({
         boxShadow: `0 26px 60px rgba(0,0,0,0.55), 0 0 34px ${withAlpha(accent, 28)}`,
         fontFamily: skin.fontFamily ?? style.fontFamily,
         color: style.textColor,
-        opacity: leaving ? 0 : 1,
-        transition: "opacity 400ms ease",
         ...skin.surface,
         ...skin.text,
       }}
     >
       <div className="flex flex-wrap items-center gap-2">
-        {style.showPlatform ? <PlatformIcon platform={pinned.platform} size={18} /> : null}
-        {pinned.badgeImages.map((badge, index) =>
+        {style.showPlatform ? <PlatformIcon platform={display.platform} size={18} /> : null}
+        {display.badgeImages.map((badge, index) =>
           badge.imageUrl ? (
             <BadgeImg
               key={`${badge.label}-${index}`}
@@ -823,16 +858,16 @@ export function ChatSpotlightView({
           ) : null,
         )}
         {roles.map((role) => (
-          <RoleBadgeIcon key={role} role={role} platform={pinned.platform} size={18} />
+          <RoleBadgeIcon key={role} role={role} platform={display.platform} size={18} />
         ))}
         <span
           style={{
             fontSize: `${Math.max(13, Math.round(style.fontSize * 0.72))}px`,
             fontWeight: 800,
-            color: pinned.color ?? accent,
+            color: display.color ?? accent,
           }}
         >
-          {pinned.author}
+          <span dir="auto">{display.author}</span>
         </span>
         <span
           className="ms-auto"
@@ -848,6 +883,7 @@ export function ChatSpotlightView({
       </div>
 
       <p
+        dir="auto"
         style={{
           fontSize: `${style.fontSize}px`,
           fontWeight: 600,
@@ -857,7 +893,7 @@ export function ChatSpotlightView({
           margin: 0,
         }}
       >
-        {renderChatText(pinned.text)}
+        {renderChatText(display.text)}
       </p>
     </div>
   );
@@ -1001,6 +1037,7 @@ function TapperCard({
           whiteSpace: "nowrap",
           fontWeight: 600,
         }}
+        dir="auto"
       >
         {entry.name}
       </span>
@@ -1128,6 +1165,7 @@ export function TikTokTappersView({
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                   }}
+                  dir="auto"
                 >
                   {entry.name}
                 </span>
@@ -1272,7 +1310,7 @@ export function TikTokTappersView({
                   size={parsed.fontSize * 1.4}
                   show={parsed.showAvatars}
                 />
-                <span style={{ fontWeight: 600 }}>{entry.name}</span>
+                <span style={{ fontWeight: 600 }} dir="auto">{entry.name}</span>
                 <span
                   style={{
                     fontWeight: 900,

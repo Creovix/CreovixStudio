@@ -37,8 +37,8 @@ function dayKey(iso: string) {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-function formatDay(key: string, lang: string) {
-  return new Date(`${key}T00:00:00Z`).toLocaleDateString(lang === "ar" ? "ar" : "en-US", {
+function formatDay(key: string) {
+  return new Date(`${key}T00:00:00Z`).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     timeZone: "UTC",
@@ -62,8 +62,7 @@ export function MetricAnalyticsModal({
   backLabel?: string;
   onClose: () => void;
 }) {
-  const { t, lang, dir } = useLanguage();
-  const rtl = dir === "rtl";
+  const { t } = useLanguage();
   const [range, setRange] = useState<string>("7");
   const [customFrom, setCustomFrom] = useState(() => isoDay(presetRange(14).start));
   const [customTo, setCustomTo] = useState(() => isoDay(new Date()));
@@ -96,13 +95,13 @@ export function MetricAnalyticsModal({
       total: sum,
       series: keys.map((key) => ({
         date: key,
-        label: formatDay(key, lang),
+        label: formatDay(key),
         value: Number(buckets.get(key)!.toFixed(2)),
       })),
     };
-  }, [customFrom, customTo, events, lang, metric, range]);
+  }, [customFrom, customTo, events, metric, range]);
 
-  const locale = lang === "ar" ? "ar" : "en-US";
+  const locale = "en-US";
   const fmt = (n: number) =>
     money
       ? `$${n.toLocaleString(locale, { minimumFractionDigits: n % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`
@@ -132,7 +131,7 @@ export function MetricAnalyticsModal({
           onClick={onClose}
           className="mb-5 flex items-center gap-2 rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.04)] px-3.5 py-2 text-sm font-medium transition-colors hover:bg-[oklch(1_0_0/0.09)]"
         >
-          <ArrowLeft className={`size-4 ${rtl ? "rotate-180" : ""}`} aria-hidden />
+          <ArrowLeft className="size-4" aria-hidden />
           {backLabel ?? t("activity.analyticsBack")}
         </button>
 
@@ -221,13 +220,13 @@ export function MetricAnalyticsModal({
                     <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
                     <XAxis
                       dataKey="label"
-                      reversed={rtl}
+                      reversed={false}
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      orientation={rtl ? "right" : "left"}
+                      orientation="left"
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
@@ -258,13 +257,13 @@ export function MetricAnalyticsModal({
                     <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
                     <XAxis
                       dataKey="label"
-                      reversed={rtl}
+                      reversed={false}
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      orientation={rtl ? "right" : "left"}
+                      orientation="left"
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
@@ -296,8 +295,7 @@ export function MetricAnalyticsModal({
 }
 
 function ChartTip({ date, value, accent }: { date: string; value: string; accent: string }) {
-  const { lang } = useLanguage();
-  const pretty = new Date(`${date}T00:00:00Z`).toLocaleDateString(lang === "ar" ? "ar" : "en-US", {
+  const pretty = new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

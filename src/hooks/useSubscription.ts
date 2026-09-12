@@ -58,32 +58,32 @@ export const LIFETIME_DAYS = 36500;
 
 /** "1 Year", "45 Days", "Lifetime" — used in the admin codes table. */
 export function durationLabel(days: number, ar: boolean) {
-  if (days >= LIFETIME_DAYS) return ar ? "مدى الحياة ♾️" : "Lifetime ♾️";
-  if (days === 365) return ar ? "سنة واحدة" : "1 Year";
-  if (days === 180) return ar ? "6 أشهر" : "6 Months";
-  if (days === 90) return ar ? "3 أشهر" : "3 Months";
-  if (days === 60) return ar ? "شهران" : "2 Months";
-  if (days === 30) return ar ? "شهر واحد" : "1 Month";
-  return ar ? `${days} يوم` : `${days} Days`;
+  if (days >= LIFETIME_DAYS) return "Lifetime ♾️";
+  if (days === 365) return "1 Year";
+  if (days === 180) return "6 Months";
+  if (days === 90) return "3 Months";
+  if (days === 60) return "2 Months";
+  if (days === 30) return "1 Month";
+  return `${days} Days`;
 }
 
 /** "2 Months and 14 Days Remaining" / "28 Days Left". */
 export function remainingLabel(daysLeft: number, lifetime: boolean, ar: boolean) {
-  if (lifetime) return ar ? "وصول مدى الحياة ♾️" : "Lifetime Access ♾️";
-  if (daysLeft <= 0) return ar ? "منتهي" : "Expired";
+  if (lifetime) return "Lifetime Access ♾️";
+  if (daysLeft <= 0) return "Expired";
 
   const years = Math.floor(daysLeft / 365);
   const months = Math.floor((daysLeft % 365) / 30);
   const days = daysLeft - years * 365 - months * 30;
 
   const parts: string[] = [];
-  if (years) parts.push(ar ? `${years} سنة` : `${years} ${years === 1 ? "Year" : "Years"}`);
-  if (months) parts.push(ar ? `${months} شهر` : `${months} ${months === 1 ? "Month" : "Months"}`);
+  if (years) parts.push(`${years} ${years === 1 ? "Year" : "Years"}`);
+  if (months) parts.push(`${months} ${months === 1 ? "Month" : "Months"}`);
   if (days || parts.length === 0)
-    parts.push(ar ? `${days} يوم` : `${days} ${days === 1 ? "Day" : "Days"}`);
+    parts.push(`${days} ${days === 1 ? "Day" : "Days"}`);
 
-  const joined = parts.join(ar ? " و" : " and ");
-  return ar ? `${joined} متبقية` : `${joined} Remaining`;
+  const joined = parts.join(" and ");
+  return `${joined} Remaining`;
 }
 
 

@@ -5,8 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SubathonElementControlPanel } from "@/components/widgets/SubathonElementControlPanel";
 import { supabase } from "@/lib/supabase/client";
 import { useWidgetStream } from "@/hooks/useWidgetStream";
-import { useLanguage } from "@/lib/i18n";
-
 export const Route = createFileRoute("/_authenticated/widgets/$widgetId/control")({
   head: () => ({
     meta: [
@@ -24,7 +22,6 @@ export const Route = createFileRoute("/_authenticated/widgets/$widgetId/control"
 function TimerControlPopout() {
   const { widgetId } = Route.useParams();
   const queryClient = useQueryClient();
-  const { lang } = useLanguage();
   const query = useQuery({
     queryKey: ["widget-control", widgetId],
     queryFn: async () => {
@@ -59,7 +56,7 @@ function TimerControlPopout() {
         onConfigChange={(key, value) => setConfig((current) => ({ ...current, [key]: value }))}
         onSaveConfig={() => save.mutateAsync()}
         compact
-        lang={lang === "ar" ? "ar" : "en"}
+        lang="en"
       />
     </main>
   );

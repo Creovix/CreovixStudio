@@ -211,9 +211,9 @@ function HomePage() {
   const subscription = useSubscription(user.id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const locked = subscription.isSuccess && !subscription.data.isActive;
-  const lockLabel = lang === "ar" ? "يتطلب اشتراك" : "Subscription required";
+  const lockLabel = "Subscription required";
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -346,12 +346,10 @@ function HomePage() {
           </span>
           <div className="min-w-0">
             <p className="text-[0.85rem] font-medium">
-              {lang === "ar" ? "الاشتراك غير مفعّل" : "Subscription required"}
+              {"Subscription required"}
             </p>
             <p className="text-[0.76rem] text-muted-foreground">
-              {lang === "ar"
-                ? "أدخل كود الترخيص المكوّن من 16 حرفاً لفتح جميع الأدوات وروابط OBS."
-                : "Enter your 16-character license code to unlock all widgets and OBS links."}
+              {"Enter your 16-character license code to unlock all widgets and OBS links."}
             </p>
           </div>
           <button
@@ -359,7 +357,7 @@ function HomePage() {
             onClick={() => setRedeemModal(true)}
             className="ms-auto rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
-            {lang === "ar" ? "تفعيل الكود" : "Activate code"}
+            {"Activate code"}
           </button>
         </div>
       ) : null}
@@ -528,7 +526,7 @@ function HomePage() {
             ) : null}
 
             <label className="mt-4 block text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Goal type / نوع الهدف
+              Goal type
             </label>
             <DarkSelect
               value={goalType}
@@ -536,7 +534,7 @@ function HomePage() {
               className="mt-2 w-full"
               options={GOAL_TYPES.map((preset) => ({
                 value: preset.id,
-                label: `${preset.emoji} ${preset.labelEn} / ${preset.labelAr}`,
+                label: `${preset.emoji} ${preset.labelEn}`,
               }))}
             />
 

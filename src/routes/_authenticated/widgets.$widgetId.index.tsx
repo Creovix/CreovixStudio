@@ -6,7 +6,6 @@ import { Check, Copy, RefreshCw, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
 import { TestSimulatePanel } from "@/components/widgets/TestSimulatePanel";
-import { useLanguage } from "@/lib/i18n";
 import { WidgetRenderer } from "@/components/widgets/WidgetRenderer";
 import { SubathonElementControlPanel } from "@/components/widgets/SubathonElementControlPanel";
 import { SubathonTimerSidebar } from "@/components/widgets/SubathonTimerSidebar";
@@ -170,7 +169,6 @@ function WidgetBuilder() {
   });
 
   const navigate = useNavigate();
-  const { lang } = useLanguage();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const remove = useMutation({
@@ -321,7 +319,7 @@ function WidgetBuilder() {
                 onSaveConfig={() => save.mutateAsync()}
                 onCopyUrl={() => void copyUrl()}
                 copied={copied}
-                lang={lang === "ar" ? "ar" : "en"}
+                lang={"en"}
               />
             ) : (
             <>
@@ -335,14 +333,14 @@ function WidgetBuilder() {
             </label>
 
             <p className={`${labelClass} pt-1`}>
-              {lang === "ar" ? "⚙️ العرض والشارات" : "⚙️ Display & badges"}
+              {"⚙️ Display & badges"}
             </p>
 
             {widget.type !== "CHAT_BOX" ? (
               <div className="space-y-4 rounded-xl border border-border bg-background p-4">
                 <label className="block">
                   <span className={labelClass}>
-                    {lang === "ar" ? "حجم الخط" : "Font size"} ({style.fontSize}px)
+                    {"Font size"} ({style.fontSize}px)
                   </span>
                   <input
                     type="range"
@@ -415,17 +413,11 @@ function WidgetBuilder() {
                     aria-hidden
                   />
                   {syncFollowers.isPending
-                    ? lang === "ar"
-                      ? "جارٍ المزامنة…"
-                      : "Syncing…"
-                    : lang === "ar"
-                      ? "مزامنة المتابعين الحاليين"
-                      : "Sync Current Followers"}
+                    ? "Syncing…"
+                    : "Sync Current Followers"}
                 </button>
                 <p className="text-[10px] text-muted-foreground">
-                  {lang === "ar"
-                    ? "يجلب عدد المتابعين الحقيقي من حساب Twitch أو Kick المتصل."
-                    : "Pulls the live follower count from your connected Twitch or Kick account."}
+                  {"Pulls the live follower count from your connected Twitch or Kick account."}
                 </p>
               </div>
 
@@ -466,7 +458,7 @@ function WidgetBuilder() {
               <div className="space-y-4 rounded-xl border border-border bg-background p-4">
                 <label className="block">
                   <span className={labelClass}>
-                    {lang === "ar" ? "شكل الرسائل" : "Message layout style"}
+                    {"Message layout style"}
                   </span>
                   <DarkSelect
                     className="mt-2"
@@ -474,15 +466,14 @@ function WidgetBuilder() {
                     onValueChange={(next) => set("chatLayout", next)}
                     options={CHAT_LAYOUTS.map((entry) => ({
                       value: entry.value,
-                      label: lang === "ar" ? entry.labelAr : entry.label,
+                      label: entry.label,
                     }))}
                   />
                   <span className="mt-1 block text-[10px] text-muted-foreground">
-                    {lang === "ar"
-                      ? CHAT_LAYOUTS.find((e) => e.value === parseChatConfig(config).chatLayout)
-                          ?.hintAr
-                      : CHAT_LAYOUTS.find((e) => e.value === parseChatConfig(config).chatLayout)
-                          ?.hint}
+                    {
+                      CHAT_LAYOUTS.find((e) => e.value === parseChatConfig(config).chatLayout)
+                        ?.hint
+                    }
                   </span>
                 </label>
 
@@ -502,7 +493,7 @@ function WidgetBuilder() {
 
                 <label className="block">
                   <span className={labelClass}>
-                    {lang === "ar" ? "المسافة بين الرسائل" : "Message spacing"} (
+                    {"Message spacing"} (
                     {parseChatConfig(config).messageGap}px)
                   </span>
                   <input
@@ -517,7 +508,7 @@ function WidgetBuilder() {
 
                 <label className="block">
                   <span className={labelClass}>
-                    {lang === "ar" ? "حجم النص" : "Text size"} (
+                    {"Text size"} (
                     {Math.min(28, Math.max(12, parseChatConfig(config).fontSize))}px)
                   </span>
                   <input
@@ -531,18 +522,16 @@ function WidgetBuilder() {
                 </label>
 
                 <ToggleField
-                  label={lang === "ar" ? "إظهار شعار المنصة" : "Show platform badge"}
+                  label={"Show platform badge"}
                   hint={
-                    lang === "ar"
-                      ? "يخفي وسم Twitch / Kick / TikTok بجانب الاسم"
-                      : "Hides the Twitch / Kick / TikTok tag next to the username"
+                    "Hides the Twitch / Kick / TikTok tag next to the username"
                   }
                   checked={parseChatConfig(config).showPlatform}
                   onChange={(next) => set("showPlatform", next)}
                 />
 
                 <ToggleField
-                  label={lang === "ar" ? "إظهار شارات الحساب" : "Show account badges"}
+                  label={"Show account badges"}
                   hint="👑 Broadcaster · 🛡️ Moderator · 💎 Sub/VIP · 🎵 TikTok gifter"
                   checked={parseChatConfig(config).showBadges}
                   onChange={(next) => set("showBadges", next)}
@@ -555,11 +544,11 @@ function WidgetBuilder() {
             {widget.type === "TIKTOK_TAP_GOAL" ? (
               <div className="space-y-4 rounded-xl border border-border bg-background p-4">
                 <p className={labelClass}>
-                  {lang === "ar" ? "🎯 هدف النقرات" : "🎯 Tap goal"}
+                  {"🎯 Tap goal"}
                 </p>
                 <label className="block">
                   <span className={labelClass}>
-                    {lang === "ar" ? "تصميم العرض" : "Design layout"}
+                    {"Design layout"}
                   </span>
                   <DarkSelect
                     className="mt-2"
@@ -567,13 +556,13 @@ function WidgetBuilder() {
                     onValueChange={(next) => set("design", next)}
                     options={TAPGOAL_DESIGNS.map((entry) => ({
                       value: entry.value,
-                      label: lang === "ar" ? entry.labelAr : entry.label,
+                      label: entry.label,
                     }))}
                   />
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>{lang === "ar" ? "عنوان الهدف" : "Goal title"}</span>
+                  <span className={labelClass}>{"Goal title"}</span>
                   <input
                     className={`${fieldClass} mt-2`}
                     value={parseTapGoalConfig(config).title}
@@ -583,7 +572,7 @@ function WidgetBuilder() {
                 </label>
                 <label className="block">
                   <span className={labelClass}>
-                    {lang === "ar" ? "عدد النقرات المستهدف" : "Goal target (taps)"}
+                    {"Goal target (taps)"}
                   </span>
                   <input
                     type="number"
@@ -609,7 +598,7 @@ function WidgetBuilder() {
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block">
                     <span className={labelClass}>
-                      {lang === "ar" ? "لون البداية" : "Gradient start"}
+                      {"Gradient start"}
                     </span>
                     <input
                       type="color"
@@ -620,7 +609,7 @@ function WidgetBuilder() {
                   </label>
                   <label className="block">
                     <span className={labelClass}>
-                      {lang === "ar" ? "لون النهاية" : "Gradient end"}
+                      {"Gradient end"}
                     </span>
                     <input
                       type="color"
@@ -631,7 +620,7 @@ function WidgetBuilder() {
                   </label>
                 </div>
                 <ToggleField
-                  label={lang === "ar" ? "إظهار النسبة المئوية" : "Show percentage"}
+                  label={"Show percentage"}
                   checked={parseTapGoalConfig(config).showPercent}
                   onChange={(next) => set("showPercent", next)}
                 />
@@ -645,7 +634,7 @@ function WidgetBuilder() {
                   ) : (
                     <Copy className="size-4" aria-hidden />
                   )}
-                  {lang === "ar" ? "نسخ رابط OBS" : "Copy OBS URL"}
+                  {"Copy OBS URL"}
                 </button>
                 <code className="block break-all text-[0.7rem] text-muted-foreground">
                   /overlay/tiktok-tap-goal?token={widget.public_token}
@@ -656,34 +645,34 @@ function WidgetBuilder() {
             {widget.type === "TIKTOK_TAPPERS" ? (
               <div className="space-y-4 rounded-xl border border-border bg-background p-4">
                 <p className={labelClass}>
-                  {lang === "ar" ? "🏆 أفضل الناقرين" : "🏆 Top tappers"}
+                  {"🏆 Top tappers"}
                 </p>
                 <label className="block">
-                  <span className={labelClass}>{lang === "ar" ? "التخطيط" : "Layout"}</span>
+                  <span className={labelClass}>{"Layout"}</span>
                   <DarkSelect
                     className="mt-2"
                     value={parseTappersConfig(config).layout}
                     onValueChange={(next) => set("layout", next)}
                     options={TAPPERS_LAYOUTS.map((entry) => ({
                       value: entry.value,
-                      label: lang === "ar" ? entry.labelAr : entry.label,
+                      label: entry.label,
                     }))}
                   />
                 </label>
                 <label className="block">
-                  <span className={labelClass}>{lang === "ar" ? "عدد المراكز" : "Top limit"}</span>
+                  <span className={labelClass}>{"Top limit"}</span>
                   <DarkSelect
                     className="mt-2"
                     value={String(parseTappersConfig(config).topLimit)}
                     onValueChange={(next) => set("topLimit", Number(next))}
                     options={TAPPERS_LIMITS.map((limit) => ({
                       value: String(limit),
-                      label: lang === "ar" ? `أفضل ${limit}` : `Top ${limit}`,
+                      label: `Top ${limit}`,
                     }))}
                   />
                 </label>
                 <label className="block">
-                  <span className={labelClass}>{lang === "ar" ? "العنوان" : "Title"}</span>
+                  <span className={labelClass}>{"Title"}</span>
                   <input
                     className={`${fieldClass} mt-2`}
                     value={parseTappersConfig(config).title}
@@ -691,7 +680,7 @@ function WidgetBuilder() {
                   />
                 </label>
                 <ToggleField
-                  label={lang === "ar" ? "إظهار الصور الشخصية" : "Show profile pictures"}
+                  label={"Show profile pictures"}
                   checked={parseTappersConfig(config).showAvatars}
                   onChange={(next) => set("showAvatars", next)}
                 />
@@ -705,7 +694,7 @@ function WidgetBuilder() {
                   ) : (
                     <Copy className="size-4" aria-hidden />
                   )}
-                  {lang === "ar" ? "نسخ رابط OBS" : "Copy OBS URL"}
+                  {"Copy OBS URL"}
                 </button>
                 <code className="block break-all text-[0.7rem] text-muted-foreground">
                   /overlay/tiktok-tappers?token={widget.public_token}
@@ -780,11 +769,11 @@ function WidgetBuilder() {
                 pinned={stream.spotlight ?? null}
                 autoHideMs={parseSpotlightConfig(config).autoHideMs}
                 onAutoHideChange={(next) => set("autoHideMs", next)}
-                lang={lang === "ar" ? "ar" : "en"}
+                lang={"en"}
               />
             ) : null}
 
-            <TestSimulatePanel widgetId={widget.id} type={widget.type} lang={lang === "ar" ? "ar" : "en"} />
+            <TestSimulatePanel widgetId={widget.id} type={widget.type} lang={"en"} />
 
             <div className="rounded-xl border border-border bg-background p-4">
               <p className={labelClass}>OBS browser source</p>
@@ -799,7 +788,7 @@ function WidgetBuilder() {
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-transparent px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:border-red-500/30 hover:bg-red-500/10"
             >
               <Trash2 className="size-4" aria-hidden />
-              {lang === "ar" ? "حذف الودجت" : "Delete widget"}
+              {"Delete widget"}
             </button>
             </>
             )}

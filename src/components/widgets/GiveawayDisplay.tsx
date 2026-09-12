@@ -2,13 +2,11 @@ import { type CSSProperties } from "react";
 import { CheckCircle2, Expand, Minimize2, RotateCcw, Trophy } from "lucide-react";
 
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
-import { useLanguage } from "@/lib/i18n";
 
 export type DrawPhase = "idle" | "shuffling" | "revealing" | "settled";
 export type ClaimState = "pending" | "confirmed" | "expired";
 
 const COPY = {
-  en: {
     shuffling: "Shuffling",
     revealing: "Revealing",
     winnerSelected: "Winner selected",
@@ -21,22 +19,7 @@ const COPY = {
     confirmed: "Confirmed — the winner replied in chat",
     reroll: "Re-roll",
     lastWinner: "Last winner",
-  },
-  ar: {
-    shuffling: "جاري الخلط",
-    revealing: "الكشف",
-    winnerSelected: "تم اختيار الفائز",
-    liveEntries: "مشاركات مباشرة",
-    expand: "توسيع عرض السحب",
-    collapse: "إغلاق العرض الموسّع",
-    joinHint: (keyword: string) => `ينضم المشاهدون بكتابة ${keyword} في الشات.`,
-    from: "القادمة من",
-    claimHint: (keyword: string) => `يعيد كتابة (${keyword}) في الشات لتأكيد الجائزة`,
-    confirmed: "تم التأكيد — الفائز رد في الشات",
-    reroll: "إعادة السحب",
-    lastWinner: "آخر فائز",
-  },
-} as const;
+  } as const;
 
 export const platformLabel = (platform: string) =>
   ({ KICK: "Kick", TWITCH: "Twitch", YOUTUBE: "YouTube", TIKTOK: "TikTok" })[
@@ -86,8 +69,7 @@ export function GiveawayDisplay({
   onToggleExpand?: (() => void) | undefined;
   onReroll?: (() => void) | undefined;
 }) {
-  const { lang } = useLanguage();
-  const c = COPY[lang];
+  const c = COPY;
   const keywordLabel = keyword || "+1";
 
   const phaseLabel =
@@ -168,7 +150,7 @@ export function GiveawayDisplay({
                   style={style}
                 >
                   <PlatformIcon platform={participant.platform} size={14} />
-                  <span>{participant.username}</span>
+                  <span dir="auto">{participant.username}</span>
                 </div>
               );
             })}
@@ -179,7 +161,7 @@ export function GiveawayDisplay({
           <div className="giveaway-winner-reveal absolute inset-0 z-20 grid place-items-center px-6 text-center">
             <div className="flex max-w-full flex-col items-center">
               <PlatformIcon platform={winner.platform} size={28} />
-              <p className="mt-3 max-w-full truncate text-4xl font-bold text-kick [text-shadow:0_0_24px_color-mix(in_oklab,var(--kick)_55%,transparent)] sm:text-5xl">
+              <p className="mt-3 max-w-full truncate text-4xl font-bold text-kick [text-shadow:0_0_24px_color-mix(in_oklab,var(--kick)_55%,transparent)] sm:text-5xl" dir="auto">
                 {winner.username}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -215,7 +197,7 @@ export function GiveawayDisplay({
         {lastWinner && !winner && !transparent ? (
           <p className="absolute bottom-3 start-3 z-30 flex items-center gap-2 text-xs text-muted-foreground">
             <Trophy className="size-3.5" aria-hidden />
-            {c.lastWinner}: {lastWinner.username} ({lastWinner.platform})
+            {c.lastWinner}: <span dir="auto">{lastWinner.username}</span> ({lastWinner.platform})
           </p>
         ) : null}
       </div>

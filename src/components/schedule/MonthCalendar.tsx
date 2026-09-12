@@ -39,8 +39,8 @@ export function MonthCalendar({
   const days = weekOrder(lang);
   const cells = monthGrid(year, month, days, todayIso);
   const visible = slots.filter((slot) => slot.enabled || onEdit);
-  const prev = lang === "ar" ? "الشهر السابق" : "Previous month";
-  const next = lang === "ar" ? "الشهر التالي" : "Next month";
+  const prev = "Previous month";
+  const next = "Next month";
 
   return (
     <div>
@@ -114,11 +114,11 @@ export function MonthCalendar({
                           lang === "en" && "tracking-wide",
                         )}
                       >
-                        {category}
+                        <span dir="auto">{category}</span>
                       </span>
                       <span className="px-1.5 pt-1.5 sm:px-2">
                         {slot.game.trim() && slot.title.trim() && slot.title.trim() !== slot.game.trim() ? (
-                          <span className="block text-[0.75rem] leading-snug">{slot.title}</span>
+                          <span className="block text-[0.75rem] leading-snug" dir="auto">{slot.title}</span>
                         ) : null}
                         <span className="mt-0.5 block font-mono text-[0.68rem] text-muted-foreground">
                           {formatClock(slot.startMinutes)}

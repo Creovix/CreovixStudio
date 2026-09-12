@@ -287,6 +287,7 @@ function ClipCommandPage() {
                   value={settings.response}
                   onChange={(e) => update("response", e.target.value)}
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm outline-none focus:border-primary"
+                  dir="auto"
                 />
                 <span className="mt-1.5 block text-[0.72rem] text-muted-foreground">
                   Variables: {"{user}"}, {"{clip_url}"}
@@ -295,7 +296,7 @@ function ClipCommandPage() {
 
               <div className="rounded-lg border border-white/5 p-3 font-mono text-[0.78rem]">
                 <span className="text-emerald-400">CreovixStudio:</span>{" "}
-                <span className="text-muted-foreground">{preview}</span>
+                <span className="text-muted-foreground" dir="auto">{preview}</span>
               </div>
             </div>
 

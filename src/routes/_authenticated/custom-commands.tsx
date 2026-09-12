@@ -117,7 +117,6 @@ export const Route = createFileRoute("/_authenticated/custom-commands")({
 });
 
 const COPY = {
-  en: {
     title: "Custom Chat Commands",
     subtitle: "Create chat triggers and automatic replies for your stream.",
     prefixTitle: "Command trigger",
@@ -220,114 +219,9 @@ const COPY = {
       "Enable it. The bot sends to Kick while this Studio page is open.",
       "There is no server cron and Twitch is not sent.",
     ],
-  },
-  ar: {
-    title: "الأوامر المخصصة للشات",
-    subtitle: "أنشئ محفّزات شات وردوداً تلقائية لقناتك.",
-    prefixTitle: "محفّز الأمر",
-    prefixHint:
-      "اختر طريقة التفعيل: رمزاً قبل الكلمة (!hello)، أو علامة استفهام بعدها (hello? أو سؤال؟)، أو الكلمة وحدها بدون رموز.",
-    none: "بدون رمز",
-    prefixGroup: "رمز في البداية",
-    suffixGroup: "علامة استفهام في النهاية",
-    custom: "رمز مخصص",
-    savePrefix: "حفظ المحفّز",
-    add: "إضافة أمر",
-    empty: "لا توجد أوامر بعد. أضف أمراً لبدء الردود التلقائية في الشات.",
-    name: "الأمر",
-    reply: "الرد التلقائي",
-    platform: "المنصات",
-    status: "الحالة",
-    on: "تشغيل",
-    off: "إيقاف",
-    edit: "تعديل",
-    delete: "حذف",
-    modalCreate: "أمر جديد",
-    modalEdit: "تعديل الأمر",
-    modalHint: "يكتب المتابع المحفّز في الشات ويرسل البوت ردّك تلقائياً.",
-    nameLabel: "اسم الأمر",
-    namePlaceholder: "discord",
-    prefixLabel: "مكان الرمز",
-    inherit: "استخدام الافتراضي",
-    prefixAtStart: "قبل الكلمة",
-    suffixAuto: "الحروف العربية تُلحق بـ ؟ والإنجليزية بـ ? تلقائياً.",
-    livePreview: "سيكتب المتابعون",
-    testerPlaceholder: "سؤال؟",
-    responseLabel: "رد البوت",
-    responsePlaceholder: "انضم لديسكورد: discord.gg/your-server",
-    vars: "المتغيرات: {user}  {command}",
-    platformsLabel: "المنصات",
-    rolesLabel: "من يمكنه الاستخدام",
-    cooldown: "فترة التهدئة (ثوانٍ)",
-    enabled: "مفعّل",
-    cancel: "إلغاء",
-    save: "حفظ الأمر",
-    deleteTitle: "حذف هذا الأمر؟",
-    deleteBody: "سيتوقف محفّز الشات فوراً.",
-    previewTitle: "معاينة المحفّز",
-    testerTitle: "جرّب سطر شات",
-    testerHint: "اكتب ما يرسله المتابع. المطابقة محلية ولا تُرسل إلى الشات.",
-    testerHit: "سيرد البوت",
-    testerMiss: "لا يوجد أمر مطابق",
-    howTitle: "طريقة العمل",
-    how: [
-      "اختر رمزاً في البداية (! أو #)، أو علامة استفهام في النهاية (? ؟)، أو بدون رموز.",
-      "أضف اسم الأمر والرسالة التي يرسلها البوت.",
-      "اختر كيك أو تويتش أو كليهما ثم فعّل الأمر.",
-    ],
-    errName: "أدخل اسم الأمر.",
-    errReply: "أدخل رسالة الرد.",
-    errDup: "اسم الأمر موجود مسبقاً.",
-    errSave: "تعذر حفظ الأمر.",
-    saved: "تم الحفظ",
-    prefixSaved: "تم حفظ المحفّز الافتراضي",
-    search: "بحث عن أمر…",
-    filters: "تصفية",
-    filterAll: "الكل",
-    filterDisabled: "متوقف",
-    filterNone: "لا توجد أوامر مطابقة.",
-    loadMore: "عرض المزيد",
-    tabDefaults: "أوامر افتراضية",
-    tabCommands: "الأوامر المخصصة",
-    tabTimers: "مؤقتات الرسائل",
-    defaultSubtitle: "أوامر شات مدمجة على كيك. عدّل الرد — اسم المحفّز محجوز.",
-    defaultHint: "خصّص رد البوت. لا يمكن تغيير اسم المحفّز.",
-    defaultVars: "المتغيرات: {user}  {command}  {target}  {list}  {followage}",
-    defaultHowTitle: "طريقة العمل",
-    defaultHow: [
-      "هذه الأوامر الخمسة تظهر دائماً. فعّل ما تريده في شات كيك.",
-      "عدّل قالب الرد. المحفّز (!commands و !lurk وغيرها) لا يُعاد تسميته.",
-      "يُرسل الرد على كيك. تويتش يُحفظ كعلم فقط. !clip لا يُسرق.",
-    ],
-    defaultSave: "حفظ الأمر",
-    fallbackLabel: "رد احتياطي",
-    errReserved: "هذا الاسم محجوز لأمر افتراضي.",
-    timerSubtitle: "رسائل شات متكررة على كيك بفاصل زمني.",
-    addTimer: "إضافة مؤقت",
-    timerEmpty: "لا توجد مؤقتات بعد. أضف رسالة تتكرر في شات كيك.",
-    timerModalCreate: "مؤقت جديد",
-    timerModalEdit: "تعديل المؤقت",
-    timerHint: "يرسل البوت الرسالة إلى كيك كل عدد دقائق طالما صفحة الاستوديو مفتوحة.",
-    timerMessage: "الرسالة",
-    timerMessagePlaceholder: "تابع البث واشرب ماء.",
-    timerInterval: "الفاصل (دقائق)",
-    timerEveryPrefix: "كل",
-    timerMinutesUnit: "دقيقة",
-    timerSave: "حفظ المؤقت",
-    timerDeleteTitle: "حذف هذا المؤقت؟",
-    timerDeleteBody: "ستتوقف الرسالة المتكررة فوراً.",
-    errTimerMessage: "أدخل الرسالة.",
-    errTimerSave: "تعذر حفظ المؤقت.",
-    timerHowTitle: "طريقة العمل",
-    timerHow: [
-      "اكتب الرسالة وكم دقيقة بين كل إرسال.",
-      "فعّله. يرسل البوت إلى كيك طالما هذه الصفحة مفتوحة.",
-      "لا يوجد cron على الخادم ولن تُرسل إلى تويتش.",
-    ],
-  },
-} as const;
+  } as const;
 
-type CommandsCopy = (typeof COPY)[keyof typeof COPY];
+type CommandsCopy = typeof COPY;
 
 const field =
   "w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(0.14_0.02_265/0.9)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-[color-mix(in_oklab,var(--primary)_55%,transparent)]";
@@ -377,7 +271,7 @@ function CustomCommandsPage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
   const { lang } = useLanguage();
-  const c = COPY[lang];
+  const c = COPY;
   const queryClient = useQueryClient();
   const test = isTestMode();
 
@@ -834,7 +728,7 @@ function CustomCommandsPage() {
               onChange={(event) => setSample(event.target.value)}
               placeholder={c.testerPlaceholder}
               className={`${field} mt-3 font-mono`}
-              dir="ltr"
+              dir="auto"
             />
             <div className="mt-3 rounded-lg border border-white/5 p-3 font-mono text-[0.78rem]">
               {sampleHit ? (
@@ -1045,7 +939,7 @@ function DefaultCommandsPanel({
               onEdit={() => onEdit(command)}
               editLabel={copy.edit}
             >
-              <h3 className="max-w-full font-mono text-sm font-semibold tracking-tight text-zinc-100" dir="ltr">
+              <h3 className="max-w-full font-mono text-sm font-semibold tracking-tight text-zinc-100" dir="auto">
                 {command.trigger}
               </h3>
             </StudioFaceCard>
@@ -1792,7 +1686,7 @@ function CommandEditor({
             ) : null}
             <p className="mt-2 font-mono">
               <span className="text-emerald-400">CreovixStudio:</span>{" "}
-              <span className="text-muted-foreground">{preview}</span>
+              <span className="text-muted-foreground" dir="auto">{preview}</span>
             </p>
           </div>
         </div>

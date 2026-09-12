@@ -6,7 +6,6 @@ import {
   BarChart3,
   Bookmark,
   CalendarDays,
-  Check,
   ChevronsLeft,
   Gift,
   Home,
@@ -24,7 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { disableTestMode, isTestMode } from "@/lib/testMode";
-import { useLanguage, type Lang, type TranslationKey } from "@/lib/i18n";
+import { useLanguage } from "@/lib/i18n";
 import type { Subathon } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 
@@ -43,21 +42,16 @@ const SIDEBAR_KEY = "creovix:sidebar-collapsed";
 const EXPANDED_W = "16.5rem";
 const COLLAPSED_W = "4.75rem";
 
-const LANGUAGES: { id: Lang; flag: string; label: TranslationKey }[] = [
-  { id: "ar", flag: "🇸🇦", label: "lang.arabic" },
-  { id: "en", flag: "🇬🇧", label: "lang.english" },
-];
-
 const NAV = [
-  { to: "/dashboard" as const, icon: Home, en: "Home", ar: "الرئيسية" },
-  { to: "/analytics" as const, icon: BarChart3, en: "Analytics", ar: "الإحصائيات" },
-  { to: "/activity-feed" as const, icon: Activity, en: "Activity", ar: "سجل النشاط" },
-  { to: "/live-counter" as const, icon: Radio, en: "Live Counter", ar: "العداد المباشر" },
-  { to: "/giveaway" as const, icon: Gift, en: "Giveaway", ar: "السحب" },
-  { to: "/custom-commands" as const, icon: MessageSquareCode, en: "Chat Commands", ar: "أوامر الشات" },
-  { to: "/clip-command" as const, icon: Scissors, en: "Clip Command", ar: "أمر القص" },
-  { to: "/schedule" as const, icon: CalendarDays, en: "Schedule", ar: "الجدول" },
-  { to: "/mark-points" as const, icon: Bookmark, en: "Mark Points", ar: "نقاط البث" },
+  { to: "/dashboard" as const, icon: Home, label: "Home" },
+  { to: "/analytics" as const, icon: BarChart3, label: "Analytics" },
+  { to: "/activity-feed" as const, icon: Activity, label: "Activity" },
+  { to: "/live-counter" as const, icon: Radio, label: "Live Counter" },
+  { to: "/giveaway" as const, icon: Gift, label: "Giveaway" },
+  { to: "/custom-commands" as const, icon: MessageSquareCode, label: "Chat Commands" },
+  { to: "/clip-command" as const, icon: Scissors, label: "Clip Command" },
+  { to: "/schedule" as const, icon: CalendarDays, label: "Schedule" },
+  { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points" },
 ];
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";
@@ -84,18 +78,16 @@ function IconTip({
   label,
   collapsed,
   children,
-  dir,
 }: {
   label: string;
   collapsed: boolean;
   children: ReactNode;
-  dir: "ltr" | "rtl";
 }) {
   if (!collapsed) return children;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={dir === "rtl" ? "left" : "right"} sideOffset={10}>
+      <TooltipContent side="right" sideOffset={10}>
         {label}
       </TooltipContent>
     </Tooltip>
@@ -105,12 +97,10 @@ function IconTip({
 export function AppShell({ children, title, subtitle, actions, user, profile }: AppShellProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, lang, dir, setLang } = useLanguage();
+  const { t } = useLanguage();
 
   const [collapsed, setCollapsed] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const langRef = useClickOutside(() => setLangOpen(false));
   const profileRef = useClickOutside(() => setProfileOpen(false));
 
   useEffect(() => {
@@ -142,7 +132,6 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
   };
 
   const initials = (profile?.name ?? user.email ?? "?").slice(0, 2).toUpperCase();
-  const currentLang = LANGUAGES.find((l) => l.id === lang) ?? LANGUAGES[1]!;
   const menuItem =
     "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-start text-[0.8rem] transition-colors";
   const sidebarW = collapsed ? COLLAPSED_W : EXPANDED_W;
@@ -197,21 +186,21 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                 aria-label="Collapse sidebar"
                 className="ms-auto grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                <ChevronsLeft className="size-4 rtl:rotate-180" />
+                <ChevronsLeft className="size-4" />
               </button>
             )}
           </div>
 
           {collapsed ? (
             <div className="flex justify-center py-2">
-              <IconTip label={lang === "ar" ? "توسيع القائمة" : "Expand sidebar"} collapsed dir={dir}>
+              <IconTip label="Expand sidebar" collapsed>
                 <button
                   type="button"
                   onClick={toggleCollapsed}
                   aria-label="Expand sidebar"
                   className="grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
                 >
-                  <ChevronsLeft className="size-4 rotate-180 rtl:rotate-0" />
+                  <ChevronsLeft className="size-4 rotate-180" />
                 </button>
               </IconTip>
             </div>
@@ -219,17 +208,16 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
 
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
             {NAV.map((item) => {
-              const label = lang === "ar" ? item.ar : item.en;
               const Icon = item.icon;
               return (
-                <IconTip key={item.to} label={label} collapsed={collapsed} dir={dir}>
+                <IconTip key={item.to} label={item.label} collapsed={collapsed}>
                   <Link
                     to={item.to}
                     className={navBtn(false)}
                     activeProps={{ className: navBtn(true) }}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden />
-                    {collapsed ? null : <span className="truncate">{label}</span>}
+                    {collapsed ? null : <span className="truncate">{item.label}</span>}
                   </Link>
                 </IconTip>
               );
@@ -237,71 +225,11 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           </nav>
 
           <div className="mt-auto space-y-2 border-t border-white/10 px-2 py-3">
-            <div ref={langRef} className="relative">
-              <IconTip label={t("nav.language")} collapsed={collapsed} dir={dir}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLangOpen((open) => !open);
-                    setProfileOpen(false);
-                  }}
-                  aria-label={t("nav.language")}
-                  aria-expanded={langOpen}
-                  className={cn(
-                    "flex w-full items-center rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.04)] text-sm transition-colors hover:text-foreground",
-                    collapsed ? "justify-center px-0 py-2" : "gap-2 px-3 py-2",
-                  )}
-                >
-                  <span aria-hidden className="leading-none">
-                    {currentLang.flag}
-                  </span>
-                  {collapsed ? null : (
-                    <span className="truncate text-xs text-muted-foreground">{t(currentLang.label)}</span>
-                  )}
-                </button>
-              </IconTip>
-              {langOpen ? (
-                <div
-                  className={cn(menuSurface, collapsed ? "start-full top-0 ms-2" : "start-0 bottom-full mb-2")}
-                  style={menuSurfaceStyle}
-                  role="menu"
-                >
-                  {LANGUAGES.map((option) => {
-                    const active = option.id === lang;
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={active}
-                        onClick={() => {
-                          setLang(option.id);
-                          setLangOpen(false);
-                        }}
-                        className={`${menuItem} ${
-                          active
-                            ? "bg-[color-mix(in_oklab,var(--primary)_16%,transparent)] text-foreground"
-                            : "text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground"
-                        }`}
-                      >
-                        <span aria-hidden>{option.flag}</span>
-                        <span className="flex-1">{t(option.label)}</span>
-                        {active ? <Check className="size-3.5 text-primary" aria-hidden /> : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-
             <div ref={profileRef} className="relative">
-              <IconTip label={t("nav.profile")} collapsed={collapsed} dir={dir}>
+              <IconTip label={t("nav.profile")} collapsed={collapsed}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setProfileOpen((open) => !open);
-                    setLangOpen(false);
-                  }}
+                  onClick={() => setProfileOpen((open) => !open)}
                   aria-label={t("nav.profile")}
                   aria-expanded={profileOpen}
                   className={cn(
@@ -320,7 +248,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                   </span>
                   {collapsed ? null : (
                     <span className="min-w-0 flex-1 text-start">
-                      <span className="block truncate text-xs font-semibold">
+                      <span className="block truncate text-xs font-semibold" dir="auto">
                         {profile?.name ?? "Creovix"}
                       </span>
                       <span className="block truncate text-[0.65rem] text-muted-foreground">
@@ -342,7 +270,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                   role="menu"
                 >
                   <div className="px-3 py-2.5">
-                    <p className="text-[0.82rem] font-semibold">{profile?.name ?? "Creovix"}</p>
+                    <p className="text-[0.82rem] font-semibold" dir="auto">{profile?.name ?? "Creovix"}</p>
                     <p className="mt-0.5 truncate text-[0.72rem] text-muted-foreground">
                       {user.email ?? "creovix0@gmail.com"}
                     </p>

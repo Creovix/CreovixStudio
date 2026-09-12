@@ -157,21 +157,22 @@ function LoginPage() {
               </span>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={continueAsGuest}
-            disabled={pending !== null}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-transparent px-5 py-3.5 text-base font-semibold text-muted-foreground transition-colors hover:border-white/30 hover:bg-white/5 hover:text-foreground disabled:opacity-60"
-          >
-            {pending === "test" ? "Opening…" : "Continue without login (Test Mode)"}
-          </button>
         </div>
-
 
         <p className="mt-8 text-xs text-muted-foreground">
           By continuing you allow this app to read your channel events so the timer can award time
           according to your rules.
+        </p>
+
+        <p className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={continueAsGuest}
+            disabled={pending !== null}
+            className="cursor-pointer border-0 bg-transparent p-0 text-sm font-normal text-muted-foreground transition-colors hover:text-foreground/80 hover:underline disabled:pointer-events-none disabled:opacity-50"
+          >
+            {pending === "test" ? t("login.testOpening") : t("login.testMode")}
+          </button>
         </p>
       </div>
     </main>

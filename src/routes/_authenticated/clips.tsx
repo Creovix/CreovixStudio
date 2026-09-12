@@ -7,7 +7,6 @@ import { Check, Search, Video } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ClipPlayer } from "@/components/clips/ClipPlayer";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useLanguage } from "@/lib/i18n";
 import { deleteClip, listChannelClips } from "@/lib/clipCommand.functions";
 
 export const Route = createFileRoute("/_authenticated/clips")({
@@ -44,53 +43,27 @@ type Clip = {
 };
 
 const COPY = {
-  en: {
-    title: "Channel clips",
-    subtitle: "Browse and watch clips created by the community.",
-    search: "Search by title or username",
-    pick: "Select a clip",
-    loading: "Loading clips…",
-    empty: "No clips yet. Clips created on your channel will appear here.",
-    noneMatch: "No clips match that search.",
-    clippedBy: "Clipped by",
-    views: (n: number) => `${n} views`,
-    copy: "Copy link",
-    copied: "Copied",
-    share: "Share",
-    download: "Download",
-    delete: "Delete",
-    open: "Open original",
-    play: "Play",
-    sorts: {
-      recent: "Most recent",
-      views: "Most viewed",
-      today: "Top today",
-      all_time: "Top all time",
-    },
-  },
-  ar: {
-    title: "قصاصات القناة",
-    subtitle: "تصفح وشاهد القصاصات التي أنشأها المجتمع.",
-    search: "ابحث بالعنوان أو اسم المستخدم",
-    pick: "اختر قصاصة",
-    loading: "جاري تحميل القصاصات…",
-    empty: "لا قصاصات بعد. ستظهر هنا القصاصات المنشأة على قناتك.",
-    noneMatch: "لا قصاصات تطابق هذا البحث.",
-    clippedBy: "قصّها",
-    views: (n: number) => `${n} مشاهدة`,
-    copy: "نسخ الرابط",
-    copied: "تم النسخ",
-    share: "مشاركة",
-    download: "تنزيل",
-    delete: "حذف",
-    open: "فتح الأصل",
-    play: "تشغيل",
-    sorts: {
-      recent: "الأحدث",
-      views: "الأكثر مشاهدة",
-      today: "الأعلى اليوم",
-      all_time: "الأعلى على الإطلاق",
-    },
+  title: "Channel clips",
+  subtitle: "Browse and watch clips created by the community.",
+  search: "Search by title or username",
+  pick: "Select a clip",
+  loading: "Loading clips…",
+  empty: "No clips yet. Clips created on your channel will appear here.",
+  noneMatch: "No clips match that search.",
+  clippedBy: "Clipped by",
+  views: (n: number) => `${n} views`,
+  copy: "Copy link",
+  copied: "Copied",
+  share: "Share",
+  download: "Download",
+  delete: "Delete",
+  open: "Open original",
+  play: "Play",
+  sorts: {
+    recent: "Most recent",
+    views: "Most viewed",
+    today: "Top today",
+    all_time: "Top all time",
   },
 } as const;
 
@@ -106,18 +79,9 @@ function formatDuration(seconds: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function timeAgo(iso: string, lang: "en" | "ar") {
+function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diff / 60000);
-  if (lang === "ar") {
-    if (mins < 1) return "الآن";
-    if (mins < 60) return `منذ ${mins} دقيقة`;
-    const hours = Math.round(mins / 60);
-    if (hours < 24) return `منذ ${hours} ساعة`;
-    const days = Math.round(hours / 24);
-    if (days < 30) return `منذ ${days} يوم`;
-    return new Date(iso).toLocaleDateString("ar");
-  }
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
   const hours = Math.round(mins / 60);
@@ -130,8 +94,7 @@ function timeAgo(iso: string, lang: "en" | "ar") {
 function ClipsPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
-  const { lang } = useLanguage();
-  const c = COPY[lang];
+  const c = COPY;
   const queryClient = useQueryClient();
   const fetchClips = useServerFn(listChannelClips);
   const removeClip = useServerFn(deleteClip);
@@ -239,7 +202,7 @@ function ClipsPage() {
                   {active.title}
                 </h2>
                 <p className="mt-1.5 text-[0.78rem] text-muted-foreground">
-                  {c.clippedBy} @{active.clippedBy} · {c.views(active.views)} · {timeAgo(active.createdAt, lang)} ·{" "}
+                  {c.clippedBy} <span dir="auto">@{active.clippedBy}</span> · {c.views(active.views)} · {timeAgo(active.createdAt)} ·{" "}
                   {active.platform}
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">

@@ -88,7 +88,6 @@ export const Route = createFileRoute("/_authenticated/mark-points")({
 });
 
 const COPY = {
-  en: {
     title: "Mark Points",
     subtitle: "Private stream highlights. !mark starts, !emark closes — times are stream uptime.",
     search: "Search marks…",
@@ -152,75 +151,9 @@ const COPY = {
     errSave: "Could not save the mark.",
     errName: "Enter a Kick username.",
     loadMore: "Load More",
-  },
-  ar: {
-    title: "نقاط البث",
-    subtitle: "لحظات خاصة من البث. !mark يقيد البداية و!emark يغلقها — الوقت هو مدة البث.",
-    search: "ابحث في النقاط…",
-    add: "نقطة جديدة",
-    start: "بدء نقطة",
-    end: "إنهاء نقطة",
-    empty: "لا نقاط بعد. اكتب !mark في شات كيك أثناء البث، أو ابدأ واحدة هنا.",
-    noneMatch: "لا نقاط تطابق هذا البحث.",
-    open: "مفتوح",
-    offline: "غير مباشر",
-    startLabel: "البداية",
-    endLabel: "النهاية",
-    duration: "المدة",
-    note: "ملاحظة",
-    notePlaceholder: "لحظة حاسمة، ريد، موقف طريف…",
-    edit: "تعديل",
-    delete: "حذف",
-    cancel: "إلغاء",
-    save: "حفظ النقطة",
-    modalCreate: "نقطة جديدة",
-    modalEdit: "تعديل النقطة",
-    modalHint: "عنوان أو ملاحظة. البداية والنهاية من مدة بث كيك وليست ساعة جهازك.",
-    deleteTitle: "حذف هذه النقطة؟",
-    deleteBody: "ستُحذف النقطة المحفوظة من قائمتك.",
-    testerTitle: "جرّب سطر شات",
-    testerHint: "وضع التجربة يكتب محلياً على ساعة بث تجريبية. كيك الحي يبقى صامتاً.",
-    testerPlaceholder: "!mark لحظة حاسمة",
-    testerHit: "سيُنفَّذ",
-    testerMiss: "ليس أمر نقطة",
-    testerApply: "تطبيق محلي",
-    howTitle: "طريقة العمل",
-    how: [
-      "المالك أو المشرفون أو الأسماء المسموحة يكتبون !mark أو /mark لفتح بداية عند مدة البث الحالية.",
-      "!emark أو /emark يغلق أحدث بداية مفتوحة. الشات صامت — بلا روابط أو معرفات.",
-      "شات كيك وهو غير مباشر يُتجاهل. الاستوديو قد يسجّل نقطة غير مباشرة دون تزييف وقت البث.",
-    ],
-    whoTitle: "من يمكنه التفعيل",
-    who: "كيك يقبل !mark / !emark من مالك القناة والمشرفين والمحررين (شارات كيك) وأسماء كيك التي تضيفها أدناه. رابط المراجعة الخاص بنفس القيد — ولا يُرسل في الشات العام.",
-    twitchNote: "يمكن حفظ تويتش كمصدر لاحقاً. الإدخال الحي يبدأ من كيك.",
-    allowTitle: "أسماء إضافية",
-    allowHint: "أسماء كيك المسموحة إضافةً إلى المالك والمشرفين والمحررين.",
-    shareTitle: "رابط مراجعة خاص",
-    shareHint: "غير معلن. الرمز مع اسم كيك (أو دخول الاستوديو). لا ترسله في الشات العام.",
-    shareCopy: "نسخ الرابط",
-    shareCopied: "تم النسخ",
-    shareRotate: "رابط جديد",
-    shareMark: "نسخ رابط النقطة",
-    shareMarkCopied: "تم نسخ رابط النقطة",
-    status: "الحالة",
-    pending: "تحت المراجعة",
-    approved: "مقبول",
-    rejected: "مرفوض",
-    allowPlaceholder: "اسم_كيك",
-    allowAdd: "إضافة",
-    allowEmpty: "لا أسماء إضافية بعد.",
-    saved: "تم الحفظ",
-    started: "بدأت النقطة",
-    closed: "حُفظت النقطة",
-    startedOffline: "حُفظت كغير مباشر — كيك ليس على الهواء.",
-    noOpen: "لا توجد نقطة مفتوحة لإغلاقها.",
-    errSave: "تعذر حفظ النقطة.",
-    errName: "أدخل اسم مستخدم كيك.",
-    loadMore: "عرض المزيد",
-  },
-} as const;
+  } as const;
 
-type MarksCopy = (typeof COPY)[keyof typeof COPY];
+type MarksCopy = typeof COPY;
 
 const MARKS_INITIAL = 12;
 const MARKS_STEP = 8;
@@ -232,7 +165,7 @@ function MarkPointsPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
   const { lang } = useLanguage();
-  const c = COPY[lang];
+  const c = COPY;
   const test = isTestMode();
   const queryClient = useQueryClient();
   const fetchMarks = useServerFn(listStreamMarks);
@@ -573,7 +506,7 @@ function MarkPointsPage() {
                   onChange={(event) => setSample(event.target.value)}
                   placeholder={c.testerPlaceholder}
                   className={`${field} font-mono lg:max-w-md`}
-                  dir="ltr"
+                  dir="auto"
                 />
                 <button
                   type="button"
@@ -588,7 +521,7 @@ function MarkPointsPage() {
                 {sampleHit ? (
                   <p className="text-zinc-200">
                     {c.testerHit}{" "}
-                    <span dir="ltr">
+                    <span dir="auto">
                       {sampleHit.kind === "emark" ? "!emark" : "!mark"}
                       {sampleHit.note ? ` ${sampleHit.note}` : ""}
                     </span>
@@ -668,7 +601,7 @@ function MarkPointsPage() {
                   onChange={(event) => setAllowName(event.target.value)}
                   placeholder={c.allowPlaceholder}
                   className={`${field} h-8 py-0 text-[0.78rem]`}
-                  dir="ltr"
+                  dir="auto"
                 />
                 <button
                   type="submit"
@@ -686,7 +619,7 @@ function MarkPointsPage() {
                       key={name}
                       className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2.5 py-1 font-mono text-[0.72rem] text-zinc-200"
                     >
-                      <span dir="ltr">{name}</span>
+                      <span dir="auto">{name}</span>
                       <button
                         type="button"
                         aria-label={`${c.delete} ${name}`}

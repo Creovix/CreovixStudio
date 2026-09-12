@@ -11,7 +11,7 @@ type Group = {
   platform: TestEventInput["platform"];
   label: string;
   color: string;
-  events: { type: TestEventInput["eventType"]; labelEn: string; labelAr: string; amount?: number }[];
+  events: { type: TestEventInput["eventType"]; labelEn: string; amount?: number }[];
 };
 
 /**
@@ -24,10 +24,10 @@ const GROUPS: Group[] = [
     label: "Kick",
     color: "#53FC18",
     events: [
-      { type: "FOLLOW", labelEn: "Follow", labelAr: "متابعة" },
-      { type: "SUBSCRIPTION", labelEn: "Sub", labelAr: "اشتراك" },
-      { type: "GIFT_SUB", labelEn: "Gift Sub", labelAr: "هدية اشتراك" },
-      { type: "RAID", labelEn: "Raid", labelAr: "غارة" },
+      { type: "FOLLOW", labelEn: "Follow" },
+      { type: "SUBSCRIPTION", labelEn: "Sub" },
+      { type: "GIFT_SUB", labelEn: "Gift Sub" },
+      { type: "RAID", labelEn: "Raid" },
     ],
   },
   {
@@ -35,11 +35,11 @@ const GROUPS: Group[] = [
     label: "Twitch",
     color: "#9F77F7",
     events: [
-      { type: "FOLLOW", labelEn: "Follow", labelAr: "متابعة" },
-      { type: "SUBSCRIPTION", labelEn: "Sub", labelAr: "اشتراك" },
-      { type: "GIFT_SUB", labelEn: "Gift Sub", labelAr: "هدية اشتراك" },
-      { type: "BITS", labelEn: "100 Bits", labelAr: "100 بت", amount: 100 },
-      { type: "RAID", labelEn: "Raid", labelAr: "غارة" },
+      { type: "FOLLOW", labelEn: "Follow" },
+      { type: "SUBSCRIPTION", labelEn: "Sub" },
+      { type: "GIFT_SUB", labelEn: "Gift Sub" },
+      { type: "BITS", labelEn: "100 Bits", amount: 100 },
+      { type: "RAID", labelEn: "Raid" },
     ],
   },
   {
@@ -47,9 +47,9 @@ const GROUPS: Group[] = [
     label: "YouTube",
     color: "#FF4444",
     events: [
-      { type: "FOLLOW", labelEn: "Subscribe", labelAr: "اشتراك قناة" },
-      { type: "SUBSCRIPTION", labelEn: "Membership", labelAr: "عضوية" },
-      { type: "DONATION", labelEn: "Super Chat $5", labelAr: "سوبر شات $5", amount: 5 },
+      { type: "FOLLOW", labelEn: "Subscribe" },
+      { type: "SUBSCRIPTION", labelEn: "Membership" },
+      { type: "DONATION", labelEn: "Super Chat $5", amount: 5 },
     ],
   },
   {
@@ -57,34 +57,33 @@ const GROUPS: Group[] = [
     label: "TikTok",
     color: "#2DCCD3",
     events: [
-      { type: "FOLLOW", labelEn: "Follow", labelAr: "متابعة" },
-      { type: "DONATION", labelEn: "Gift $2", labelAr: "هدية $2", amount: 2 },
+      { type: "FOLLOW", labelEn: "Follow" },
+      { type: "DONATION", labelEn: "Gift $2", amount: 2 },
     ],
   },
   {
     platform: "X",
     label: "X (Twitter)",
     color: "#E7E9EA",
-    events: [{ type: "FOLLOW", labelEn: "Follower", labelAr: "متابع" }],
+    events: [{ type: "FOLLOW", labelEn: "Follower" }],
   },
   {
     platform: "STREAMLABS",
     label: "Streamlabs",
     color: "#80F5D2",
-    events: [{ type: "DONATION", labelEn: "Donation $10", labelAr: "تبرع $10", amount: 10 }],
+    events: [{ type: "DONATION", labelEn: "Donation $10", amount: 10 }],
   },
   {
     platform: "STREAMELEMENTS",
     label: "StreamElements",
     color: "#4FC3F7",
-    events: [{ type: "DONATION", labelEn: "Tip $5", labelAr: "إكرامية $5", amount: 5 }],
+    events: [{ type: "DONATION", labelEn: "Tip $5", amount: 5 }],
   },
 ];
 
 /** Developer harness for firing one simulated event per platform. */
 export function EventTestPanel() {
-  const { t, lang } = useLanguage();
-  const ar = lang === "ar";
+  const { t } = useLanguage();
   const run = useServerFn(fireTestEvent);
   const [name, setName] = useState("");
   const [log, setLog] = useState<{ text: string; ok: boolean }[]>([]);
@@ -99,7 +98,7 @@ export function EventTestPanel() {
 
   const fire = async (group: Group, event: Group["events"][number]) => {
     const id = `${group.platform}-${event.type}`;
-    const label = ar ? event.labelAr : event.labelEn;
+    const label = event.labelEn;
     setPending(id);
     try {
       const response = await mutation.mutateAsync({
@@ -143,6 +142,7 @@ export function EventTestPanel() {
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="TestViewer"
+          dir="auto"
           className="mt-1 w-full rounded-lg border border-white/5 bg-background px-3 py-2 text-sm outline-none focus:border-primary"
         />
       </label>
@@ -168,11 +168,7 @@ export function EventTestPanel() {
                     onClick={() => void fire(group, event)}
                     className="rounded-full border border-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                   >
-                    {pending === id
-                      ? t("settings.test.sending")
-                      : ar
-                        ? event.labelAr
-                        : event.labelEn}
+                    {pending === id ? t("settings.test.sending") : event.labelEn}
                   </button>
                 );
               })}

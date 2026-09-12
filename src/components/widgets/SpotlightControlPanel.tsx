@@ -30,7 +30,6 @@ export function SpotlightControlPanel({
   onAutoHideChange: (next: number) => void;
   lang: "ar" | "en";
 }) {
-  const ar = lang === "ar";
   const pin = useServerFn(pinSpotlightMessage);
   const clear = useServerFn(clearSpotlightMessage);
   const { messages } = useLiveChat(chat, 25);
@@ -78,12 +77,12 @@ export function SpotlightControlPanel({
     <div className="space-y-3 rounded-xl border border-border bg-background p-4">
       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Pin className="size-4 text-primary" aria-hidden />
-        {ar ? "لوحة تثبيت الرسائل" : "Pin / highlight control"}
+        {"Pin / highlight control"}
       </p>
 
       <label className="block">
         <span className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {ar ? "الإخفاء التلقائي" : "Auto-hide timer"}
+          {"Auto-hide timer"}
         </span>
         <DarkSelect
           className="mt-2"
@@ -91,7 +90,7 @@ export function SpotlightControlPanel({
           onValueChange={(next) => onAutoHideChange(Number(next))}
           options={SPOTLIGHT_AUTO_HIDE.map((entry) => ({
             value: String(entry.value),
-            label: ar ? entry.labelAr : entry.label,
+            label: entry.label,
           }))}
         />
       </label>
@@ -99,13 +98,13 @@ export function SpotlightControlPanel({
       {pinned ? (
         <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
           <p className="font-semibold text-primary">
-            {ar ? "المثبّت حالياً" : "Currently pinned"}: {pinned.author}
+            {"Currently pinned"}: <span dir="auto">{pinned.author}</span>
           </p>
-          <p className="mt-1 line-clamp-2 text-muted-foreground">{pinned.text}</p>
+          <p className="mt-1 line-clamp-2 text-muted-foreground" dir="auto">{pinned.text}</p>
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">
-          {ar ? "لا توجد رسالة مثبّتة." : "No message is pinned right now."}
+          {"No message is pinned right now."}
         </p>
       )}
 
@@ -116,7 +115,7 @@ export function SpotlightControlPanel({
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
       >
         <Eraser className="size-4" aria-hidden />
-        {ar ? "إزالة التثبيت" : "Clear / unpin"}
+        {"Clear / unpin"}
       </button>
 
       <div className="space-y-2">
@@ -124,8 +123,9 @@ export function SpotlightControlPanel({
           <input
             value={manual}
             onChange={(event) => setManual(event.target.value)}
-            placeholder={ar ? "ثبّت رسالة يدوياً…" : "Pin a message manually…"}
+            placeholder={"Pin a message manually…"}
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            dir="auto"
           />
           <button
             type="button"
@@ -139,19 +139,17 @@ export function SpotlightControlPanel({
             }}
             className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >
-            {ar ? "تثبيت" : "Pin"}
+            {"Pin"}
           </button>
         </div>
 
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {ar ? "بث الدردشة المباشر" : "Live chat feed"}
+          {"Live chat feed"}
         </p>
 
         {feed.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            {ar
-              ? "بانتظار رسائل الدردشة من Twitch / Kick…"
-              : "Waiting for Twitch / Kick chat messages…"}
+            {"Waiting for Twitch / Kick chat messages…"}
           </p>
         ) : (
           <ul className="max-h-64 space-y-1.5 overflow-y-auto pe-1">
@@ -162,16 +160,16 @@ export function SpotlightControlPanel({
               >
                 <PlatformIcon platform={message.platform} size={14} />
                 <span className="min-w-0 flex-1">
-                  <span className="font-semibold" style={{ color: message.color ?? undefined }}>
+                  <span className="font-semibold" style={{ color: message.color ?? undefined }} dir="auto">
                     {message.author}
                   </span>
-                  <span className="ms-1 break-words text-muted-foreground">{message.text}</span>
+                  <span className="ms-1 break-words text-muted-foreground" dir="auto">{message.text}</span>
                 </span>
                 <button
                   type="button"
                   disabled={busy !== null}
                   onClick={() => pinMessage(message)}
-                  aria-label={ar ? "تثبيت الرسالة" : "Pin message"}
+                  aria-label={"Pin message"}
                   className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                 >
                   <Pin className="size-3.5" aria-hidden />

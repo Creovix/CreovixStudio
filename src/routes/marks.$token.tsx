@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { useLanguage } from "@/lib/i18n";
 import {
   formatUptime,
   kickChannelUrl,
@@ -49,51 +48,30 @@ async function bearerHeaders(): Promise<HeadersInit> {
 
 function SharedMarksPage() {
   const { token } = Route.useParams();
-  const { lang } = useLanguage();
   const test = isTestMode();
   const [payload, setPayload] = useState<SharedPayload | null>(null);
   const [phase, setPhase] = useState<"loading" | "gate" | "ready" | "missing">("loading");
   const [username, setUsername] = useState("");
   const [denied, setDenied] = useState(false);
 
-  const copy =
-    lang === "ar"
-      ? {
-          title: "نقاط البث",
-          gateHint: "أدخل اسمك على كيك. الرابط وحده لا يكفي.",
-          username: "اسم كيك",
-          enter: "دخول",
-          denied: "هذا الاسم غير مسموح.",
-          missing: "الرابط غير صالح.",
-          empty: "لا نقاط بعد.",
-          watch: "مشاهدة",
-          start: "البداية",
-          end: "النهاية",
-          duration: "المدة",
-          status: "الحالة",
-          stream: "البث",
-          open: "مفتوح",
-          offline: "غير مباشر",
-          note: "ملاحظة",
-        }
-      : {
-          title: "Mark Points",
-          gateHint: "Enter your Kick username. The link alone is not enough.",
-          username: "Kick username",
-          enter: "Enter",
-          denied: "That name is not allowed.",
-          missing: "This link is not valid.",
-          empty: "No marks yet.",
-          watch: "Watch",
-          start: "Start",
-          end: "End",
-          duration: "Duration",
-          status: "Status",
-          stream: "Stream",
-          open: "open",
-          offline: "offline",
-          note: "Note",
-        };
+  const copy = {
+    title: "Mark Points",
+    gateHint: "Enter your Kick username. The link alone is not enough.",
+    username: "Kick username",
+    enter: "Enter",
+    denied: "That name is not allowed.",
+    missing: "This link is not valid.",
+    empty: "No marks yet.",
+    watch: "Watch",
+    start: "Start",
+    end: "End",
+    duration: "Duration",
+    status: "Status",
+    stream: "Stream",
+    open: "open",
+    offline: "offline",
+    note: "Note",
+  };
 
   const loadLive = async () => {
     const response = await fetch(`/api/public/marks/${encodeURIComponent(token)}/live`, {
@@ -190,7 +168,7 @@ function SharedMarksPage() {
   };
 
   return (
-    <main className="min-h-svh bg-zinc-950 px-4 text-zinc-100" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <main className="min-h-svh bg-zinc-950 px-4 text-zinc-100" dir={"ltr"}>
       {phase === "loading" || phase === "missing" || phase === "gate" ? (
         <div className="flex min-h-svh items-center justify-center">
           {phase === "loading" ? <p className="text-sm text-zinc-500">…</p> : null}
@@ -213,7 +191,7 @@ function SharedMarksPage() {
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm outline-none focus:border-zinc-600"
-                  dir="ltr"
+                  dir="auto"
                 />
               </label>
               {denied ? <p className="mt-2 text-[0.78rem] text-red-400">{copy.denied}</p> : null}
@@ -249,7 +227,6 @@ function SharedMarksPage() {
                   key={mark.id}
                   token={token}
                   mark={mark}
-                  lang={lang}
                   copy={copy}
                   onStatus={(status) => void changeStatus(mark.id, status)}
                 />
@@ -265,13 +242,11 @@ function SharedMarksPage() {
 function ReviewMarkCard({
   token,
   mark,
-  lang,
   copy,
   onStatus,
 }: {
   token: string;
   mark: StreamMark;
-  lang: "en" | "ar";
   copy: { duration: string; open: string; offline: string; status: string; watch: string };
   onStatus: (status: MarkStatus) => void;
 }) {
@@ -283,7 +258,7 @@ function ReviewMarkCard({
       ? copy.open
       : formatUptime(mark.uptimeEndSeconds);
   const span = mark.offline ? null : markSpanSeconds(mark);
-  const statusText = markStatusLabel(mark.status, lang);
+  const statusText = markStatusLabel(mark.status);
 
   return (
     <article className="flex w-full min-w-0 flex-col overflow-hidden rounded-[20px] bg-zinc-900">
@@ -298,7 +273,7 @@ function ReviewMarkCard({
             className="max-w-full truncate font-mono text-sm font-semibold tracking-tight text-zinc-100"
             dir="auto"
           >
-            {markTitle(mark, lang)}
+            {markTitle(mark)}
           </h3>
         </div>
         <p className="font-mono text-[0.68rem] tabular-nums text-zinc-400" dir="ltr">
@@ -329,7 +304,7 @@ function ReviewMarkCard({
           >
             {MARK_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {markStatusLabel(status, lang)}
+                {markStatusLabel(status)}
               </option>
             ))}
           </select>

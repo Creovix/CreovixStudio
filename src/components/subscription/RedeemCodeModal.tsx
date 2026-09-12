@@ -4,13 +4,9 @@ import { useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { formatCode, normalizeCode } from "@/hooks/useSubscription";
-import { useLanguage } from "@/lib/i18n";
-
 type Feedback = { kind: "success" | "error"; message: string } | null;
 
 export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
-  const { lang } = useLanguage();
-  const ar = lang === "ar";
   const queryClient = useQueryClient();
 
   const [value, setValue] = useState("");
@@ -40,12 +36,8 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
         setFeedback({
           kind: "success",
           message: result.is_lifetime
-            ? ar
-              ? "تم التفعيل! وصول مدى الحياة ♾️"
-              : "Activated! Lifetime Access ♾️"
-            : ar
-              ? `تم التفعيل! أُضيف ${days} يوم — ينتهي في ${until}.`
-              : `Activated! ${days} days added — valid until ${until}.`,
+            ? "Activated! Lifetime Access ♾️"
+            : `Activated! ${days} days added — valid until ${until}.`,
         });
         await queryClient.invalidateQueries({ queryKey: ["subscription"] });
         setTimeout(onClose, 1600);
@@ -56,17 +48,13 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
       setFeedback({
         kind: "error",
         message: expired
-          ? ar
-            ? "انتهت صلاحية هذا الكود."
-            : "This code has expired."
-          : ar
-            ? "كود غير صالح أو مستخدم مسبقاً."
-            : "Invalid or already used code.",
+          ? "This code has expired."
+          : "Invalid or already used code.",
       });
     } catch (err) {
       setFeedback({
         kind: "error",
-        message: err instanceof Error ? err.message : ar ? "تعذر التفعيل." : "Activation failed.",
+        message: err instanceof Error ? err.message : "Activation failed.",
       });
     } finally {
       setPending(false);
@@ -77,7 +65,7 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={ar ? "تفعيل الاشتراك" : "Activate your subscription"}
+      aria-label={"Activate your subscription"}
       className="fixed inset-0 z-[60] grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
@@ -88,7 +76,7 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          aria-label={ar ? "إغلاق" : "Close"}
+          aria-label={"Close"}
           className="absolute end-4 top-4 rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
         >
           <X className="size-4" aria-hidden />
@@ -105,12 +93,10 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
         </span>
 
         <h2 className="mt-4 text-lg font-semibold tracking-tight">
-          {ar ? "تفعيل الاشتراك" : "Activate your subscription"}
+          {"Activate your subscription"}
         </h2>
         <p className="mt-1.5 text-[0.8rem] leading-relaxed text-muted-foreground">
-          {ar
-            ? "أدخل كود الترخيص المكوّن من 16 حرفاً لفتح جميع أدوات وودجات البث."
-            : "Enter your 16-character license code to unlock all streaming widgets and tools."}
+          {"Enter your 16-character license code to unlock all streaming widgets and tools."}
         </p>
 
         <input
@@ -122,7 +108,7 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
             if (event.key === "Enter") void activate();
           }}
           placeholder="XXXX - XXXX - XXXX - XXXX"
-          aria-label={ar ? "كود الترخيص" : "License code"}
+          aria-label={"License code"}
           className={`mt-5 w-full rounded-xl border bg-[oklch(1_0_0/0.04)] px-4 py-3.5 text-center font-mono text-lg tracking-[0.25em] outline-none transition-colors ${
             raw.length === 0
               ? "border-[oklch(1_0_0/0.1)] focus:border-primary"
@@ -160,12 +146,8 @@ export function RedeemCodeModal({ onClose }: { onClose: () => void }) {
           className="mt-5 w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_34px_-12px_var(--primary)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
         >
           {pending
-            ? ar
-              ? "جارٍ التفعيل…"
-              : "Activating…"
-            : ar
-              ? "تفعيل الكود"
-              : "Activate code"}
+            ? "Activating…"
+            : "Activate code"}
         </button>
       </div>
     </div>

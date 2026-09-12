@@ -74,37 +74,27 @@ export type ChatLayout = "transparent" | "glass" | "island" | "bubble";
 export const CHAT_LAYOUTS: {
   value: ChatLayout;
   label: string;
-  labelAr: string;
-  hint: string;
-  hintAr: string;
-}[] = [
+    hint: string;
+  }[] = [
   {
     value: "transparent",
     label: "👻 Pure Transparent",
-    labelAr: "👻 شفاف تماماً",
     hint: "No container, text straight over video",
-    hintAr: "بدون خلفية، النص فوق الفيديو",
   },
   {
     value: "glass",
     label: "🧊 Full Glass Container",
-    labelAr: "🧊 لوحة زجاجية",
     hint: "Continuous chat panel window",
-    hintAr: "نافذة دردشة متصلة",
   },
   {
     value: "island",
     label: "🏝️ Dynamic Island Messages",
-    labelAr: "🏝️ رسائل جزيرة",
     hint: "Each message a floating capsule",
-    hintAr: "كل رسالة كبسولة عائمة",
   },
   {
     value: "bubble",
     label: "💬 Speech Bubbles",
-    labelAr: "💬 فقاعات محادثة",
     hint: "Rounded bubbles with offset corner",
-    hintAr: "فقاعات بزاوية مائلة",
   },
 ];
 
@@ -251,11 +241,11 @@ export type SpotlightConfig = BaseStyle & {
   showPlatform: boolean;
 };
 
-export const SPOTLIGHT_AUTO_HIDE: { value: number; label: string; labelAr: string }[] = [
-  { value: 0, label: "Stay until cleared", labelAr: "يبقى حتى الإزالة" },
-  { value: 10_000, label: "Hide after 10s", labelAr: "إخفاء بعد ١٠ ثوانٍ" },
-  { value: 15_000, label: "Hide after 15s", labelAr: "إخفاء بعد ١٥ ثانية" },
-  { value: 30_000, label: "Hide after 30s", labelAr: "إخفاء بعد ٣٠ ثانية" },
+export const SPOTLIGHT_AUTO_HIDE: { value: number; label: string }[] = [
+  { value: 0, label: "Stay until cleared" },
+  { value: 10_000, label: "Hide after 10s" },
+  { value: 15_000, label: "Hide after 15s" },
+  { value: 30_000, label: "Hide after 30s" },
 ];
 
 export function parseSpotlightConfig(raw: unknown): SpotlightConfig {
@@ -381,13 +371,12 @@ export type TappersLayout = "vertical" | "horizontal" | "podium" | "grid" | "tic
 export const TAPPERS_LAYOUTS: {
   value: TappersLayout;
   label: string;
-  labelAr: string;
-}[] = [
-  { value: "vertical", label: "Vertical list", labelAr: "قائمة عمودية" },
-  { value: "horizontal", label: "Horizontal shelf", labelAr: "رف أفقي" },
-  { value: "podium", label: "Podium showcase (Top 3)", labelAr: "منصة التتويج (أفضل ٣)" },
-  { value: "grid", label: "Minimal grid", labelAr: "شبكة مبسطة" },
-  { value: "ticker", label: "Ticker / marquee banner", labelAr: "شريط متحرك" },
+  }[] = [
+  { value: "vertical", label: "Vertical list" },
+  { value: "horizontal", label: "Horizontal shelf" },
+  { value: "podium", label: "Podium showcase (Top 3)" },
+  { value: "grid", label: "Minimal grid" },
+  { value: "ticker", label: "Ticker / marquee banner" },
 ];
 
 export const TAPPERS_LIMITS = [3, 5, 10] as const;
@@ -454,12 +443,11 @@ export type TapGoalDesign = "bar" | "pill" | "pillar" | "glass";
 export const TAPGOAL_DESIGNS: {
   value: TapGoalDesign;
   label: string;
-  labelAr: string;
-}[] = [
-  { value: "bar", label: "Standard bar", labelAr: "شريط قياسي" },
-  { value: "pill", label: "Compact floating pill", labelAr: "كبسولة عائمة" },
-  { value: "pillar", label: "Vertical pillar", labelAr: "عمود رأسي" },
-  { value: "glass", label: "Glassmorphic card", labelAr: "بطاقة زجاجية" },
+  }[] = [
+  { value: "bar", label: "Standard bar" },
+  { value: "pill", label: "Compact floating pill" },
+  { value: "pillar", label: "Vertical pillar" },
+  { value: "glass", label: "Glassmorphic card" },
 ];
 
 export type TapGoalConfig = BaseStyle & {

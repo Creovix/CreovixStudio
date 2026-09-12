@@ -52,11 +52,10 @@ export const DEFAULT_OVERLAY_THEME: OverlayTheme = {
 export const OVERLAY_TIME_FORMATS: {
   value: OverlayTimeFormat;
   label: string;
-  labelAr: string;
-}[] = [
-  { value: "dhms", label: "Days, Hours, Minutes, Seconds", labelAr: "أيام:ساعات:دقائق:ثواني" },
-  { value: "hms", label: "Hours, Minutes, Seconds", labelAr: "ساعات:دقائق:ثواني" },
-  { value: "ms", label: "Minutes, Seconds", labelAr: "دقائق:ثواني" },
+  }[] = [
+  { value: "dhms", label: "Days, Hours, Minutes, Seconds" },
+  { value: "hms", label: "Hours, Minutes, Seconds" },
+  { value: "ms", label: "Minutes, Seconds" },
 ];
 
 /** Formats remaining seconds according to the overlay's selected time format. */
@@ -77,37 +76,31 @@ export function formatOverlayTime(totalSeconds: number, format: OverlayTimeForma
 export const OVERLAY_LAYOUTS: {
   value: OverlayLayout;
   label: string;
-  labelAr: string;
-  hint: string;
+    hint: string;
 }[] = [
   {
     value: "island",
     label: "Dynamic Island",
-    labelAr: "الجزيرة الديناميكية",
     hint: "Glossy black live capsule",
   },
   {
     value: "cute_heart",
     label: "Cute Heart",
-    labelAr: "قلب لطيف",
     hint: "Dark capsule with a pink heart badge",
   },
   {
     value: "circular_pomodoro",
     label: "Circular Pomodoro",
-    labelAr: "بومودورو دائري",
     hint: "Circular progress ring with status accents",
   },
   {
     value: "multi_ring_countdown",
     label: "Multi-Ring Countdown",
-    labelAr: "عد تنازلي متعدد الحلقات",
     hint: "Four circular rings for days, hours, minutes and seconds",
   },
   {
     value: "raw_digits",
     label: "Raw Digits",
-    labelAr: "أرقام خام",
     hint: "Borderless transparent digits only",
   },
 ];

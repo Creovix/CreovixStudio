@@ -48,7 +48,7 @@ export function ToolCard({
   platforms = [],
   comingSoon = false,
 }: ToolCardProps) {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const previewLocked = locked || comingSoon;
@@ -101,7 +101,7 @@ export function ToolCard({
                   return (
                     <span
                       key={id}
-                      title={lang === "ar" ? meta.label.ar : meta.label.en}
+                      title={meta.label.en}
                       className="size-1.5 rounded-full"
                       style={{ background: meta.color } as CSSProperties}
                     />

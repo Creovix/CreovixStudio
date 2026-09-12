@@ -12,10 +12,8 @@ export type WidgetThemePreset = {
   id: WidgetThemeId;
   emoji: string;
   label: string;
-  labelAr: string;
-  hint: string;
-  hintAr: string;
-  /** Swatch shown inside the selector card. */
+    hint: string;
+    /** Swatch shown inside the selector card. */
   swatch: CSSProperties;
 };
 
@@ -24,9 +22,7 @@ export const WIDGET_THEMES: WidgetThemePreset[] = [
     id: "dark-glass",
     emoji: "🌌",
     label: "Dark Glass",
-    labelAr: "زجاج داكن",
     hint: "Frosted dark panel, glowing border",
-    hintAr: "لوحة داكنة ضبابية مع حدود متوهجة",
     swatch: {
       background: "rgba(15, 23, 42, 0.85)",
       border: "1px solid rgba(148, 163, 184, 0.35)",
@@ -38,9 +34,7 @@ export const WIDGET_THEMES: WidgetThemePreset[] = [
     id: "minimal",
     emoji: "👻",
     label: "Clean Minimalist",
-    labelAr: "بسيط وشفاف",
     hint: "Fully transparent, bold text with shadow",
-    hintAr: "شفاف تماماً مع نص عريض وظل",
     swatch: {
       background: "transparent",
       border: "1px dashed rgba(255,255,255,0.25)",
@@ -52,9 +46,7 @@ export const WIDGET_THEMES: WidgetThemePreset[] = [
     id: "neon",
     emoji: "⚡",
     label: "Neon Cyberpunk",
-    labelAr: "نيون سايبربانك",
     hint: "Cyan & pink dual glow",
-    hintAr: "توهج سماوي ووردي",
     swatch: {
       background: "rgba(8, 10, 24, 0.9)",
       border: "1px solid rgba(0,242,254,0.8)",
@@ -66,9 +58,7 @@ export const WIDGET_THEMES: WidgetThemePreset[] = [
     id: "retro",
     emoji: "👾",
     label: "Retro 8-Bit Arcade",
-    labelAr: "ريترو 8-بت",
     hint: "Pixel borders, blocky arcade look",
-    hintAr: "حدود بكسل وشكل أركيد",
     swatch: {
       background: "#1A1030",
       border: "4px solid #F5D90A",

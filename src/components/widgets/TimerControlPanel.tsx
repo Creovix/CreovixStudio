@@ -62,7 +62,6 @@ export function TimerControlPanel({
   remaining: number;
   lang: "ar" | "en";
 }) {
-  const ar = lang === "ar";
   const start = useServerFn(startTimer);
   const pause = useServerFn(pauseTimer);
   const reset = useServerFn(resetTimer);
@@ -96,7 +95,7 @@ export function TimerControlPanel({
     <div className="space-y-3 rounded-xl border border-border bg-background p-4">
       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Timer className="size-4 text-primary" aria-hidden />
-        {ar ? "تحكم يدوي بالمؤقت" : "Manual timer controls"}
+        {"Manual timer controls"}
       </p>
 
       <div className="flex items-center justify-between gap-3">
@@ -138,7 +137,7 @@ export function TimerControlPanel({
           onClick={() => void run(() => start({ data: payload }))}
         >
           <Play className="mx-auto size-4" aria-hidden />
-          {status === "PAUSED" ? (ar ? "استئناف" : "Resume") : ar ? "تشغيل" : "Start"}
+          {status === "PAUSED" ? ("Resume") : "Start"}
         </button>
         <button
           type="button"
@@ -147,7 +146,7 @@ export function TimerControlPanel({
           onClick={() => void run(() => pause({ data: payload }))}
         >
           <Pause className="mx-auto size-4" aria-hidden />
-          {ar ? "إيقاف مؤقت" : "Pause"}
+          {"Pause"}
         </button>
         <button
           type="button"
@@ -156,7 +155,7 @@ export function TimerControlPanel({
           onClick={() => void run(() => reset({ data: payload }))}
         >
           <RotateCcw className="mx-auto size-4" aria-hidden />
-          {ar ? "إعادة ضبط" : "Reset"}
+          {"Reset"}
         </button>
       </div>
 
@@ -166,7 +165,7 @@ export function TimerControlPanel({
           event.preventDefault();
           const seconds = parseManualTime(manual);
           if (seconds === null) {
-            setError(ar ? "صيغة وقت غير صحيحة" : "Invalid time format");
+            setError("Invalid time format");
             return;
           }
           void run(async () => {
@@ -176,17 +175,17 @@ export function TimerControlPanel({
         }}
       >
         <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {ar ? "ضبط وقت يدوي" : "Set Manual Time"}
+          {"Set Manual Time"}
         </label>
         <div className="flex gap-2">
           <input
             value={manual}
             onChange={(event) => setManual(event.target.value)}
-            placeholder={ar ? "01:30:00 أو 90 دقيقة" : "HH:MM:SS or minutes"}
+            placeholder={"HH:MM:SS or minutes"}
             className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
           <button type="submit" disabled={busy} className={chip}>
-            {ar ? "تطبيق" : "Apply"}
+            {"Apply"}
           </button>
         </div>
       </form>
@@ -194,9 +193,7 @@ export function TimerControlPanel({
 
 
       <p className="text-[10px] text-muted-foreground">
-        {ar
-          ? "الوقت محفوظ في الخادم: تحديث المتصفح أو مصدر OBS لا يعيد ضبط العداد."
-          : "State is persisted server-side — reloading the page or the OBS source never resets the clock."}
+        {"State is persisted server-side — reloading the page or the OBS source never resets the clock."}
       </p>
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}

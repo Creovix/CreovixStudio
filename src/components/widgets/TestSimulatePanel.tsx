@@ -27,7 +27,6 @@ export function TestSimulatePanel({
   const [message, setMessage] = useState<string | null>(null);
   const [customText, setCustomText] = useState("");
 
-  const ar = lang === "ar";
   const isChat = type === "CHAT_BOX";
 
   const run = async (key: string, action: () => Promise<unknown>, success: string) => {
@@ -38,9 +37,7 @@ export function TestSimulatePanel({
       if (result && result.ok === false) {
         setMessage(
           result.error === "no_subathon"
-            ? ar
-              ? "أنشئ سباثون أولاً حتى تعمل القواعد."
-              : "Create a subathon first so rules can apply."
+            ? "Create a subathon first so rules can apply."
             : `⚠️ ${result.error}`,
         );
       } else {
@@ -62,7 +59,7 @@ export function TestSimulatePanel({
     <div className="space-y-3 rounded-xl border border-border bg-background p-4">
       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <FlaskConical className="size-4 text-primary" aria-hidden />
-        {ar ? "🧪 اختبار ومحاكاة" : "🧪 Test & Simulate"}
+        {"🧪 Test & Simulate"}
       </p>
 
       {isChat ? (
@@ -71,8 +68,9 @@ export function TestSimulatePanel({
             type="text"
             value={customText}
             onChange={(event) => setCustomText(event.target.value)}
-            placeholder={ar ? "اكتب رسالة تجريبية…" : "Type a test message…"}
+            placeholder={"Type a test message…"}
             className={inputClass}
+            dir="auto"
             onKeyDown={(event) => {
               if (event.key === "Enter" && customText.trim()) {
                 void run(
@@ -81,7 +79,7 @@ export function TestSimulatePanel({
                     testChat({
                       data: { widgetId, text: customText.trim() },
                     }),
-                  ar ? "تم إرسال الرسالة ✅" : "Message sent ✅",
+                  "Message sent ✅",
                 );
                 setCustomText("");
               }
@@ -98,7 +96,7 @@ export function TestSimulatePanel({
                   testChat({
                     data: { widgetId, text: customText.trim() },
                   }),
-                ar ? "تم إرسال الرسالة ✅" : "Message sent ✅",
+                "Message sent ✅",
               );
               setCustomText("");
             }}
@@ -106,9 +104,7 @@ export function TestSimulatePanel({
             <MessageSquare className="size-4" aria-hidden />
             {busy === "chat"
               ? "…"
-              : ar
-                ? "إرسال رسالة تجريبية"
-                : "Send Test Chat Message"}
+              : "Send Test Chat Message"}
           </button>
         </div>
       ) : type === "TIKTOK_TAPPERS" ? (
@@ -132,12 +128,12 @@ export function TestSimulatePanel({
                         quantity: 25 + Math.floor(Math.random() * 120),
                       },
                     }),
-                  ar ? "تم إرسال نقرات ✅" : "Taps sent ✅",
+                  "Taps sent ✅",
                 )
               }
             >
               <Zap className="size-4" aria-hidden />
-              {busy === tapper ? "…" : ar ? `نقرات من ${tapper}` : `Send taps as ${tapper}`}
+              {busy === tapper ? "…" : `Send taps as ${tapper}`}
             </button>
           ))}
         </div>
@@ -154,16 +150,14 @@ export function TestSimulatePanel({
                   simulate({
                     data: { widgetId, platform: "TWITCH", eventType: "FOLLOW" },
                   }),
-                ar ? "تم إرسال متابعة Twitch ✅" : "Twitch follow sent ✅",
+                "Twitch follow sent ✅",
               )
             }
           >
             <Zap className="size-4" aria-hidden />
             {busy === "twitch"
               ? "…"
-              : ar
-                ? "محاكاة متابعة Twitch"
-                : "Simulate Twitch Follow"}
+              : "Simulate Twitch Follow"}
           </button>
 
           <button
@@ -177,12 +171,12 @@ export function TestSimulatePanel({
                   simulate({
                     data: { widgetId, platform: "KICK", eventType: "SUBSCRIPTION" },
                   }),
-                ar ? "تم إرسال اشتراك Kick ✅" : "Kick sub sent ✅",
+                "Kick sub sent ✅",
               )
             }
           >
             <Zap className="size-4" aria-hidden />
-            {busy === "kick" ? "…" : ar ? "محاكاة اشتراك Kick" : "Simulate Kick Sub"}
+            {busy === "kick" ? "…" : "Simulate Kick Sub"}
           </button>
 
           <button
@@ -193,12 +187,12 @@ export function TestSimulatePanel({
               void run(
                 "chat",
                 () => testChat({ data: { widgetId } }),
-                ar ? "تم إرسال رسالة تجريبية ✅" : "Test chat message sent ✅",
+                "Test chat message sent ✅",
               )
             }
           >
             <MessageSquare className="size-4" aria-hidden />
-            {busy === "chat" ? "…" : ar ? "رسالة دردشة تجريبية" : "Send Test Chat Message"}
+            {busy === "chat" ? "…" : "Send Test Chat Message"}
           </button>
 
           <button
@@ -209,25 +203,21 @@ export function TestSimulatePanel({
               void run(
                 "eventsub",
                 () => syncEvents({}),
-                ar ? "تم تفعيل أحداث Twitch المباشرة ✅" : "Twitch live events enabled ✅",
+                "Twitch live events enabled ✅",
               )
             }
           >
             <Radio className="size-4" aria-hidden />
             {busy === "eventsub"
               ? "…"
-              : ar
-                ? "تفعيل أحداث Twitch المباشرة"
-                : "Enable Twitch live events"}
+              : "Enable Twitch live events"}
           </button>
         </div>
       )}
 
       {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
       <p className="text-[11px] text-muted-foreground">
-        {ar
-          ? "كل زر يمر عبر نفس مسار الأحداث الحقيقي ويبث التحديث فوراً إلى OBS."
-          : "Every button runs the real ingest pipeline and broadcasts instantly to OBS."}
+        {"Every button runs the real ingest pipeline and broadcasts instantly to OBS."}
       </p>
     </div>
   );

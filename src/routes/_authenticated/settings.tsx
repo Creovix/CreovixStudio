@@ -88,7 +88,7 @@ function SettingsPage() {
           <div className="mt-6 divide-y divide-white/5 border-y border-white/5">
             <div className="flex flex-wrap items-baseline justify-between gap-3 py-4">
               <p className="text-[0.8rem] text-muted-foreground">{t("settings.profile.name")}</p>
-              <p className="text-sm font-medium">{data?.profile?.name ?? user.email}</p>
+              <p className="text-sm font-medium" dir="auto">{data?.profile?.name ?? user.email}</p>
             </div>
             <div className="flex flex-wrap items-baseline justify-between gap-3 py-4">
               <p className="text-[0.8rem] text-muted-foreground">{t("settings.profile.email")}</p>

@@ -43,14 +43,13 @@ export function SubathonTimerSidebar({
   copied: boolean;
   lang: "ar" | "en";
 }) {
-  const ar = lang === "ar";
   const [tab, setTab] = useState<TabId>("general");
   const theme = parseOverlayTheme(config);
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: "general", label: ar ? "عام والتخطيط" : "General & Layout" },
-    { id: "controls", label: ar ? "التحكم" : "Controls & Actions" },
-    { id: "test", label: ar ? "اختبار وربط" : "Test & Integration" },
+    { id: "general", label: "General & Layout" },
+    { id: "controls", label: "Controls & Actions" },
+    { id: "test", label: "Test & Integration" },
   ];
 
   return (
@@ -75,23 +74,22 @@ export function SubathonTimerSidebar({
       {tab === "general" ? (
         <div className="space-y-4">
           <label className="block">
-            <span className={labelClass}>{ar ? "الاسم" : "Name"}</span>
+            <span className={labelClass}>{"Name"}</span>
             <input
               className={`${fieldClass} mt-2`}
               value={name}
               onChange={(event) => onNameChange(event.target.value)}
+              dir="auto"
             />
           </label>
 
           <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background p-4">
             <span className="min-w-0">
               <span className="block text-sm font-medium">
-                {ar ? "إظهار العنوان" : "Show Title"}
+                {"Show Title"}
               </span>
               <span className="block text-[10px] text-muted-foreground">
-                {ar
-                  ? "يخفي نص SUBATHON بجانب المؤقت في معاينة OBS"
-                  : "Hides the SUBATHON text label next to the timer in the OBS preview"}
+                {"Hides the SUBATHON text label next to the timer in the OBS preview"}
               </span>
             </span>
             <button
@@ -112,7 +110,7 @@ export function SubathonTimerSidebar({
           </div>
 
           <label className="block">
-            <span className={labelClass}>{ar ? "نمط التخطيط" : "Layout Style"}</span>
+            <span className={labelClass}>{"Layout Style"}</span>
             <DarkSelect
               className="mt-2 text-foreground"
               contentClassName="bg-popover text-popover-foreground"
@@ -120,13 +118,13 @@ export function SubathonTimerSidebar({
               onValueChange={(next) => onConfigChange("layout", next)}
               options={OVERLAY_LAYOUTS.map((entry) => ({
                 value: entry.value,
-                label: ar ? entry.labelAr : entry.label,
+                label: entry.label,
               }))}
             />
           </label>
 
           <label className="block">
-            <span className={labelClass}>{ar ? "صيغة الوقت" : "Time format"}</span>
+            <span className={labelClass}>{"Time format"}</span>
             <DarkSelect
               className="mt-2 text-foreground"
               contentClassName="bg-popover text-popover-foreground"
@@ -134,19 +132,19 @@ export function SubathonTimerSidebar({
               onValueChange={(next) => onConfigChange("timeFormat", next)}
               options={OVERLAY_TIME_FORMATS.map((entry) => ({
                 value: entry.value,
-                label: ar ? entry.labelAr : entry.label,
+                label: entry.label,
               }))}
             />
           </label>
 
           <div className="grid grid-cols-3 gap-2">
             {[
-              { key: "accentColor", value: theme.accentColor, label: ar ? "اللون المميز" : "Accent" },
-              { key: "textColor", value: theme.textColor, label: ar ? "لون النص" : "Text" },
+              { key: "accentColor", value: theme.accentColor, label: "Accent" },
+              { key: "textColor", value: theme.textColor, label: "Text" },
               {
                 key: "backgroundColor",
                 value: theme.backgroundColor,
-                label: ar ? "الخلفية" : "Background",
+                label: "Background",
               },
             ].map((entry) => (
               <label key={entry.key} className="block">
@@ -165,7 +163,7 @@ export function SubathonTimerSidebar({
 
           <label className="block">
             <span className={labelClass}>
-              {ar ? "شفافية الخلفية" : "Background opacity"} ({theme.backgroundOpacity}%)
+              {"Background opacity"} ({theme.backgroundOpacity}%)
             </span>
             <input
               type="range"
@@ -183,12 +181,10 @@ export function SubathonTimerSidebar({
           <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background p-4">
             <span className="min-w-0">
               <span className="block text-sm font-medium">
-                {ar ? "إخفاء حاوية الخلفية" : "Hide background container"}
+                {"Hide background container"}
               </span>
               <span className="block text-[10px] text-muted-foreground">
-                {ar
-                  ? "يعرض الأرقام والأيقونات فقط بخلفية شفافة تمامًا لـ OBS"
-                  : "Shows only the timer text and icons on a fully transparent background"}
+                {"Shows only the timer text and icons on a fully transparent background"}
               </span>
             </span>
             <button
@@ -210,7 +206,7 @@ export function SubathonTimerSidebar({
 
           <label className="block">
             <span className={labelClass}>
-              {ar ? "حجم الخط" : "Font size"} ({theme.fontSize}px)
+              {"Font size"} ({theme.fontSize}px)
             </span>
             <input
               type="range"
@@ -253,7 +249,7 @@ export function SubathonTimerSidebar({
               ) : (
                 <Copy className="size-4" aria-hidden />
               )}
-              {ar ? "نسخ رابط OBS" : "Copy OBS URL"}
+              {"Copy OBS URL"}
             </button>
             <code className="mt-3 block break-all text-xs text-muted-foreground">
               {`/overlay/subathon-timer?token=${publicToken}&layout=${theme.layout}`}

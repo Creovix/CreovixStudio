@@ -68,7 +68,6 @@ export const Route = createFileRoute("/_authenticated/schedule")({
 });
 
 const COPY = {
-  en: {
     title: "Stream schedule",
     subtitle: "A monthly calendar of go-live times. Share a public page or export ICS — no fake push alerts.",
     timezone: "Timezone",
@@ -109,50 +108,7 @@ const COPY = {
     errStorage: "Could not store the image locally. Try a smaller file.",
     howTitle: "Sharing",
     how: "Viewers open the public URL. They can add sessions to their own calendar via ICS. Local OS reminders come from that calendar — we do not send push notifications.",
-  },
-  ar: {
-    title: "جدول البث",
-    subtitle: "تقويم شهري لمواعيد البث. صفحة عامة وتصدير ICS — بدون تنبيهات وهمية.",
-    timezone: "المنطقة الزمنية",
-    calendarTitle: "عنوان الصفحة العامة",
-    reminder: "ملاحظة التذكير",
-    reminderHint: "تظهر في الصفحة العامة (مثل «فعّل تنبيهات القناة»). ليست نظام إشعارات.",
-    reminderPlaceholder: "فعّل تنبيهات القناة حتى لا يفوتك البث.",
-    share: "الجدول العام",
-    copy: "نسخ الرابط",
-    copied: "تم النسخ",
-    ics: "تنزيل ICS",
-    add: "إضافة جلسة",
-    empty: "اضغط يوماً لإضافة بث. الجلسات الأسبوعية تظهر في كل يوم مطابق.",
-    modalCreate: "جلسة جديدة",
-    modalEdit: "تعديل الجلسة",
-    date: "التاريخ",
-    repeat: "تكرار كل أسبوع في نفس اليوم",
-    cover: "غلاف اللعبة",
-    coverHint: "تظهر كملصق أسفل تفاصيل اليوم في التقويم. يتم ضغط الصور.",
-    coverRemove: "إزالة الصورة",
-    day: "اليوم",
-    time: "وقت البداية",
-    duration: "المدة (دقائق)",
-    sessionTitle: "العنوان",
-    game: "اللعبة / التصنيف",
-    notes: "ملاحظات",
-    enabled: "ظاهر للعامة",
-    cancel: "إلغاء",
-    save: "حفظ",
-    delete: "حذف",
-    deleteTitle: "حذف هذه الجلسة؟",
-    deleteBody: "ستختفي من الجدول العام فوراً.",
-    saved: "تم الحفظ",
-    errTitle: "أدخل عنوان الجلسة.",
-    errTime: "استخدم وقتاً من 24 ساعة مثل 18:00.",
-    errSave: "تعذر حفظ الجلسة.",
-    errCover: "تعذر قراءة الصورة. جرّب ملفاً أصغر JPG أو PNG.",
-    errStorage: "تعذر حفظ الصورة محلياً. جرّب ملفاً أصغر.",
-    howTitle: "المشاركة",
-    how: "المشاهدون يفتحون الرابط العام ويمكنهم إضافة الجلسات لتقويمهم عبر ICS. التذكيرات تأتي من تقويمهم — نحن لا نرسل إشعارات دفع.",
-  },
-} as const;
+  } as const;
 
 const field =
   "w-full border-b border-zinc-800/50 bg-transparent px-0 py-2 text-sm text-foreground outline-none transition-colors focus:border-white/20";
@@ -174,7 +130,7 @@ function SchedulePage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
   const { lang } = useLanguage();
-  const c = COPY[lang];
+  const c = COPY;
   const queryClient = useQueryClient();
   const test = isTestMode();
 
@@ -293,7 +249,7 @@ function SchedulePage() {
           <div className="space-y-4 lg:col-span-2">
             <label className="block">
               <span className={label}>{c.calendarTitle}</span>
-              <input className={field} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} />
+              <input className={field} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} dir="auto" />
             </label>
             <label className="block">
               <span className={label}>{c.timezone}</span>
@@ -313,6 +269,7 @@ function SchedulePage() {
                 onChange={(e) => setReminderNote(e.target.value)}
                 placeholder={c.reminderPlaceholder}
                 maxLength={280}
+                dir="auto"
               />
               <p className="mt-1.5 text-[0.75rem] text-muted-foreground">{c.reminderHint}</p>
             </label>
@@ -468,6 +425,7 @@ function SchedulePage() {
                   value={editor.title}
                   onChange={(e) => setEditor({ ...editor, title: e.target.value })}
                   maxLength={80}
+                  dir="auto"
                 />
               </label>
               <label className="block">
@@ -477,6 +435,7 @@ function SchedulePage() {
                   value={editor.game}
                   onChange={(e) => setEditor({ ...editor, game: e.target.value })}
                   maxLength={80}
+                  dir="auto"
                 />
               </label>
               <div>
@@ -521,6 +480,7 @@ function SchedulePage() {
                   value={editor.notes}
                   onChange={(e) => setEditor({ ...editor, notes: e.target.value })}
                   maxLength={280}
+                  dir="auto"
                 />
               </label>
               <label className="flex items-center gap-2 text-sm">

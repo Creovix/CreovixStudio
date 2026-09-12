@@ -10,8 +10,7 @@ export type GoalTypePreset = {
   id: GoalTypeId;
   emoji: string;
   labelEn: string;
-  labelAr: string;
-  /** Default overlay label. */
+    /** Default overlay label. */
   overlayLabel: string;
   /** Goal row title. */
   title: string;
@@ -29,7 +28,6 @@ export const GOAL_TYPES: GoalTypePreset[] = [
     id: "DONATION",
     emoji: "💰",
     labelEn: "Donation goal",
-    labelAr: "التبرعات",
     overlayLabel: "DONATION GOAL",
     title: "Donation goal",
     unit: "USD",
@@ -42,7 +40,6 @@ export const GOAL_TYPES: GoalTypePreset[] = [
     id: "FOLLOWER",
     emoji: "👤",
     labelEn: "Follower goal",
-    labelAr: "المتابعون",
     overlayLabel: "FOLLOWER GOAL",
     title: "Follower goal",
     unit: "followers",
@@ -55,7 +52,6 @@ export const GOAL_TYPES: GoalTypePreset[] = [
     id: "SUBSCRIBER",
     emoji: "⭐",
     labelEn: "Subscriber goal",
-    labelAr: "المشتركون",
     overlayLabel: "SUB GOAL",
     title: "Subscriber goal",
     unit: "subs",
@@ -68,7 +64,6 @@ export const GOAL_TYPES: GoalTypePreset[] = [
     id: "CUSTOM",
     emoji: "🎯",
     labelEn: "Custom goal",
-    labelAr: "هدف مخصص",
     overlayLabel: "CUSTOM GOAL",
     title: "Custom goal",
     unit: "points",

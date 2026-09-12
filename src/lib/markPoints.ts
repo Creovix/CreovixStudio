@@ -46,12 +46,7 @@ export function isMarkStatus(value: string): value is MarkStatus {
   return (MARK_STATUSES as readonly string[]).includes(value);
 }
 
-export function markStatusLabel(status: MarkStatus, lang: "en" | "ar"): string {
-  if (lang === "ar") {
-    if (status === "approved") return "مقبول";
-    if (status === "rejected") return "مرفوض";
-    return "تحت المراجعة";
-  }
+export function markStatusLabel(status: MarkStatus, _lang?: "en" | "ar"): string {
   if (status === "approved") return "Approved";
   if (status === "rejected") return "Rejected";
   return "Pending";
@@ -195,9 +190,9 @@ export function matchMarkCommand(text: string): MarkCommandMatch | null {
   return null;
 }
 
-export function markTitle(mark: StreamMark, lang: "en" | "ar"): string {
+export function markTitle(mark: StreamMark, _lang?: "en" | "ar"): string {
   if (mark.note) return mark.note;
-  return lang === "ar" ? "نقطة بث" : "Stream mark";
+  return "Stream mark";
 }
 
 function emptyMarks(): StreamMark[] {

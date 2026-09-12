@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { MarkVodPlayer } from "@/components/marks/MarkVodPlayer";
-import { useLanguage } from "@/lib/i18n";
 import {
   formatUptime,
   kickChannelUrl,
@@ -43,49 +42,29 @@ async function bearerHeaders(): Promise<HeadersInit> {
 
 function MarkPlaybackPage() {
   const { token, markId } = Route.useParams();
-  const { lang } = useLanguage();
   const test = isTestMode();
   const [payload, setPayload] = useState<MarkPlaybackPayload | null>(null);
   const [phase, setPhase] = useState<"loading" | "gate" | "ready" | "missing">("loading");
   const [username, setUsername] = useState("");
   const [denied, setDenied] = useState(false);
 
-  const copy =
-    lang === "ar"
-      ? {
-          title: "نقاط البث",
-          gateHint: "أدخل اسمك على كيك. الرابط وحده لا يكفي.",
-          username: "اسم كيك",
-          enter: "دخول",
-          denied: "هذا الاسم غير مسموح.",
-          missing: "الرابط غير صالح.",
-          back: "كل النقاط",
-          start: "البداية",
-          end: "النهاية",
-          duration: "المدة",
-          status: "الحالة",
-          open: "مفتوح",
-          offline: "غير مباشر",
-          emptyVod: "لا تسجيل بعد",
-          seekHint: "ابدأ عند",
-        }
-      : {
-          title: "Mark Points",
-          gateHint: "Enter your Kick username. The link alone is not enough.",
-          username: "Kick username",
-          enter: "Enter",
-          denied: "That name is not allowed.",
-          missing: "This link is not valid.",
-          back: "All marks",
-          start: "Start",
-          end: "End",
-          duration: "Duration",
-          status: "Status",
-          open: "open",
-          offline: "offline",
-          emptyVod: "No recording yet",
-          seekHint: "Starts at",
-        };
+  const copy = {
+    title: "Mark Points",
+    gateHint: "Enter your Kick username. The link alone is not enough.",
+    username: "Kick username",
+    enter: "Enter",
+    denied: "That name is not allowed.",
+    missing: "This link is not valid.",
+    back: "All marks",
+    start: "Start",
+    end: "End",
+    duration: "Duration",
+    status: "Status",
+    open: "open",
+    offline: "offline",
+    emptyVod: "No recording yet",
+    seekHint: "Starts at",
+  };
 
   const loadPlayback = async () => {
     const response = await fetch(
@@ -212,7 +191,7 @@ function MarkPlaybackPage() {
   const span = mark && !mark.offline ? markSpanSeconds(mark) : null;
 
   return (
-    <main className="min-h-svh bg-zinc-950 px-4 text-zinc-100" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <main className="min-h-svh bg-zinc-950 px-4 text-zinc-100" dir={"ltr"}>
       {phase === "loading" || phase === "missing" || phase === "gate" ? (
         <div className="flex min-h-svh items-center justify-center">
           {phase === "loading" ? <p className="text-sm text-zinc-500">…</p> : null}
@@ -235,7 +214,7 @@ function MarkPlaybackPage() {
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm outline-none focus:border-zinc-600"
-                  dir="ltr"
+                  dir="auto"
                 />
               </label>
               {denied ? <p className="mt-2 text-[0.78rem] text-red-400">{copy.denied}</p> : null}
@@ -281,7 +260,7 @@ function MarkPlaybackPage() {
                   aria-hidden
                 />
                 <h2 className="truncate text-[1.05rem] font-semibold" dir="auto">
-                  {markTitle(mark, lang)}
+                  {markTitle(mark)}
                 </h2>
               </div>
               <p className="text-[0.78rem] text-zinc-400">
@@ -317,7 +296,7 @@ function MarkPlaybackPage() {
                 >
                   {MARK_STATUSES.map((status) => (
                     <option key={status} value={status}>
-                      {markStatusLabel(status, lang)}
+                      {markStatusLabel(status)}
                     </option>
                   ))}
                 </select>

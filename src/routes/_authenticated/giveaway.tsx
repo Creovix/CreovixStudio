@@ -12,7 +12,6 @@ import { GiveawayDisplay, type DrawPhase } from "@/components/widgets/GiveawayDi
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useLiveChat } from "@/hooks/useLiveChat";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useLanguage } from "@/lib/i18n";
 import {
   DEFAULT_GIVEAWAY,
   announceGiveawayWinner,
@@ -50,7 +49,6 @@ export const Route = createFileRoute("/_authenticated/giveaway")({
 });
 
 const COPY = {
-  en: {
     title: "Giveaway",
     subtitle: "Collect chat entries with a keyword, then pick a winner live on stream.",
     how: "Viewers join by typing the keyword in Kick or Twitch chat. Open entries, wait for names, then draw.",
@@ -85,43 +83,7 @@ const COPY = {
     peopleEmpty: (keyword: string) =>
       `Nobody has entered yet. Viewers join by typing ${keyword} in chat.`,
     entriesCount: (people: number, entries: number) => `${people} · ${entries} entries`,
-  },
-  ar: {
-    title: "السحب",
-    subtitle: "اجمع المشاركات بكلمة من الشات ثم اسحب فائزاً مباشرة على البث.",
-    how: "ينضم المشاهدون بكتابة الكلمة في شات Kick أو Twitch. افتح المشاركات، انتظر الأسماء، ثم اسحب.",
-    entryTitle: "طريقة الدخول",
-    entryHint: "تُلتقط المشاركات تلقائياً من كل شات متصل.",
-    keyword: "الكلمة",
-    entriesOpen: "المشاركات مفتوحة",
-    entriesClosed: "المشاركات مغلقة",
-    subsOnly: "المشتركون المدفوعون فقط",
-    multiplier: "مضاعف المشتركين",
-    multiplierOff: "إيقاف",
-    multiplierN: (n: number) => `×${n} مشاركات`,
-    drawTitle: "السحب",
-    drawHint: "اضبط مدة الدوران ونافذة التأكيد، ثم ابدأ عندما تكون القائمة جاهزة.",
-    spin: "مدة الدوران",
-    seconds: (n: number) => `${n} ثوانٍ`,
-    claim: "نافذة التأكيد",
-    minutes: (n: number) => (n === 1 ? "دقيقة واحدة" : `${n} دقائق`),
-    pick: "اختيار فائز",
-    clear: "مسح القائمة",
-    stageTitle: "المسرح المباشر",
-    overlayTitle: "مصدر متصفح OBS",
-    overlayHint:
-      "أضف هذا الرابط كمصدر متصفح في OBS (1920×1080، شفاف) لعرض سحابة الأسماء وإعلان الفائز وعدّاد التأكيد على البث.",
-    overlayPlaceholder: "جاري إنشاء الرابط…",
-    copy: "نسخ",
-    copied: "تم نسخ رابط الأوفرلاي",
-    saved: "تم حفظ إعدادات السحب",
-    cleared: "تم مسح قائمة المشاركين",
-    noParticipants: "لا مشاركين بعد",
-    peopleTitle: "المشاركون الآن",
-    peopleEmpty: (keyword: string) => `لا أحد دخل بعد. ينضم المشاهدون بكتابة ${keyword} في الشات.`,
-    entriesCount: (people: number, entries: number) => `${people} · ${entries} مشاركة`,
-  },
-} as const;
+  } as const;
 
 const field =
   "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-foreground outline-none focus:border-zinc-600";
@@ -137,8 +99,7 @@ const MULTIPLIERS = [1, 2, 3, 5, 10];
 function GiveawayPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
-  const { lang } = useLanguage();
-  const c = COPY[lang];
+  const c = COPY;
   const queryClient = useQueryClient();
 
   const fetchState = useServerFn(getGiveawayState);
@@ -457,7 +418,7 @@ function GiveawayPage() {
                     className="flex items-center gap-2.5 border-b border-zinc-800 py-2.5 last:border-b-0"
                   >
                     <PlatformIcon platform={participant.platform} size={16} />
-                    <span className="min-w-0 flex-1 truncate text-sm">{participant.username}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm" dir="auto">{participant.username}</span>
                     <span className="font-mono text-[0.72rem] text-muted-foreground">
                       ×{participant.entries}
                     </span>

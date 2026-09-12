@@ -396,6 +396,7 @@ function SearchBar({
           }}
           placeholder={label}
           className={`${field} ps-9`}
+          dir="auto"
           aria-label={label}
           aria-autocomplete="list"
           aria-expanded={showList}
@@ -447,8 +448,8 @@ function SearchBar({
                       </span>
                     )}
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{item.displayName}</span>
-                      <span className="block truncate text-[0.7rem] text-muted-foreground">
+                      <span className="block truncate font-medium" dir="auto">{item.displayName}</span>
+                      <span className="block truncate text-[0.7rem] text-muted-foreground" dir="auto">
                         @{item.username}
                       </span>
                     </span>

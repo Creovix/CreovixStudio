@@ -11,16 +11,15 @@ import {
   useActivationCodes,
   type ActivationCode,
 } from "@/hooks/useSubscription";
-import { useLanguage } from "@/lib/i18n";
 import { DarkSelect } from "@/components/ui/dark-select";
 
 const DURATIONS = [
-  { days: 30, en: "30 Days", ar: "30 يوم" },
-  { days: 60, en: "60 Days", ar: "60 يوم" },
-  { days: 90, en: "90 Days", ar: "90 يوم" },
-  { days: 365, en: "365 Days", ar: "365 يوم" },
-  { days: LIFETIME_DAYS, en: "Lifetime ♾️", ar: "مدى الحياة ♾️" },
-  { days: 0, en: "Custom Days…", ar: "أيام مخصصة…" },
+  { days: 30, label: "30 Days" },
+  { days: 60, label: "60 Days" },
+  { days: 90, label: "90 Days" },
+  { days: 365, label: "365 Days" },
+  { days: LIFETIME_DAYS, label: "Lifetime ♾️" },
+  { days: 0, label: "Custom Days…" },
 ];
 
 type Filter = "all" | "available" | "redeemed" | "revoked";
@@ -30,8 +29,6 @@ function csvEscape(value: string) {
 }
 
 export function AdminCodesPanel() {
-  const { lang } = useLanguage();
-  const ar = lang === "ar";
   const queryClient = useQueryClient();
   const codes = useActivationCodes(true);
 
@@ -66,12 +63,12 @@ export function AdminCodesPanel() {
     await navigator.clipboard.writeText(formatCode(code));
     setCopied(code);
     setTimeout(() => setCopied(null), 1600);
-    toast.success(ar ? "تم نسخ الكود" : "Code copied to clipboard");
+    toast.success("Code copied to clipboard");
   };
 
   const generate = async () => {
     if (!validDays) {
-      toast.error(ar ? "أدخل عدد أيام بين 1 و 36500." : "Enter a day count between 1 and 36500.");
+      toast.error("Enter a day count between 1 and 36500.");
       return;
     }
     setGenerating(true);
@@ -86,7 +83,7 @@ export function AdminCodesPanel() {
       setGenerated(result.code);
       setNotes("");
       await refresh();
-      toast.success(ar ? "تم إنشاء كود جديد" : "New code generated");
+      toast.success("New code generated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not generate a code.");
     } finally {
@@ -106,12 +103,8 @@ export function AdminCodesPanel() {
     await refresh();
     toast.success(
       row.is_active
-        ? ar
-          ? "تم تعطيل الكود"
-          : "Code deactivated"
-        : ar
-          ? "تم تفعيل الكود"
-          : "Code reactivated",
+        ? "Code deactivated"
+        : "Code reactivated",
     );
   };
 
@@ -122,7 +115,7 @@ export function AdminCodesPanel() {
       return;
     }
     await refresh();
-    toast.success(ar ? "تم حذف الكود" : "Code deleted");
+    toast.success("Code deleted");
   };
 
   /** Cancels a redeemed code and drops the linked account back to the free plan. */
@@ -139,7 +132,7 @@ export function AdminCodesPanel() {
     }
     await refresh();
     await queryClient.invalidateQueries({ queryKey: ["subscription"] });
-    toast.success(ar ? "تم سحب الاشتراك" : "Subscription revoked");
+    toast.success("Subscription revoked");
   };
 
   const runConfirm = async () => {
@@ -157,7 +150,7 @@ export function AdminCodesPanel() {
   const exportCsv = () => {
     const available = (codes.data ?? []).filter((row) => !row.is_used && row.is_active && !row.is_revoked);
     if (available.length === 0) {
-      toast.error(ar ? "لا توجد أكواد متاحة للتصدير." : "No available codes to export.");
+      toast.error("No available codes to export.");
       return;
     }
     const lines = [
@@ -179,14 +172,14 @@ export function AdminCodesPanel() {
     anchor.download = `creovix-codes-${new Date().toISOString().slice(0, 10)}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
-    toast.success(ar ? `تم تصدير ${available.length} كود` : `Exported ${available.length} codes`);
+    toast.success(`Exported ${available.length} codes`);
   };
 
-  const filters: { key: Filter; en: string; ar: string }[] = [
-    { key: "all", en: "All", ar: "الكل" },
-    { key: "available", en: "Available", ar: "متاح" },
-    { key: "redeemed", en: "Redeemed", ar: "مستخدم" },
-    { key: "revoked", en: "Revoked", ar: "مسحوب" },
+  const filters: { key: Filter; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "available", label: "Available" },
+    { key: "redeemed", label: "Redeemed" },
+    { key: "revoked", label: "Revoked" },
   ];
 
   const fieldClass =
@@ -196,13 +189,13 @@ export function AdminCodesPanel() {
     <div className="space-y-6">
       <section>
         <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
-          🔑 {ar ? "مولّد أكواد التفعيل" : "Activation code generator"}
+          🔑 {"Activation code generator"}
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="space-y-1.5">
             <span className="block text-[0.72rem] font-medium text-muted-foreground">
-              {ar ? "مدة الصلاحية" : "Validity duration"}
+              {"Validity duration"}
             </span>
             <DarkSelect
               value={String(duration)}
@@ -210,7 +203,7 @@ export function AdminCodesPanel() {
               className="w-full"
               options={DURATIONS.map((option) => ({
                 value: String(option.days),
-                label: ar ? option.ar : option.en,
+                label: option.label,
               }))}
             />
           </label>
@@ -218,7 +211,7 @@ export function AdminCodesPanel() {
           {isCustom ? (
             <label className="space-y-1.5">
               <span className="block text-[0.72rem] font-medium text-muted-foreground">
-                {ar ? "عدد الأيام" : "Custom days"}
+                {"Custom days"}
               </span>
               <input
                 type="number"
@@ -233,12 +226,12 @@ export function AdminCodesPanel() {
 
           <label className="space-y-1.5 sm:col-span-2">
             <span className="block text-[0.72rem] font-medium text-muted-foreground">
-              {ar ? "ملاحظة / مرجع (اختياري)" : "Notes / reference (optional)"}
+              {"Notes / reference (optional)"}
             </span>
             <input
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              placeholder={ar ? "مثال: العميل رقم 104" : "e.g. Customer #104"}
+              placeholder={"e.g. Customer #104"}
               className={`${fieldClass} w-full`}
             />
           </label>
@@ -252,12 +245,8 @@ export function AdminCodesPanel() {
         >
           <Zap className="size-4" aria-hidden />
           {generating
-            ? ar
-              ? "جارٍ الإنشاء…"
-              : "Generating…"
-            : ar
-              ? "إنشاء كود من 16 خانة"
-              : "Generate 16-char code"}
+            ? "Generating…"
+            : "Generate 16-char code"}
         </button>
 
         {generated ? (
@@ -275,7 +264,7 @@ export function AdminCodesPanel() {
               ) : (
                 <Copy className="size-3.5" aria-hidden />
               )}
-              {ar ? "نسخ الكود" : "Copy code"}
+              {"Copy code"}
             </button>
           </div>
         ) : null}
@@ -284,7 +273,7 @@ export function AdminCodesPanel() {
       <section className="border-t border-white/5 pt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
-            {ar ? "إدارة الأكواد" : "Codes management"} · {rows.length}
+            {"Codes management"} · {rows.length}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex rounded-full border border-[oklch(1_0_0/0.1)] p-1">
@@ -299,7 +288,7 @@ export function AdminCodesPanel() {
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {ar ? entry.ar : entry.en}
+                  {entry.label}
                 </button>
               ))}
             </div>
@@ -309,7 +298,7 @@ export function AdminCodesPanel() {
               className="inline-flex items-center gap-1.5 rounded-lg border border-[oklch(1_0_0/0.12)] px-3 py-1.5 text-[0.74rem] font-medium hover:bg-[oklch(1_0_0/0.06)]"
             >
               <Download className="size-3.5" aria-hidden />
-              {ar ? "تصدير CSV" : "Export CSV"}
+              {"Export CSV"}
             </button>
           </div>
         </div>
@@ -318,13 +307,13 @@ export function AdminCodesPanel() {
           <table className="w-full min-w-[820px] text-start text-[0.78rem]">
             <thead className="text-[0.66rem] uppercase tracking-[0.18em] text-muted-foreground">
               <tr>
-                <th className="py-2 text-start">{ar ? "الكود" : "Code"}</th>
-                <th className="py-2 text-start">{ar ? "المدة" : "Duration"}</th>
-                <th className="py-2 text-start">{ar ? "الحالة" : "Status"}</th>
-                <th className="py-2 text-start">{ar ? "تاريخ الإنشاء" : "Created"}</th>
-                <th className="py-2 text-start">{ar ? "استُخدم بواسطة" : "Redeemed by"}</th>
-                <th className="py-2 text-start">{ar ? "ملاحظة" : "Notes"}</th>
-                <th className="py-2 text-end">{ar ? "الإجراءات" : "Actions"}</th>
+                <th className="py-2 text-start">{"Code"}</th>
+                <th className="py-2 text-start">{"Duration"}</th>
+                <th className="py-2 text-start">{"Status"}</th>
+                <th className="py-2 text-start">{"Created"}</th>
+                <th className="py-2 text-start">{"Redeemed by"}</th>
+                <th className="py-2 text-start">{"Notes"}</th>
+                <th className="py-2 text-end">{"Actions"}</th>
               </tr>
             </thead>
             <tbody>
@@ -332,7 +321,7 @@ export function AdminCodesPanel() {
                 <tr key={row.id} className="border-t border-[oklch(1_0_0/0.06)]">
                   <td className="py-2 font-mono">{formatCode(row.code)}</td>
                   <td className="py-2 text-muted-foreground">
-                    {durationLabel(row.duration_days, ar)}
+                    {durationLabel(row.duration_days, false)}
                   </td>
                   <td className="py-2">
                     <span
@@ -347,20 +336,12 @@ export function AdminCodesPanel() {
                       }
                     >
                       {row.is_revoked
-                        ? ar
-                          ? "مسحوب"
-                          : "Revoked"
+                        ? "Revoked"
                         : row.is_used
-                          ? ar
-                            ? "مستخدم"
-                            : "Redeemed"
+                          ? "Redeemed"
                           : row.is_active
-                            ? ar
-                              ? "متاح"
-                              : "Available"
-                            : ar
-                              ? "معطّل"
-                              : "Disabled"}
+                            ? "Available"
+                            : "Disabled"}
                     </span>
                   </td>
                   <td className="py-2 text-muted-foreground">
@@ -406,7 +387,7 @@ export function AdminCodesPanel() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 px-2.5 py-1.5 text-[0.72rem] font-semibold text-red-400 hover:bg-red-500/10"
                         >
                           <ShieldOff className="size-3.5" aria-hidden />
-                          {ar ? "سحب الاشتراك" : "Revoke Subscription"}
+                          {"Revoke Subscription"}
                         </button>
                       ) : null}
                       <button
@@ -425,7 +406,7 @@ export function AdminCodesPanel() {
           </table>
           {rows.length === 0 ? (
             <p className="py-6 text-center text-[0.78rem] text-muted-foreground">
-              {ar ? "لا توجد أكواد." : "No codes to show."}
+              {"No codes to show."}
             </p>
           ) : null}
         </div>
@@ -440,21 +421,13 @@ export function AdminCodesPanel() {
           <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-[#0B0D12] p-6 shadow-2xl">
             <h3 className="text-lg font-semibold text-red-400">
               {confirm.mode === "revoke"
-                ? ar
-                  ? "سحب الاشتراك؟"
-                  : "Revoke subscription?"
-                : ar
-                  ? "حذف الكود؟"
-                  : "Delete code?"}
+                ? "Revoke subscription?"
+                : "Delete code?"}
             </h3>
             <p className="mt-2 text-[0.82rem] text-muted-foreground">
               {confirm.mode === "revoke"
-                ? ar
-                  ? "سيتم إلغاء اشتراك المستخدم فوراً وإرجاع حسابه إلى الخطة المجانية، ولن يعمل هذا الكود مرة أخرى."
-                  : "The linked account is downgraded to Free immediately and this code can never be used again."
-                : ar
-                  ? "سيتم حذف هذا الكود نهائياً ولن يمكن استخدامه."
-                  : "This code is deleted permanently and can never be redeemed."}
+                ? "The linked account is downgraded to Free immediately and this code can never be used again."
+                : "This code is deleted permanently and can never be redeemed."}
             </p>
             <p className="mt-3 font-mono text-sm tracking-[0.15em]">{formatCode(confirm.row.code)}</p>
             <div className="mt-5 flex justify-end gap-2">
@@ -463,7 +436,7 @@ export function AdminCodesPanel() {
                 onClick={() => setConfirm(null)}
                 className="rounded-lg border border-[oklch(1_0_0/0.12)] px-4 py-2 text-sm font-medium hover:bg-[oklch(1_0_0/0.06)]"
               >
-                {ar ? "إلغاء" : "Cancel"}
+                {"Cancel"}
               </button>
               <button
                 type="button"
@@ -472,16 +445,10 @@ export function AdminCodesPanel() {
                 className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50"
               >
                 {working
-                  ? ar
-                    ? "جارٍ التنفيذ…"
-                    : "Working…"
+                  ? "Working…"
                   : confirm.mode === "revoke"
-                    ? ar
-                      ? "تأكيد السحب"
-                      : "Revoke now"
-                    : ar
-                      ? "حذف"
-                      : "Delete"}
+                    ? "Revoke now"
+                    : "Delete"}
               </button>
             </div>
           </div>

@@ -4,12 +4,12 @@ export type PlatformFilter = "ALL" | PlatformId;
 
 export const PLATFORM_META: Record<
   PlatformId,
-  { color: string; label: { en: string; ar: string } }
+  { color: string; label: { en: string } }
 > = {
-  KICK: { color: "#53FC18", label: { en: "Kick", ar: "كيك" } },
-  TWITCH: { color: "#9146FF", label: { en: "Twitch", ar: "تويتش" } },
-  YOUTUBE: { color: "#FF0000", label: { en: "YouTube", ar: "يوتيوب" } },
-  TIKTOK: { color: "#FE2C55", label: { en: "TikTok", ar: "تيك توك" } },
+  KICK: { color: "#53FC18", label: { en: "Kick" } },
+  TWITCH: { color: "#9146FF", label: { en: "Twitch" } },
+  YOUTUBE: { color: "#FF0000", label: { en: "YouTube" } },
+  TIKTOK: { color: "#FE2C55", label: { en: "TikTok" } },
 };
 
 /** Real catalog platforms — used for “all sources” widgets and the All chip. */

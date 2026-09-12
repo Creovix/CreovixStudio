@@ -1,20 +1,145 @@
-/**
- * Miniature, purely presentational 3D-glass previews used inside the Home
- * widget hub cards. Each preview hints at what the real widget renders.
- */
+import { useEffect, useState } from "react";
 
-function Bar({ percent, label, value }: { percent: number; label: string; value: string }) {
+const HUB_LOOP_MS = 10_000;
+const HUB_STAGGER_MS = 500;
+const HUB_SHIFT_MS = 550;
+const HUB_BEAT_MS = 5_000;
+const HUB_TICK_MS = 2_500;
+
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3;
+}
+
+function easeInOutCubic(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduced(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return reduced;
+}
+
+function formatPlus(total: number) {
+  const days = Math.floor(total / 86400);
+  const rest = total % 86400;
+  const [hours, minutes, seconds] = formatHms(rest);
+  if (days > 0) return `+${days}d ${hours}:${minutes}:${seconds}`;
+  return `+${hours}:${minutes}:${seconds}`;
+}
+
+function randomBonusSeconds() {
+  const roll = Math.random();
+  if (roll < 0.34) return 18 + Math.floor(Math.random() * 240);
+  if (roll < 0.68) return 3600 + Math.floor(Math.random() * 4 * 3600);
+  if (roll < 0.88) return 86400 + Math.floor(Math.random() * 2 * 86400 + Math.random() * 8 * 3600);
+  return 10 * 3600 + Math.floor(Math.random() * 17 * 3600 + Math.random() * 3600);
+}
+
+function useSubathonPreview(startSeconds: number) {
+  const reduced = useReducedMotion();
+  const [seconds, setSeconds] = useState(startSeconds);
+  const [chip, setChip] = useState<{ id: number; label: string } | null>(null);
+
+  useEffect(() => {
+    if (reduced) {
+      setSeconds(startSeconds);
+      setChip(null);
+      return;
+    }
+    let chipId = 0;
+    let hideChip = 0;
+    const tick = window.setInterval(() => {
+      setSeconds((value) => value + 1);
+    }, 1000);
+    const bonus = window.setInterval(() => {
+      const added = randomBonusSeconds();
+      chipId += 1;
+      const id = chipId;
+      setSeconds((value) => value + added);
+      setChip({ id, label: formatPlus(added) });
+      window.clearTimeout(hideChip);
+      hideChip = window.setTimeout(() => {
+        setChip((current) => (current?.id === id ? null : current));
+      }, 1600);
+    }, 4200);
+    return () => {
+      window.clearInterval(tick);
+      window.clearInterval(bonus);
+      window.clearTimeout(hideChip);
+    };
+  }, [reduced, startSeconds]);
+
+  return { seconds, chip };
+}
+
+function useLoopProgress(from: number, to: number, durationMs: number) {
+  const reduced = useReducedMotion();
+  const [value, setValue] = useState((from + to) / 2);
+  useEffect(() => {
+    if (reduced) {
+      setValue((from + to) / 2);
+      return;
+    }
+    let raf = 0;
+    const started = performance.now();
+    const frame = (now: number) => {
+      const t = ((now - started) % durationMs) / durationMs;
+      const raw = t < 0.62 ? t / 0.62 : t < 0.78 ? 1 : 1 - (t - 0.78) / 0.22;
+      const smooth = t < 0.62 ? easeOutCubic(raw) : t < 0.78 ? 1 : easeInOutCubic(raw);
+      setValue(from + (to - from) * smooth);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [from, to, durationMs, reduced]);
+  return value;
+}
+
+function useTick(ms: number, enabled: boolean) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!enabled) return;
+    const id = window.setInterval(() => setTick((n) => n + 1), ms);
+    return () => window.clearInterval(id);
+  }, [ms, enabled]);
+  return tick;
+}
+
+function formatHms(total: number) {
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return [
+    String(hours).padStart(2, "0"),
+    String(minutes).padStart(2, "0"),
+    String(seconds).padStart(2, "0"),
+  ] as const;
+}
+
+function Bar({
+  percent,
+  label,
+  value,
+}: {
+  percent: number;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="flex h-full flex-col justify-center gap-2 px-3.5">
+    <div className="flex h-full flex-col justify-center gap-2 overflow-hidden px-3.5">
       <div className="flex items-center justify-between text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground">
         <span>{label}</span>
         <span className="text-foreground">{percent}%</span>
       </div>
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-[oklch(1_0_0/0.06)] shadow-[inset_0_1px_2px_oklch(0_0_0/0.5)]">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-primary to-accent shadow-[0_0_12px_-2px_var(--primary)]"
-          style={{ width: `${percent}%` }}
-        />
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-[oklch(1_0_0/0.06)]">
+        <div className="hub-bar-fill h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
       </div>
       <p className="text-[0.66rem] text-muted-foreground">{value}</p>
     </div>
@@ -22,18 +147,26 @@ function Bar({ percent, label, value }: { percent: number; label: string; value:
 }
 
 export function TimerPreview() {
+  const { seconds: total, chip } = useSubathonPreview(1 * 3600 + 25 * 60 + 36);
+  const days = Math.floor(total / 86400);
+  const [hours, minutes, seconds] = formatHms(days > 0 ? total % 86400 : total);
   return (
-    <div className="relative grid h-full place-items-center">
-      <div
-        className="absolute size-[104px] rounded-full border border-primary/30 shadow-[0_18px_30px_-18px_var(--primary)] [transform:rotateX(58deg)]"
-        aria-hidden
-      />
-      <div
-        className="absolute size-[70px] rounded-full border border-accent/30 [transform:rotateX(58deg)_rotateZ(20deg)]"
-        aria-hidden
-      />
+    <div className="relative grid h-full place-items-center overflow-hidden">
+      {chip ? (
+        <span
+          key={chip.id}
+          className="hub-timer-chip absolute top-1.5 rounded-full border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.06)] px-2 py-0.5 text-[0.58rem] font-semibold tabular-nums text-primary"
+        >
+          {chip.label}
+        </span>
+      ) : null}
       <p className="relative rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-3 py-1.5 text-lg font-semibold tabular-nums tracking-tight">
-        00:25:36
+        {days > 0 ? <span className="me-1 text-[0.78rem] text-muted-foreground">{days}d</span> : null}
+        <span>{hours}</span>
+        <span className="px-0.5 text-muted-foreground">:</span>
+        <span>{minutes}</span>
+        <span className="px-0.5 text-muted-foreground">:</span>
+        <span>{seconds}</span>
       </p>
     </div>
   );
@@ -52,10 +185,23 @@ export function SubscriberGoalPreview() {
 }
 
 export function CustomGoalPreview() {
-  return <Bar percent={46} label="Custom goal" value="46 / 100 points" />;
+  const live = useLoopProgress(22, 88, HUB_LOOP_MS);
+  const percent = Math.round(live);
+  const current = Math.round((percent / 100) * 100);
+  return (
+    <div className="flex h-full flex-col justify-center gap-2 overflow-hidden px-3.5">
+      <div className="flex items-center justify-between text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground">
+        <span>Custom goal</span>
+        <span className="tabular-nums text-foreground">{percent}%</span>
+      </div>
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-[oklch(1_0_0/0.06)]">
+        <div className="hub-bar-fill h-full rounded-full bg-primary" style={{ width: `${live}%` }} />
+      </div>
+      <p className="text-[0.66rem] tabular-nums text-muted-foreground">{current} / 100 points</p>
+    </div>
+  );
 }
 
-/** Preview driven by the selected goal-type preset (used in the customize modal). */
 export function GoalTypePreview({
   label,
   current,
@@ -69,16 +215,23 @@ export function GoalTypePreview({
   unit: string;
   accent?: string;
 }) {
-  const percent = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  const percent = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+  const live = useLoopProgress(
+    Math.max(8, percent - 14),
+    Math.min(100, percent + 8),
+    HUB_LOOP_MS,
+  );
+  const shown = Math.round(live);
+  const amount = Math.round((shown / 100) * target);
   return (
     <div
-      className="h-full"
+      className="h-full overflow-hidden"
       style={accent ? ({ "--primary": accent } as Record<string, string>) : undefined}
     >
       <Bar
-        percent={percent}
+        percent={shown}
         label={label}
-        value={`${current.toLocaleString()} / ${target.toLocaleString()} ${unit}`}
+        value={`${amount.toLocaleString()} / ${target.toLocaleString()} ${unit}`}
       />
     </div>
   );
@@ -90,13 +243,9 @@ export function GoalPreview() {
 
 export function AlertPreview() {
   return (
-    <div className="grid h-full place-items-center [perspective:600px]">
+    <div className="grid h-full place-items-center overflow-hidden">
       <div className="relative w-full max-w-[195px]">
-        <div
-          className="absolute inset-x-3 -bottom-2 h-8 rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.03)]"
-          aria-hidden
-        />
-        <div className="relative rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.05)] px-3 py-2.5 shadow-[0_18px_30px_oklch(0_0_0/0.6)] [transform:rotateX(10deg)]">
+        <div className="relative rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.05)] px-3 py-2.5">
           <p className="text-[0.6rem] uppercase tracking-[0.24em] text-primary">New sub · Tier 1</p>
           <p className="mt-1 text-[0.8rem] font-medium">nova_stream just subscribed</p>
         </div>
@@ -105,42 +254,77 @@ export function AlertPreview() {
   );
 }
 
+const CHAT_LINES = [
+  { who: "kira", msg: "let's goooo" },
+  { who: "mox", msg: "that clutch though" },
+  { who: "ari", msg: "gg" },
+  { who: "nova", msg: "timer just popped" },
+  { who: "lex", msg: "one more gift" },
+] as const;
+
 export function ChatPreview() {
-  const lines = [
-    ["kira", "let's goooo"],
-    ["mox", "that clutch though"],
-    ["ari", "gg 🎉"],
-  ];
   return (
-    <div className="flex h-full flex-col justify-center gap-1.5 px-3">
-      {lines.map(([who, msg], index) => (
+    <div className="flex h-full flex-col justify-end gap-1 overflow-hidden px-3 py-2">
+      {CHAT_LINES.map((line, index) => (
         <div
-          key={who}
-          className="rounded-xl border border-[oklch(1_0_0/0.07)] bg-[oklch(1_0_0/0.035)] px-2.5 py-1.5 text-[0.68rem] shadow-[0_8px_18px_-12px_oklch(0_0_0/0.9)]"
-          style={{ marginInlineStart: `${index * 10}px` }}
+          key={line.who}
+          className="hub-chat-line rounded-xl border border-[oklch(1_0_0/0.07)] bg-[oklch(1_0_0/0.035)] px-2.5 py-1.5 text-[0.68rem]"
+          style={{ animationDelay: `${index * (HUB_STAGGER_MS / 1000)}s` }}
         >
-          <span className="font-semibold text-primary">{who}</span>{" "}
-          <span className="text-muted-foreground">{msg}</span>
+          <span className="font-semibold text-primary">{line.who}</span>{" "}
+          <span className="text-muted-foreground">{line.msg}</span>
         </div>
       ))}
     </div>
   );
 }
 
+const SPOTLIGHTS = [
+  { who: "kira", msg: "Pinned message on stream" },
+  { who: "mox", msg: "That play was insane" },
+] as const;
+
 export function SpotlightPreview() {
+  const reduced = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  const [motion, setMotion] = useState<"shown" | "exit" | "enter">("shown");
+
+  useEffect(() => {
+    if (reduced) return;
+    let swap = 0;
+    let enter = 0;
+    const cycle = window.setInterval(() => {
+      setMotion("exit");
+      swap = window.setTimeout(() => {
+        setIndex((current) => (current + 1) % SPOTLIGHTS.length);
+        setMotion("enter");
+        enter = window.requestAnimationFrame(() => {
+          enter = window.requestAnimationFrame(() => setMotion("shown"));
+        });
+      }, HUB_SHIFT_MS);
+    }, HUB_BEAT_MS);
+    return () => {
+      window.clearInterval(cycle);
+      window.clearTimeout(swap);
+      window.cancelAnimationFrame(enter);
+    };
+  }, [reduced]);
+
+  const pin = SPOTLIGHTS[index]!;
   return (
-    <div className="grid h-full place-items-center px-3">
-      <div className="w-full rounded-xl border border-primary/30 bg-[oklch(1_0_0/0.05)] px-3 py-2.5 shadow-[0_14px_30px_-16px_oklch(0_0_0/0.95)]">
+    <div className="grid h-full place-items-center overflow-hidden px-3">
+      <div
+        className="hub-spotlight-card w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.05)] px-3 py-2.5"
+        data-motion={motion}
+      >
         <div className="flex items-center gap-1.5">
           <span className="size-2 rounded-full bg-primary" />
-          <span className="text-[0.68rem] font-bold text-primary">kira</span>
-          <span className="ms-auto text-[0.5rem] font-bold uppercase tracking-[0.24em] text-primary/70">
+          <span className="text-[0.68rem] font-bold text-primary">{pin.who}</span>
+          <span className="ms-auto text-[0.5rem] font-bold uppercase tracking-[0.24em] text-muted-foreground">
             Spotlight
           </span>
         </div>
-        <p className="mt-1 text-[0.72rem] font-medium text-muted-foreground">
-          Pinned message on stream ✨
-        </p>
+        <p className="mt-1 text-[0.72rem] font-medium text-muted-foreground">{pin.msg}</p>
       </div>
     </div>
   );
@@ -148,9 +332,9 @@ export function SpotlightPreview() {
 
 export function WheelPreview() {
   return (
-    <div className="grid h-full place-items-center">
+    <div className="grid h-full place-items-center overflow-hidden">
       <div
-        className="size-[86px] rounded-full border border-[oklch(1_0_0/0.12)] shadow-[0_22px_34px_-20px_var(--primary)] [transform:rotateX(52deg)]"
+        className="size-[86px] rounded-full border border-[oklch(1_0_0/0.12)]"
         style={{
           background:
             "conic-gradient(var(--primary) 0 25%, var(--cyan) 0 50%, var(--primary-glow) 0 75%, var(--secondary) 0 100%)",
@@ -175,14 +359,16 @@ const HUB_EMOTES = [
 ] as const;
 
 const HUB_EMOTE_FALLS = [
-  { left: "6%", delay: "-0.4s", duration: "4.4s", size: 18, spin: "150deg" },
-  { left: "18%", delay: "-1.9s", duration: "5.2s", size: 16, spin: "-190deg" },
-  { left: "31%", delay: "-3.3s", duration: "4.8s", size: 20, spin: "210deg" },
-  { left: "44%", delay: "-0.8s", duration: "5.6s", size: 17, spin: "-140deg" },
-  { left: "57%", delay: "-2.6s", duration: "4.2s", size: 15, spin: "175deg" },
-  { left: "69%", delay: "-4.1s", duration: "5.4s", size: 19, spin: "-205deg" },
-  { left: "81%", delay: "-1.4s", duration: "4.9s", size: 16, spin: "185deg" },
-  { left: "91%", delay: "-3.0s", duration: "5.1s", size: 18, spin: "-165deg" },
+  { left: "4%", delay: "0s", duration: "10s", size: 18, spin: "150deg" },
+  { left: "15%", delay: "-0.5s", duration: "11s", size: 16, spin: "-190deg" },
+  { left: "26%", delay: "-1s", duration: "9s", size: 20, spin: "210deg" },
+  { left: "38%", delay: "-1.5s", duration: "12s", size: 17, spin: "-140deg" },
+  { left: "49%", delay: "-2s", duration: "8s", size: 15, spin: "175deg" },
+  { left: "60%", delay: "-2.5s", duration: "10s", size: 19, spin: "-205deg" },
+  { left: "71%", delay: "-3s", duration: "11s", size: 16, spin: "185deg" },
+  { left: "82%", delay: "-3.5s", duration: "9s", size: 18, spin: "-165deg" },
+  { left: "90%", delay: "-4s", duration: "12s", size: 15, spin: "200deg" },
+  { left: "10%", delay: "-4.5s", duration: "8s", size: 14, spin: "-120deg" },
 ] as const;
 
 export function EmotePreview() {
@@ -221,7 +407,7 @@ export function ActivityPreview() {
     ["Sub", "Tier 1"],
   ];
   return (
-    <div className="flex h-full flex-col justify-center gap-1.5 px-3 text-[0.68rem]">
+    <div className="flex h-full flex-col justify-center gap-1.5 overflow-hidden px-3 text-[0.68rem]">
       {rows.map(([kind, value]) => (
         <div
           key={kind}
@@ -237,11 +423,11 @@ export function ActivityPreview() {
 
 export function CountdownPreview() {
   return (
-    <div className="flex h-full items-center justify-center gap-2 [perspective:700px]">
+    <div className="flex h-full items-center justify-center gap-2 overflow-hidden">
       {["02", "14", "09"].map((unit) => (
         <div
           key={unit}
-          className="rounded-xl border border-[oklch(1_0_0/0.09)] bg-[oklch(1_0_0/0.04)] px-3 py-2.5 text-lg font-semibold tabular-nums shadow-[0_14px_24px_-16px_oklch(0_0_0/0.9)] [transform:rotateX(8deg)]"
+          className="rounded-xl border border-[oklch(1_0_0/0.09)] bg-[oklch(1_0_0/0.04)] px-3 py-2.5 text-lg font-semibold tabular-nums"
         >
           {unit}
         </div>
@@ -252,11 +438,11 @@ export function CountdownPreview() {
 
 export function SocialPreview() {
   return (
-    <div className="flex h-full items-center justify-center gap-2">
+    <div className="flex h-full items-center justify-center gap-2 overflow-hidden">
       {["tw", "yt", "ig", "x"].map((tag) => (
         <span
           key={tag}
-          className="grid size-9 place-items-center rounded-xl border border-[oklch(1_0_0/0.09)] bg-[oklch(1_0_0/0.04)] text-[0.6rem] uppercase text-muted-foreground shadow-[0_12px_22px_-16px_oklch(0_0_0/0.9)]"
+          className="grid size-9 place-items-center rounded-xl border border-[oklch(1_0_0/0.09)] bg-[oklch(1_0_0/0.04)] text-[0.6rem] uppercase text-muted-foreground"
         >
           {tag}
         </span>
@@ -267,12 +453,12 @@ export function SocialPreview() {
 
 export function TtsPreview() {
   return (
-    <div className="flex h-full items-end justify-center gap-1 pb-8">
+    <div className="flex h-full items-end justify-center gap-1 overflow-hidden pb-8">
       {[12, 26, 38, 20, 32, 14, 28].map((height, index) => (
         <span
           key={index}
-          className="w-1.5 rounded-full bg-gradient-to-t from-primary/40 to-accent"
-          style={{ height }}
+          className="hub-eq-bar w-1.5 rounded-full bg-primary/70"
+          style={{ height, animationDelay: `${index * (HUB_STAGGER_MS / 5)}ms` }}
         />
       ))}
     </div>
@@ -281,7 +467,7 @@ export function TtsPreview() {
 
 export function TextPreview() {
   return (
-    <div className="grid h-full place-items-center">
+    <div className="grid h-full place-items-center overflow-hidden">
       <p className="text-sm font-semibold tracking-tight">
         Now playing <span className="text-primary">· lo-fi</span>
       </p>
@@ -291,7 +477,7 @@ export function TextPreview() {
 
 export function MediaPreview() {
   return (
-    <div className="grid h-full place-items-center">
+    <div className="grid h-full place-items-center overflow-hidden">
       <div className="flex w-full max-w-[170px] gap-1.5">
         <div className="h-16 flex-1 rounded-xl bg-[oklch(1_0_0/0.06)]" />
         <div className="h-16 w-10 rounded-xl bg-primary/25" />
@@ -303,12 +489,9 @@ export function MediaPreview() {
 
 export function PollPreview() {
   return (
-    <div className="flex h-full flex-col justify-center gap-2 px-3.5">
+    <div className="flex h-full flex-col justify-center gap-2 overflow-hidden px-3.5">
       {[64, 26, 10].map((value) => (
-        <div
-          key={value}
-          className="h-2 w-full overflow-hidden rounded-full bg-[oklch(1_0_0/0.06)]"
-        >
+        <div key={value} className="h-2 w-full overflow-hidden rounded-full bg-[oklch(1_0_0/0.06)]">
           <div className="h-full rounded-full bg-primary/70" style={{ width: `${value}%` }} />
         </div>
       ))}
@@ -318,7 +501,7 @@ export function PollPreview() {
 
 export function QueuePreview() {
   return (
-    <div className="flex h-full flex-col justify-center gap-1.5 px-3 text-[0.68rem]">
+    <div className="flex h-full flex-col justify-center gap-1.5 overflow-hidden px-3 text-[0.68rem]">
       {["1. kira", "2. mox", "3. ari"].map((row) => (
         <p
           key={row}
@@ -331,64 +514,150 @@ export function QueuePreview() {
   );
 }
 
+const TAPPERS = [
+  { name: "hala_live", base: 12840, step: 360, tone: "#C9A227" },
+  { name: "mvp_gamer", base: 12410, step: 520, tone: "#94A3B8" },
+  { name: "noorx", base: 11980, step: 690, tone: "#B87A45" },
+] as const;
+
 export function TappersPreview() {
-  const rows = [
-    { rank: 1, name: "hala_live", taps: "12.8K", color: "#FFD34D" },
-    { rank: 2, name: "mvp_gamer", taps: "9.3K", color: "#CBD5E1" },
-    { rank: 3, name: "noorx", taps: "4.1K", color: "#E29A5A" },
-  ];
+  const reduced = useReducedMotion();
+  const phase = useTick(HUB_TICK_MS, !reduced);
+  const ranked = TAPPERS.map((row, index) => ({
+    ...row,
+    taps: row.base + ((phase + index) % 4) * row.step - ((phase * 2 + index) % 3) * 210,
+  })).sort((a, b) => b.taps - a.taps);
+
   return (
-    <div className="flex h-full flex-col justify-center gap-1.5 px-3.5">
-      {rows.map((row) => (
-        <div
-          key={row.rank}
-          className="flex items-center gap-2 rounded-xl border border-[#FE2C55]/25 bg-[oklch(1_0_0/0.04)] px-2 py-1"
-        >
-          <span className="text-[0.68rem] font-bold" style={{ color: row.color }}>
-            #{row.rank}
-          </span>
-          <span className="size-4 rounded-full bg-gradient-to-br from-[#00F2FE]/50 to-[#FE2C55]/60" />
-          <span className="min-w-0 flex-1 truncate text-[0.66rem]">{row.name}</span>
-          <span className="text-[0.66rem] font-semibold tabular-nums text-[#FE2C55]">
-            {row.taps}
-          </span>
-        </div>
-      ))}
+    <div className="relative h-full overflow-hidden px-3.5 pt-3">
+      {TAPPERS.map((row) => {
+        const rank = ranked.findIndex((entry) => entry.name === row.name);
+        const live = ranked[rank];
+        return (
+          <div
+            key={row.name}
+            className="hub-tappers-row absolute inset-x-3.5 flex items-center gap-2 rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-2 py-1"
+            style={{ top: 10 + rank * 34, transitionDuration: `${HUB_SHIFT_MS}ms` }}
+          >
+            <span className="w-5 text-[0.68rem] font-bold tabular-nums" style={{ color: row.tone }}>
+              #{rank + 1}
+            </span>
+            <span className="size-4 rounded-full bg-[oklch(1_0_0/0.12)]" />
+            <span className="min-w-0 flex-1 truncate text-[0.66rem]">{row.name}</span>
+            <span className="text-[0.66rem] font-semibold tabular-nums text-muted-foreground">
+              {(live?.taps ?? row.base).toLocaleString()}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
+
+const CONFETTI = [
+  { left: "18%", delay: "0s", color: "#FE2C55" },
+  { left: "34%", delay: "0.5s", color: "#E4E4E7" },
+  { left: "52%", delay: "1s", color: "#FE2C55" },
+  { left: "68%", delay: "1.5s", color: "#A1A1AA" },
+  { left: "80%", delay: "2s", color: "#FE2C55" },
+] as const;
 
 export function TapGoalPreview() {
+  const live = useLoopProgress(18, 92, HUB_LOOP_MS);
+  const percent = Math.round(live);
+  const current = Math.round((percent / 100) * 50_000);
   return (
-    <div className="flex h-full flex-col justify-center gap-2 px-3.5">
+    <div className="relative flex h-full flex-col justify-center gap-2 overflow-hidden px-3.5">
+      {CONFETTI.map((dot) => (
+        <span
+          key={dot.left}
+          className="hub-confetti pointer-events-none absolute bottom-8 size-1 rounded-full"
+          style={{
+            insetInlineStart: dot.left,
+            background: dot.color,
+            animationDelay: dot.delay,
+          }}
+        />
+      ))}
       <div className="flex items-baseline justify-between">
         <span className="text-[0.66rem] font-bold uppercase tracking-wide">Goal: 50K taps</span>
-        <span className="text-[0.66rem] font-black text-[#FE2C55]">75%</span>
+        <span className="text-[0.66rem] font-semibold tabular-nums text-[#FE2C55]">{percent}%</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-[oklch(1_0_0/0.12)]">
-        <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-[#00F2FE] to-[#FE2C55]" />
+        <div
+          className="h-full rounded-full bg-[#FE2C55]"
+          style={{
+            width: `${live}%`,
+            boxShadow: "0 0 10px -6px color-mix(in oklab, #FE2C55 36%, transparent)",
+          }}
+        />
       </div>
-      <span className="text-[0.6rem] tabular-nums text-muted-foreground">37,500 / 50,000 taps</span>
+      <span className="text-[0.6rem] tabular-nums text-muted-foreground">
+        {current.toLocaleString()} / 50,000 taps
+      </span>
     </div>
   );
 }
 
+const MEDIA_TRACKS = ["Midnight Drive", "Lo-fi Keys", "Arena Drop"] as const;
+
 export function MediaRequestPreview() {
+  const reduced = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (reduced) return;
+    let swap = 0;
+    const cycle = window.setInterval(() => {
+      setVisible(false);
+      swap = window.setTimeout(() => {
+        setIndex((current) => (current + 1) % MEDIA_TRACKS.length);
+        setVisible(true);
+      }, HUB_SHIFT_MS);
+    }, HUB_BEAT_MS);
+    return () => {
+      window.clearInterval(cycle);
+      window.clearTimeout(swap);
+    };
+  }, [reduced]);
+
+  const track = MEDIA_TRACKS[index]!;
+  const queued = [
+    MEDIA_TRACKS[(index + 1) % MEDIA_TRACKS.length]!,
+    MEDIA_TRACKS[(index + 2) % MEDIA_TRACKS.length]!,
+  ];
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-1.5 p-3">
-      <div className="flex items-center gap-2 rounded-xl border border-[#53FC18]/35 bg-[#53FC18]/10 px-2 py-1.5">
-        <span className="grid size-5 place-items-center rounded-xl bg-[#53FC18]/20 text-[0.55rem] font-bold text-[#53FC18]">
-          ▶
-        </span>
-        <span className="truncate text-[0.62rem] font-medium">Now playing · YouTube · Spotify</span>
+    <div className="flex h-full flex-col justify-center overflow-hidden px-3">
+      <div className="rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.045)] px-2.5 py-2 backdrop-blur-sm">
+        <div className="flex items-center gap-2.5">
+          <span className="hub-media-art relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-[oklch(1_0_0/0.07)]">
+            <span className="absolute inset-0 bg-primary/12" />
+            <span className="relative text-[0.58rem] text-foreground/85">▶</span>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.48rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Now playing
+            </p>
+            <p
+              className="hub-fade truncate text-[0.7rem] font-medium tracking-tight"
+              style={{ opacity: visible ? 1 : 0 }}
+            >
+              {track}
+            </p>
+          </div>
+        </div>
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-[oklch(1_0_0/0.08)]">
+          <div className="hub-media-progress h-full w-full rounded-full bg-primary/70" />
+        </div>
       </div>
-      <div className="flex items-center gap-2 rounded-xl border border-white/10 px-2 py-1">
-        <span className="text-[0.55rem] text-muted-foreground">2.</span>
-        <span className="h-1.5 flex-1 rounded-full bg-white/15" />
-      </div>
-      <div className="flex items-center gap-2 rounded-xl border border-white/10 px-2 py-1">
-        <span className="text-[0.55rem] text-muted-foreground">3.</span>
-        <span className="h-1.5 w-2/3 rounded-full bg-white/10" />
+      <div className="mt-1.5 space-y-1 px-0.5">
+        {queued.map((name, order) => (
+          <div key={`${name}-${order}`} className="flex items-center gap-2">
+            <span className="w-3 text-[0.5rem] tabular-nums text-muted-foreground/80">{order + 2}</span>
+            <span className="truncate text-[0.6rem] text-muted-foreground">{name}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

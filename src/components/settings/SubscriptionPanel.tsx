@@ -5,8 +5,7 @@ import { remainingLabel, useSubscription } from "@/hooks/useSubscription";
 import { useLanguage } from "@/lib/i18n";
 
 export function SubscriptionStatusPill({ userId }: { userId: string }) {
-  const { lang, t } = useLanguage();
-  const ar = lang === "ar";
+  const { t } = useLanguage();
   const { data } = useSubscription(userId);
   if (!data) return null;
 
@@ -14,7 +13,7 @@ export function SubscriptionStatusPill({ userId }: { userId: string }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[0.68rem] font-semibold text-emerald-400">
         <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_currentColor]" />
-        {remainingLabel(data.daysLeft, data.lifetime, ar)}
+        {remainingLabel(data.daysLeft, data.lifetime, false)}
       </span>
     );
   }

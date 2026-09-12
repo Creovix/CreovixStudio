@@ -14,7 +14,7 @@ import { ErrorFallback } from "@/components/layout/ErrorFallback";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { LanguageProvider, LANG_STORAGE_KEY } from "@/lib/i18n";
+import { LanguageProvider } from "@/lib/i18n";
 import "@/styles.css";
 
 function NotFoundComponent() {
@@ -80,13 +80,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-const LANG_BOOTSTRAP = `(function(){try{var l=localStorage.getItem("${LANG_STORAGE_KEY}");var ar=l==="ar";var html=document.documentElement;html.setAttribute("lang",ar?"ar":"en");html.setAttribute("dir",ar?"rtl":"ltr");}catch(e){}})();`;
-
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="en" dir="ltr">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: LANG_BOOTSTRAP }} />
         <HeadContent />
       </head>
       <body>
