@@ -26,7 +26,7 @@ export function LinkInBioPage({
     : "1px solid transparent";
   return (
     <div
-      className={cn("relative min-h-full overflow-hidden", preview ? "h-full min-h-[32rem]" : "min-h-screen")}
+      className={cn("relative min-h-full overflow-x-hidden", preview ? "h-full min-h-[32rem]" : "min-h-screen")}
       style={{
         fontFamily: font.stack,
         background: theme.paletteBg,
@@ -41,7 +41,10 @@ export function LinkInBioPage({
       <LinkInBioAmbient theme={theme} />
       <div
         className={cn(
-          "relative mx-auto flex w-full max-w-[min(92vw,80rem)] flex-col px-5 py-12 md:px-8 md:py-16 lg:px-10",
+          "@container relative mx-auto flex w-full flex-col",
+          preview
+            ? "max-w-none px-4 py-8"
+            : "max-w-[min(96vw,80rem)] px-5 py-12 md:px-8 md:py-16 lg:px-10",
         )}
       >
         <Header profile={profile} compact={theme.layout === "grid"} bannerLayout={theme.layout === "banner"} border={border} glass={glass} accent={theme.paletteAccent} />
@@ -118,7 +121,7 @@ function Header({
           className={cn(
             "grid size-24 place-items-center overflow-hidden rounded-full",
             showBanner
-              ? "absolute bottom-0 left-1/2 z-10 -translate-x-1/2 translate-y-1/2"
+              ? "absolute bottom-0 left-1/2 z-20 -translate-x-1/2 translate-y-1/2"
               : "relative mx-auto",
           )}
           style={{
@@ -185,11 +188,45 @@ function CountdownCard({
       ) : ended ? (
         <p className="mt-1 text-sm font-semibold">The countdown has ended.</p>
       ) : (
-        <p className="mt-1 font-semibold tabular-nums">
-          {days > 0 ? `${days}d ` : ""}
-          {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-        </p>
+        <div className="mt-2 flex items-start justify-center gap-1.5">
+          <CountdownUnit value={days} label="D" />
+          <CountdownColon />
+          <CountdownUnit value={hours} label="H" padded />
+          <CountdownColon />
+          <CountdownUnit value={minutes} label="M" padded />
+          <CountdownColon />
+          <CountdownUnit value={seconds} label="S" padded />
+        </div>
       )}
     </div>
+  );
+}
+
+function CountdownUnit({
+  value,
+  label,
+  padded = false,
+}: {
+  value: number;
+  label: string;
+  padded?: boolean;
+}) {
+  return (
+    <div className="flex min-w-[2rem] flex-col items-center">
+      <span className="text-lg font-semibold leading-none tabular-nums">
+        {padded ? String(value).padStart(2, "0") : value}
+      </span>
+      <span className="mt-1 text-[0.6rem] font-medium uppercase tracking-wide" style={{ color: "var(--bio-muted)" }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function CountdownColon() {
+  return (
+    <span className="pt-0.5 text-lg font-semibold leading-none" style={{ color: "var(--bio-muted)" }} aria-hidden>
+      :
+    </span>
   );
 }

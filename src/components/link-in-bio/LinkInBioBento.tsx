@@ -66,7 +66,7 @@ export function LinkInBioBento({
       ref={rootRef}
       className={cn(
         "relative grid w-full",
-        fill && "grid-cols-2 md:grid-cols-4 lg:grid-cols-6 [grid-auto-flow:dense]",
+        fill && "grid-cols-2 @min-[36rem]:grid-cols-4 @min-[60rem]:grid-cols-6 [grid-auto-flow:dense]",
       )}
       style={{
         gridTemplateColumns: fill ? undefined : `repeat(${BENTO_COLS}, minmax(0, 1fr))`,
@@ -158,7 +158,7 @@ function BentoTile({
 
   const inner =
     link.kind === "gallery" ? (
-      <div className="flex h-full flex-col p-4">
+      <div className="flex h-full flex-col p-5">
         <LinkInBioGallery images={link.galleryImages} title={link.title} className="min-h-0 flex-1" />
       </div>
     ) : (
@@ -187,13 +187,13 @@ function BentoTile({
     gridRow: fill ? `span ${link.rowSpan}` : `${link.gridY + 1} / span ${link.rowSpan}`,
     background:
       link.kind === "gallery"
-        ? "color-mix(in oklab, #ffffff 16%, var(--bio-bg))"
+        ? "color-mix(in oklab, #ffffff 22%, var(--bio-bg))"
         : accent.css,
-    border: link.kind === "gallery" ? "1px solid color-mix(in oklab, var(--bio-fg) 12%, transparent)" : undefined,
-    backdropFilter: link.kind === "gallery" ? "blur(16px)" : undefined,
+    border: link.kind === "gallery" ? "1px solid color-mix(in oklab, var(--bio-fg) 10%, transparent)" : undefined,
+    backdropFilter: link.kind === "gallery" ? "blur(18px)" : undefined,
     boxShadow:
       link.kind === "gallery"
-        ? "0 14px 32px color-mix(in oklab, #000 22%, transparent)"
+        ? "0 10px 28px color-mix(in oklab, #000 16%, transparent)"
         : glow
           ? `0 16px 28px color-mix(in oklab, ${accent.color} ${Math.round(glow / 4)}%, transparent)`
           : undefined,

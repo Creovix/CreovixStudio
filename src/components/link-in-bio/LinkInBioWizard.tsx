@@ -134,8 +134,8 @@ export function LinkInBioWizard({
         </div>
       </header>
 
-      <div className="relative mx-auto flex min-h-dvh w-full max-w-6xl items-center px-5 py-24 md:px-8">
-        <div className={cn("w-full", current === 2 || current === 3 ? "grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]" : "max-w-xl")}>
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-[min(96vw,80rem)] items-center px-5 py-24 md:px-8">
+        <div className={cn("w-full", current >= 2 ? "grid items-start gap-10 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]" : "max-w-xl")}>
           <section>
             <p className="text-sm tabular-nums text-white/35">0{current}</p>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">{STEPS[current - 1]?.title}</h1>
@@ -376,8 +376,8 @@ export function LinkInBioWizard({
               ) : null}
             </div>
           </section>
-          {current === 2 || current === 3 ? (
-            <aside className="overflow-hidden rounded-[2rem] border border-white/10">
+          {current >= 2 ? (
+            <aside className="overflow-x-hidden overflow-y-auto rounded-[2rem] border border-white/10">
               <LinkInBioPage data={preview} preview />
             </aside>
           ) : null}
@@ -385,7 +385,7 @@ export function LinkInBioWizard({
       </div>
 
       <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-white/10 bg-[#090b10]/80 px-5 py-4 backdrop-blur md:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[min(96vw,80rem)] items-center justify-between gap-4">
           <Button type="button" variant="ghost" disabled={current === 1} onClick={() => go(current - 1)}>
             <ChevronLeft className="size-4" />
             Back

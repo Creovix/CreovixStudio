@@ -30,7 +30,7 @@ function formatPlus(total: number) {
   const days = Math.floor(total / 86400);
   const rest = total % 86400;
   const [hours, minutes, seconds] = formatHms(rest);
-  if (days > 0) return `+${days}d ${hours}:${minutes}:${seconds}`;
+  if (days > 0) return `+${days}:${hours}:${minutes}:${seconds}`;
   return `+${hours}:${minutes}:${seconds}`;
 }
 
@@ -112,6 +112,25 @@ function useTick(ms: number, enabled: boolean) {
   return tick;
 }
 
+function HubTimeUnit({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div className="flex min-w-[1.55rem] flex-col items-center">
+      <span className="text-lg font-semibold leading-none tabular-nums tracking-tight">{value}</span>
+      <span className="mt-1 text-center text-[0.45rem] font-medium uppercase leading-none tracking-wide text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function HubTimeColon() {
+  return (
+    <span className="pt-0.5 text-lg font-semibold leading-none text-muted-foreground" aria-hidden>
+      :
+    </span>
+  );
+}
+
 function formatHms(total: number) {
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
@@ -161,21 +180,14 @@ export function TimerPreview() {
         </span>
       ) : null}
       <div className="relative rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-3 py-1.5">
-        <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto] items-baseline justify-items-center">
-          <span className="text-lg font-semibold tabular-nums tracking-tight">{days}</span>
-          <span className="px-0.5 text-lg font-semibold text-muted-foreground">:</span>
-          <span className="text-lg font-semibold tabular-nums tracking-tight">{hours}</span>
-          <span className="px-0.5 text-lg font-semibold text-muted-foreground">:</span>
-          <span className="text-lg font-semibold tabular-nums tracking-tight">{minutes}</span>
-          <span className="px-0.5 text-lg font-semibold text-muted-foreground">:</span>
-          <span className="text-lg font-semibold tabular-nums tracking-tight">{seconds}</span>
-          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">D</span>
-          <span />
-          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">H</span>
-          <span />
-          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">M</span>
-          <span />
-          <span className="text-center text-[0.45rem] font-medium uppercase text-muted-foreground">S</span>
+        <div className="flex items-start justify-center gap-1">
+          <HubTimeUnit value={days} label="D" />
+          <HubTimeColon />
+          <HubTimeUnit value={hours} label="H" />
+          <HubTimeColon />
+          <HubTimeUnit value={minutes} label="M" />
+          <HubTimeColon />
+          <HubTimeUnit value={seconds} label="S" />
         </div>
       </div>
     </div>

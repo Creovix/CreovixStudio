@@ -329,15 +329,16 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
             ) : null}
           </Panel>
 
-          <div className="overflow-hidden rounded-2xl border border-white/10">
-            <p className="border-b border-white/10 px-4 py-2 text-[0.72rem] uppercase tracking-wide text-muted-foreground">
-              Live preview
-            </p>
-            <div className="max-h-[36rem] overflow-auto">
-              <LinkInBioPage data={preview} preview />
-            </div>
-          </div>
         </aside>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-white/10">
+        <p className="border-b border-white/10 px-4 py-2 text-[0.72rem] uppercase tracking-wide text-muted-foreground">
+          Live preview
+        </p>
+        <div className="max-h-[52rem] overflow-auto">
+          <LinkInBioPage data={preview} preview />
+        </div>
       </div>
     </div>
   );
