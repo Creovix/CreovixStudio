@@ -144,35 +144,39 @@ function Header({
   accent: string;
 }) {
   const initials = (profile.displayName || profile.slug || "?").slice(0, 2).toUpperCase();
+  const showBanner = Boolean(profile.headerUrl || bannerLayout);
   return (
-    <header className={cn("flex flex-col items-center text-center", compact && "mb-2")}>
-      <div
-        className={cn("relative mb-10 w-full overflow-hidden rounded-3xl", bannerLayout ? "min-h-40" : profile.headerUrl ? "min-h-32" : "")}
-        style={
-          profile.headerUrl || bannerLayout
-            ? {
-                background: profile.headerUrl
-                  ? `center / cover no-repeat url(${profile.headerUrl})`
-                  : `linear-gradient(160deg, color-mix(in oklab, ${accent} 40%, var(--bio-bg)), var(--bio-bg))`,
-                border,
-                backdropFilter: glass ? "blur(10px)" : undefined,
-              }
-            : undefined
-        }
-      >
-        {profile.headerUrl || bannerLayout ? <div className="h-36 w-full" /> : null}
+    <header className={cn("flex flex-col items-center overflow-visible text-center", compact && "mb-2")}>
+      <div className={cn("relative w-full overflow-visible", showBanner ? "mb-14" : "mb-2")}>
+        {showBanner ? (
+          <div
+            className={cn("w-full overflow-hidden rounded-3xl", bannerLayout ? "min-h-40" : "min-h-32")}
+            style={{
+              background: profile.headerUrl
+                ? `center / cover no-repeat url(${profile.headerUrl})`
+                : `linear-gradient(160deg, color-mix(in oklab, ${accent} 40%, var(--bio-bg)), var(--bio-bg))`,
+              border,
+              backdropFilter: glass ? "blur(10px)" : undefined,
+            }}
+          >
+            <div className="h-36 w-full" />
+          </div>
+        ) : null}
         <span
           className={cn(
             "grid size-24 place-items-center overflow-hidden rounded-full",
-            profile.headerUrl || bannerLayout ? "absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2" : "mx-auto",
+            showBanner
+              ? "absolute bottom-0 left-1/2 z-10 -translate-x-1/2 translate-y-1/2"
+              : "relative mx-auto",
           )}
           style={{
-            border: "1px solid color-mix(in oklab, var(--bio-fg) 18%, transparent)",
+            border: "3px solid color-mix(in oklab, var(--bio-bg) 82%, var(--bio-fg))",
+            boxShadow: "0 0 0 1px color-mix(in oklab, var(--bio-fg) 16%, transparent)",
             background: "color-mix(in oklab, var(--bio-fg) 8%, var(--bio-bg))",
           }}
         >
           {profile.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="" className="size-full object-cover" />
+            <img src={profile.avatarUrl} alt="" className="size-full object-cover object-center" />
           ) : (
             <span className="text-lg font-semibold">{initials}</span>
           )}
