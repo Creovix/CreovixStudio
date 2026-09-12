@@ -213,7 +213,7 @@ export const FONT_CHOICES: ReadonlyArray<{ id: string; label: string; stack: str
 ];
 
 export const BENTO_COLS = 4;
-export const BENTO_ROW_PX = 148;
+export const BENTO_ROW_PX = 160;
 export const BENTO_GAP_PX = 12;
 export const GALLERY_MAX_IMAGES = 8;
 

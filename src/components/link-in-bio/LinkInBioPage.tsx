@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
+import { LinkInBioPlatformLogo } from "@/components/link-in-bio/LinkInBioPlatformLogo";
 import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
 import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
 import { fontById, resolveCardSize, type PublicLinkInBio } from "@/lib/linkInBio";
@@ -61,8 +62,7 @@ export function LinkInBioPage({
       <LinkInBioAmbient theme={theme} />
       <div
         className={cn(
-          "relative mx-auto flex w-full flex-col px-5 py-12 md:py-16",
-          theme.layout === "bento" ? "max-w-3xl" : "max-w-lg",
+          "relative mx-auto flex w-full max-w-[min(92vw,80rem)] flex-col px-5 py-12 md:px-8 md:py-16 lg:px-10",
         )}
       >
         <Header profile={profile} compact={theme.layout === "grid"} bannerLayout={theme.layout === "banner"} border={border} glass={glass} accent={theme.paletteAccent} />
@@ -150,7 +150,7 @@ function Header({
       <div className={cn("relative w-full overflow-visible", showBanner ? "mb-14" : "mb-2")}>
         {showBanner ? (
           <div
-            className={cn("w-full overflow-hidden rounded-3xl", bannerLayout ? "min-h-40" : "min-h-32")}
+            className={cn("w-full overflow-hidden rounded-3xl", bannerLayout ? "min-h-48 lg:min-h-56" : "min-h-36 lg:min-h-48")}
             style={{
               background: profile.headerUrl
                 ? `center / cover no-repeat url(${profile.headerUrl})`
@@ -159,7 +159,7 @@ function Header({
               backdropFilter: glass ? "blur(10px)" : undefined,
             }}
           >
-            <div className="h-36 w-full" />
+            <div className="h-36 w-full lg:h-48" />
           </div>
         ) : null}
         <span
@@ -182,11 +182,11 @@ function Header({
           )}
         </span>
       </div>
-      <LinkInBioText as="h1" className="mx-auto mt-4 w-full min-w-0 max-w-md text-2xl font-semibold tracking-tight">
+      <LinkInBioText as="h1" className="mx-auto mt-4 w-full min-w-0 max-w-2xl text-2xl font-semibold tracking-tight md:text-3xl">
         {profile.displayName || profile.slug || "Your page"}
       </LinkInBioText>
       {profile.bio ? (
-        <LinkInBioText className="mx-auto mt-2 w-full min-w-0 max-w-md text-sm leading-relaxed" style={{ color: "var(--bio-muted)" }}>
+        <LinkInBioText className="mx-auto mt-2 w-full min-w-0 max-w-2xl text-sm leading-relaxed md:text-base" style={{ color: "var(--bio-muted)" }}>
           {profile.bio}
         </LinkInBioText>
       ) : null}
@@ -280,6 +280,7 @@ function BioLinkCard({
           : undefined,
       }}
     >
+      <LinkInBioPlatformLogo platform={link.platform} size={22} />
       <span className="min-w-0 text-start">
         <span className="block truncate font-semibold" dir="auto">
           {link.title}
