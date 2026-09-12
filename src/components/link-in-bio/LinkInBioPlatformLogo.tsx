@@ -1,5 +1,12 @@
-import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import type { LinkPlatform } from "@/lib/linkInBio";
+
+const box = (size: number) =>
+  ({
+    height: size,
+    width: size,
+    display: "block",
+    flex: "0 0 auto",
+  }) as const;
 
 export function LinkInBioPlatformLogo({
   platform,
@@ -10,100 +17,95 @@ export function LinkInBioPlatformLogo({
   size?: number;
   onBrand?: boolean;
 }) {
-  const common = {
-    height: size,
-    width: size,
-    display: "block",
-    flex: "0 0 auto",
-  } as const;
+  const style = box(size);
 
-  if (onBrand && platform === "kick") {
+  if (platform === "instagram") {
     return (
-      <svg viewBox="0 0 512 512" style={common} aria-hidden>
+      <svg viewBox="0 0 24 24" style={style} aria-hidden>
+        <rect x="2.4" y="2.4" width="19.2" height="19.2" rx="5.6" fill="none" stroke="#fff" strokeWidth="1.7" />
+        <circle cx="12" cy="12" r="4.15" fill="none" stroke="#fff" strokeWidth="1.7" />
+        <circle cx="17.15" cy="6.85" r="1.15" fill="#fff" />
+      </svg>
+    );
+  }
+
+  if (platform === "youtube") {
+    return (
+      <svg viewBox="0 0 24 24" style={style} aria-hidden>
+        <path fill="#fff" d="M8.4 6.8v10.4L18.2 12 8.4 6.8z" />
+      </svg>
+    );
+  }
+
+  if (platform === "tiktok") {
+    return (
+      <svg viewBox="0 0 24 24" style={style} aria-hidden>
         <path
-          fill="#111"
+          fill={onBrand ? "#25F4EE" : "#25F4EE"}
+          d="M14.2 3c.4 2.2 1.7 3.8 3.8 4.3v2.3c-1.3 0-2.6-.4-3.8-1.1v6.7c0 3.2-2.5 5.6-5.8 5.6S2.6 18.4 2.6 15.2c0-3.1 2.4-5.5 5.5-5.6v2.5c-1.7.1-3 1.5-3 3.2 0 1.8 1.4 3.2 3.2 3.2s3.2-1.4 3.2-3.2V3h2.7z"
+        />
+        <path
+          fill="#FE2C55"
+          d="M13.6 3c.4 2.2 1.7 3.8 3.8 4.3v2.3c-1.3 0-2.6-.4-3.8-1.1v6.7c0 3.2-2.5 5.6-5.8 5.6-.6 0-1.2-.1-1.7-.3 1.1 1.5 2.9 2.5 4.9 2.5 3.3 0 5.8-2.4 5.8-5.6V8.5c1.2.7 2.5 1.1 3.8 1.1V7.3c-2.1-.5-3.4-2.1-3.8-4.3h-3.2z"
+          opacity="0.85"
+        />
+        <path
+          fill="#fff"
+          d="M13.9 3.4c.4 2.1 1.6 3.6 3.5 4.1v1.6c-1.2-.1-2.4-.5-3.5-1.1v6.8c0 2.8-2.2 4.9-5.1 4.9S3.7 17.6 3.7 14.8c0-2.6 2-4.7 4.6-4.8v1.8c-1.5.2-2.6 1.4-2.6 3 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9V3.4h2.4z"
+        />
+      </svg>
+    );
+  }
+
+  if (platform === "twitch") {
+    return (
+      <svg viewBox="0 0 24 24" style={style} aria-hidden>
+        <path
+          fill="#fff"
+          d="M4.2 3 3 6.2v13.1h4.5V22l2.6-2.7h3.9L21 14.4V3H4.2zm15.3 10.4-2.9 2.9h-4.2L10 18.6v-2.3H6.3V4.6h13.2v8.8z"
+        />
+        <path fill="#fff" d="M14.4 7.2h1.8v5.1h-1.8zm-4.6 0h1.8v5.1H9.8z" />
+      </svg>
+    );
+  }
+
+  if (platform === "x") {
+    return (
+      <svg viewBox="0 0 24 24" style={style} aria-hidden>
+        <path
+          fill="#fff"
+          d="M14.3 10.6 21 3h-2.2l-5.1 5.9L9.5 3H3.2l7 10.2L3 21h2.2l5.6-6.5 4.5 6.5H21l-6.7-10.4zm-2 2.3-.7-1L5.6 4.4h2.4l4.3 6.1.7 1 5.8 8.2h-2.4l-4.1-5.8z"
+        />
+      </svg>
+    );
+  }
+
+  if (platform === "kick") {
+    return (
+      <svg viewBox="0 0 512 512" style={style} aria-hidden>
+        <path
+          fill="#fff"
           d="M37 .036h164.448v113.621h54.71v-56.82h54.731V.036h164.448v170.777h-54.73v56.82h-54.711v56.8h54.71v56.82h54.73V512.03H310.89v-56.82h-54.73v-56.8h-54.711v113.62H37V.036z"
         />
       </svg>
     );
   }
 
-  if (onBrand && platform === "discord") {
-    return (
-      <svg viewBox="0 0 24 24" style={common} aria-hidden>
-        <path
-          fill="#fff"
-          d="M20.317 4.37a19.8 19.8 0 0 0-4.885-1.515.07.07 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.3 18.3 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.08.08 0 0 0-.079-.037A19.7 19.7 0 0 0 3.677 4.37a.1.1 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.08.08 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.08.08 0 0 0 .084-.027 14 14 0 0 0 1.226-1.994.07.07 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.08.08 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.07.07 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.07.07 0 0 1 .078.01c.12.098.246.198.373.292a.08.08 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.892.08.08 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.08.08 0 0 0 .084.028 19.8 19.8 0 0 0 6.002-3.03.08.08 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.03M8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418m7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418"
-        />
-      </svg>
-    );
-  }
-
-  if (onBrand && platform === "instagram") {
-    return (
-      <svg viewBox="0 0 24 24" style={common} aria-hidden>
-        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="none" stroke="#fff" strokeWidth="1.8" />
-        <circle cx="12" cy="12" r="4.2" fill="none" stroke="#fff" strokeWidth="1.8" />
-        <circle cx="17.2" cy="6.8" r="1.15" fill="#fff" />
-      </svg>
-    );
-  }
-
-  if (onBrand && platform === "youtube") {
-    return (
-      <svg viewBox="0 0 24 24" style={common} aria-hidden>
-        <path fill="#fff" d="M9.2 7.6v8.8L16.8 12 9.2 7.6z" />
-      </svg>
-    );
-  }
-
-  if (onBrand && platform === "custom") {
-    return (
-      <svg viewBox="0 0 24 24" style={common} aria-hidden>
-        <path
-          fill="#fff"
-          d="M10.6 13.4a4 4 0 0 1 0-5.66l2.12-2.12a4 4 0 1 1 5.66 5.66l-1.3 1.3a1 1 0 0 1-1.42-1.42l1.3-1.3a2 2 0 1 0-2.83-2.83L11.99 9.2a2 2 0 0 0 0 2.83 1 1 0 1 1-1.4 1.4Zm2.8-2.8a4 4 0 0 1 0 5.66l-2.12 2.12a4 4 0 1 1-5.66-5.66l1.3-1.3a1 1 0 0 1 1.42 1.42l-1.3 1.3a2 2 0 1 0 2.83 2.83l2.12-2.12a2 2 0 0 0 0-2.83 1 1 0 1 1 1.4-1.4Z"
-        />
-      </svg>
-    );
-  }
-
-  if (platform === "kick" || platform === "twitch" || platform === "youtube" || platform === "tiktok" || platform === "x") {
-    return <PlatformIcon platform={platform.toUpperCase()} size={size} />;
-  }
-
   if (platform === "discord") {
     return (
-      <svg viewBox="0 0 24 24" style={common} aria-hidden>
+      <svg viewBox="0 0 24 24" style={style} aria-hidden>
         <path
-          fill="#5865F2"
+          fill="#fff"
           d="M20.317 4.37a19.8 19.8 0 0 0-4.885-1.515.07.07 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.3 18.3 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.08.08 0 0 0-.079-.037A19.7 19.7 0 0 0 3.677 4.37a.1.1 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.08.08 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.08.08 0 0 0 .084-.027 14 14 0 0 0 1.226-1.994.07.07 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.08.08 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.07.07 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.07.07 0 0 1 .078.01c.12.098.246.198.373.292a.08.08 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.892.08.08 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.08.08 0 0 0 .084.028 19.8 19.8 0 0 0 6.002-3.03.08.08 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.03M8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418m7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418"
         />
-      </svg>
-    );
-  }
-
-  if (platform === "instagram") {
-    return (
-      <svg viewBox="0 0 24 24" style={common} aria-hidden>
-        <defs>
-          <linearGradient id="bioIgGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#F58529" />
-            <stop offset="50%" stopColor="#DD2A7B" />
-            <stop offset="100%" stopColor="#8134AF" />
-          </linearGradient>
-        </defs>
-        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#bioIgGrad)" />
-        <circle cx="12" cy="12" r="4.2" fill="none" stroke="#fff" strokeWidth="1.8" />
-        <circle cx="17.2" cy="6.8" r="1.1" fill="#fff" />
       </svg>
     );
   }
 
   return (
-    <svg viewBox="0 0 24 24" style={common} aria-hidden>
+    <svg viewBox="0 0 24 24" style={style} aria-hidden>
       <path
-        fill="currentColor"
+        fill="#fff"
         d="M10.6 13.4a4 4 0 0 1 0-5.66l2.12-2.12a4 4 0 1 1 5.66 5.66l-1.3 1.3a1 1 0 0 1-1.42-1.42l1.3-1.3a2 2 0 1 0-2.83-2.83L11.99 9.2a2 2 0 0 0 0 2.83 1 1 0 1 1-1.4 1.4Zm2.8-2.8a4 4 0 0 1 0 5.66l-2.12 2.12a4 4 0 1 1-5.66-5.66l1.3-1.3a1 1 0 0 1 1.42 1.42l-1.3 1.3a2 2 0 1 0 2.83 2.83l2.12-2.12a2 2 0 0 0 0-2.83 1 1 0 1 1 1.4-1.4Z"
       />
     </svg>

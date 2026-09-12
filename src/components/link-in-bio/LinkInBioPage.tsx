@@ -2,28 +2,10 @@ import { useEffect, useState } from "react";
 
 import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
-import { LinkInBioPlatformLogo } from "@/components/link-in-bio/LinkInBioPlatformLogo";
 import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
 import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
-import { fontById, resolveCardSize, type PublicLinkInBio } from "@/lib/linkInBio";
+import { fontById, type PublicLinkInBio } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
-
-const PLATFORM_LABEL: Record<PublicLinkInBio["links"][number]["platform"], string> = {
-  kick: "Kick",
-  twitch: "Twitch",
-  youtube: "YouTube",
-  tiktok: "TikTok",
-  instagram: "Instagram",
-  x: "X",
-  discord: "Discord",
-  custom: "Link",
-};
-
-function cardPadding(size: "s" | "m" | "l") {
-  if (size === "s") return "px-3 py-2.5 text-[0.82rem]";
-  if (size === "l") return "px-5 py-4 text-[1.02rem]";
-  return "px-4 py-3 text-sm";
-}
 
 export function LinkInBioPage({
   data,
@@ -42,9 +24,6 @@ export function LinkInBioPage({
   const border = theme.hairlineBorders
     ? "1px solid color-mix(in oklab, var(--bio-fg) 16%, transparent)"
     : "1px solid transparent";
-  const featured = links.find((link) => link.featured) ?? (theme.layout === "spotlight" ? links[0] : undefined);
-  const rest = featured && theme.layout === "spotlight" ? links.filter((link) => link.id !== featured.id) : links;
-
   return (
     <div
       className={cn("relative min-h-full overflow-hidden", preview ? "h-full min-h-[32rem]" : "min-h-screen")}
@@ -91,36 +70,9 @@ export function LinkInBioPage({
           <p className="mt-8 text-center text-sm" style={{ color: theme.paletteMuted }}>
             No links yet.
           </p>
-        ) : theme.layout === "bento" ? (
-          <div className="mt-8">
-            <LinkInBioBento links={links} theme={theme} livePlatforms={livePlatforms} />
-          </div>
         ) : (
-          <div className={cn("mt-8", theme.layout === "grid" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-2.5")}>
-            {featured && theme.layout === "spotlight" ? (
-              <BioLinkCard
-                link={featured}
-                theme={theme}
-                size="l"
-                cardBg={cardBg}
-                border={border}
-                glass={glass}
-                live={Boolean(livePlatforms[featured.platform as keyof typeof livePlatforms])}
-                spotlight
-              />
-            ) : null}
-            {rest.map((link) => (
-              <BioLinkCard
-                key={link.id}
-                link={link}
-                theme={theme}
-                size={resolveCardSize(link, theme)}
-                cardBg={cardBg}
-                border={border}
-                glass={glass}
-                live={Boolean(livePlatforms[link.platform as keyof typeof livePlatforms])}
-              />
-            ))}
+          <div className="mt-10">
+            <LinkInBioBento links={links} theme={theme} livePlatforms={livePlatforms} />
           </div>
         )}
       </div>
@@ -239,61 +191,5 @@ function CountdownCard({
         </p>
       )}
     </div>
-  );
-}
-
-function BioLinkCard({
-  link,
-  theme,
-  size,
-  cardBg,
-  border,
-  glass,
-  live,
-  spotlight,
-}: {
-  link: PublicLinkInBio["links"][number];
-  theme: PublicLinkInBio["theme"];
-  size: "s" | "m" | "l";
-  cardBg: string;
-  border: string;
-  glass: boolean;
-  live: boolean;
-  spotlight?: boolean;
-}) {
-  return (
-    <a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "group flex items-center justify-between gap-3 rounded-2xl transition-transform hover:-translate-y-0.5",
-        cardPadding(spotlight ? "l" : size),
-        spotlight && "col-span-full",
-      )}
-      style={{
-        background: cardBg,
-        border,
-        backdropFilter: glass ? `blur(${6 + theme.glassIntensity / 10}px)` : undefined,
-        boxShadow: theme.glowStrength
-          ? `0 10px ${12 + theme.glowStrength / 4}px color-mix(in oklab, var(--bio-accent) ${Math.round(theme.glowStrength / 5)}%, transparent)`
-          : undefined,
-      }}
-    >
-      <LinkInBioPlatformLogo platform={link.platform} size={22} />
-      <span className="min-w-0 text-start">
-        <span className="block truncate font-semibold" dir="auto">
-          {link.title}
-        </span>
-        <span className="mt-0.5 block truncate text-[0.7rem]" style={{ color: "var(--bio-muted)" }}>
-          {PLATFORM_LABEL[link.platform]}
-          {link.platform === "tiktok" ? " · Coming Soon" : ""}
-          {live ? " · Live" : ""}
-        </span>
-      </span>
-      <span className="shrink-0 text-[0.7rem] font-medium" style={{ color: "var(--bio-accent)" }} aria-hidden>
-        Open
-      </span>
-    </a>
   );
 }

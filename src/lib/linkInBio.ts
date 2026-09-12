@@ -479,16 +479,13 @@ export function sanitizeGalleryImages(raw: unknown): GalleryImage[] {
 
 export function platformAccent(platform: LinkPlatform): { color: string; css: string } {
   if (platform === "kick") return { color: "#53FC18", css: "#53FC18" };
-  if (platform === "twitch") return { color: "#9146FF", css: "#9146FF" };
-  if (platform === "youtube") return { color: "#FF0000", css: "#FF0000" };
-  if (platform === "instagram") return { color: "#E1306C", css: "linear-gradient(135deg, #F58529 0%, #DD2A7B 48%, #8134AF 100%)" };
-  if (platform === "tiktok") return { color: "#25F4EE", css: "linear-gradient(145deg, #010101 0%, #111 58%, #25F4EE 140%)" };
+  if (platform === "twitch") return { color: "#6B21A8", css: "#6B21A8" };
+  if (platform === "youtube") return { color: "#E62117", css: "#E62117" };
+  if (platform === "instagram") return { color: "#C2185B", css: "#C2185B" };
+  if (platform === "tiktok") return { color: "#25F4EE", css: "#141414" };
   if (platform === "x") return { color: "#E7E9EA", css: "#000000" };
   if (platform === "discord") return { color: "#5865F2", css: "#5865F2" };
-  return {
-    color: "var(--bio-accent)",
-    css: "linear-gradient(160deg, color-mix(in oklab, var(--bio-accent) 88%, #111), #1a1a1f)",
-  };
+  return { color: "#229ED9", css: "#229ED9" };
 }
 
 export function normalizeLink(partial: Partial<LinkInBioLink> & { id: string }, index = 0): LinkInBioLink {

@@ -34,42 +34,63 @@ export function LinkInBioGallery({
 
   if (images.length === 0) {
     return (
-      <div className={cn("grid h-full place-items-center text-sm", className)} style={{ color: "var(--bio-muted)" }}>
-        Empty gallery
+      <div
+        className={cn("grid h-full place-items-center px-4 text-sm", className)}
+        style={{ color: "var(--bio-muted)" }}
+      >
+        Add photos to this gallery
       </div>
     );
   }
 
   return (
-    <div className={cn("relative h-full min-h-28 overflow-hidden", className)}>
-      {images.map((image, imageIndex) => (
-        <img
-          key={image.id}
-          src={image.url}
-          alt=""
-          className="absolute inset-0 size-full object-cover"
-          style={{
-            opacity: imageIndex === index ? 1 : 0,
-            transition: reduce ? "none" : "opacity 700ms ease",
-          }}
-        />
-      ))}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-3 pb-2.5 pt-8">
-        {title ? (
-          <LinkInBioText className="text-sm font-semibold text-white">{title}</LinkInBioText>
-        ) : null}
-        {images.length > 1 ? (
-          <div className="mt-1.5 flex gap-1">
-            {images.map((image, imageIndex) => (
-              <span
-                key={image.id}
-                className="h-1 flex-1 rounded-full"
-                style={{ background: imageIndex === index ? "white" : "rgba(255,255,255,0.35)" }}
-              />
-            ))}
-          </div>
-        ) : null}
+    <div className={cn("flex h-full min-h-28 flex-col gap-3", className)}>
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
+        {images.map((image, imageIndex) => (
+          <img
+            key={image.id}
+            src={image.url}
+            alt=""
+            className="absolute inset-0 size-full object-cover"
+            style={{
+              opacity: imageIndex === index ? 1 : 0,
+              transform: reduce ? undefined : imageIndex === index ? "scale(1)" : "scale(1.04)",
+              transition: reduce ? "none" : "opacity 800ms ease, transform 900ms ease",
+            }}
+          />
+        ))}
       </div>
+      {(title || images.length > 1) && (
+        <div className="flex items-center justify-between gap-3 px-0.5">
+          {title ? (
+            <LinkInBioText className="min-w-0 flex-1 text-[0.8rem] font-medium" style={{ color: "var(--bio-fg)" }}>
+              {title}
+            </LinkInBioText>
+          ) : (
+            <span />
+          )}
+          {images.length > 1 ? (
+            <div className="flex items-center gap-1.5" role="tablist" aria-label="Gallery slides">
+              {images.map((image, imageIndex) => (
+                <span
+                  key={image.id}
+                  className="rounded-full"
+                  style={{
+                    width: imageIndex === index ? 16 : 7,
+                    height: 7,
+                    background:
+                      imageIndex === index
+                        ? "color-mix(in oklab, var(--bio-fg) 82%, transparent)"
+                        : "color-mix(in oklab, var(--bio-fg) 28%, transparent)",
+                    transition: reduce ? "none" : "width 280ms ease, background-color 280ms ease",
+                  }}
+                  aria-current={imageIndex === index ? "true" : undefined}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
