@@ -3,10 +3,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Loader2, Play, ShieldCheck, SkipForward, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DarkSelect } from "@/components/ui/dark-select";
+import { MediaSourceBadge } from "@/components/media/MediaSourceBadge";
+import { mediaArtworkUrl } from "@/lib/mediaRequests";
 
 type ModRequest = {
   id: string; title: string; status: string; requester_username: string;
-  youtube_video_id: string; thumbnail_url: string | null; duration_seconds: number;
+  platform?: string | null; artist?: string | null;
+  youtube_video_id: string; youtube_url?: string | null; thumbnail_url: string | null; duration_seconds: number;
 };
 type Snapshot = {
   requests: ModRequest[];
@@ -119,6 +122,7 @@ function ModQueuePage() {
         {playing && (
           <section className={`${glass} flex items-center gap-3 p-4`}>
             <span className="text-xs font-bold uppercase tracking-[.2em] text-[#53fc18]">Now playing</span>
+            <MediaSourceBadge platform={playing.platform} className="shrink-0 text-white/80" />
             <p className="min-w-0 flex-1 truncate text-sm font-semibold">{playing.title}</p>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void act({ action: "SKIP", requestId: playing.id })}><SkipForward />Skip</Button>
           </section>
@@ -129,11 +133,18 @@ function ModQueuePage() {
           {[...pending, ...queue].map((r, i) => (
             <div key={r.id} className="flex items-center gap-3 rounded-xl border border-white/8 bg-black/15 p-3">
               <span className="w-5 text-center font-mono text-xs text-muted-foreground">{i + 1}</span>
-              <img src={r.thumbnail_url ?? `https://i.ytimg.com/vi/${r.youtube_video_id}/mqdefault.jpg`} alt="" className="h-12 w-20 rounded-lg object-cover" />
+              {mediaArtworkUrl(r)
+                ? <img src={mediaArtworkUrl(r) ?? ""} alt="" className="h-12 w-20 rounded-lg object-cover" />
+                : <span className="grid h-12 w-20 place-items-center rounded-lg bg-white/5"><MediaSourceBadge platform={r.platform} showLabel={false} size={20} /></span>}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{r.title}</p>
-                <div className="mt-1 flex gap-2 text-xs text-muted-foreground">
-                  <span>{r.requester_username}</span><span>·</span><span>{fmt(r.duration_seconds)}</span>
+                <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
+                  <MediaSourceBadge platform={r.platform} size={13} className="shrink-0 text-white/80" />
+                  <span className="truncate">{r.title}</span>
+                </p>
+                <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span>{r.requester_username}</span>
+                  {r.artist && <><span>·</span><span className="truncate">{r.artist}</span></>}
+                  {r.duration_seconds > 0 && <><span>·</span><span>{fmt(r.duration_seconds)}</span></>}
                   {r.status === "PENDING" && <span className="text-amber-300">Pending</span>}
                 </div>
               </div>

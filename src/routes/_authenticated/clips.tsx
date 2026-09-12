@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Check, Copy, Download, Play, Search, Share2, Trash2, Video, X } from "lucide-react";
+import { Check, Search, Video } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ClipPlayer } from "@/components/clips/ClipPlayer";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useLanguage } from "@/lib/i18n";
 import { deleteClip, listChannelClips } from "@/lib/clipCommand.functions";
 
 export const Route = createFileRoute("/_authenticated/clips")({
@@ -42,25 +43,81 @@ type Clip = {
   platform: string;
 };
 
-const SORTS = [
-  { id: "recent", label: "Most Recent" },
-  { id: "views", label: "Most Viewed" },
-  { id: "today", label: "Top Today" },
-  { id: "all_time", label: "Top All Time" },
-] as const;
+const COPY = {
+  en: {
+    title: "Channel clips",
+    subtitle: "Browse and watch clips created by the community.",
+    search: "Search by title or username",
+    pick: "Select a clip",
+    loading: "Loading clips…",
+    empty: "No clips yet. Clips created on your channel will appear here.",
+    noneMatch: "No clips match that search.",
+    clippedBy: "Clipped by",
+    views: (n: number) => `${n} views`,
+    copy: "Copy link",
+    copied: "Copied",
+    share: "Share",
+    download: "Download",
+    delete: "Delete",
+    open: "Open original",
+    play: "Play",
+    sorts: {
+      recent: "Most recent",
+      views: "Most viewed",
+      today: "Top today",
+      all_time: "Top all time",
+    },
+  },
+  ar: {
+    title: "قصاصات القناة",
+    subtitle: "تصفح وشاهد القصاصات التي أنشأها المجتمع.",
+    search: "ابحث بالعنوان أو اسم المستخدم",
+    pick: "اختر قصاصة",
+    loading: "جاري تحميل القصاصات…",
+    empty: "لا قصاصات بعد. ستظهر هنا القصاصات المنشأة على قناتك.",
+    noneMatch: "لا قصاصات تطابق هذا البحث.",
+    clippedBy: "قصّها",
+    views: (n: number) => `${n} مشاهدة`,
+    copy: "نسخ الرابط",
+    copied: "تم النسخ",
+    share: "مشاركة",
+    download: "تنزيل",
+    delete: "حذف",
+    open: "فتح الأصل",
+    play: "تشغيل",
+    sorts: {
+      recent: "الأحدث",
+      views: "الأكثر مشاهدة",
+      today: "الأعلى اليوم",
+      all_time: "الأعلى على الإطلاق",
+    },
+  },
+} as const;
 
-type SortId = (typeof SORTS)[number]["id"];
+const SORT_IDS = ["recent", "views", "today", "all_time"] as const;
+type SortId = (typeof SORT_IDS)[number];
 
-const card = "glass-3d rounded-2xl border border-[oklch(1_0_0/0.08)]";
+const field =
+  "w-full border border-zinc-800 bg-transparent py-2 ps-9 pe-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-zinc-600";
+const textAction = "text-sm text-muted-foreground hover:text-foreground";
 
 function formatDuration(seconds: number) {
   const s = Math.max(0, Math.round(seconds || 0));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, lang: "en" | "ar") {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diff / 60000);
+  if (lang === "ar") {
+    if (mins < 1) return "الآن";
+    if (mins < 60) return `منذ ${mins} دقيقة`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    const days = Math.round(hours / 24);
+    if (days < 30) return `منذ ${days} يوم`;
+    return new Date(iso).toLocaleDateString("ar");
+  }
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
   const hours = Math.round(mins / 60);
@@ -73,6 +130,8 @@ function timeAgo(iso: string) {
 function ClipsPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
+  const { lang } = useLanguage();
+  const c = COPY[lang];
   const queryClient = useQueryClient();
   const fetchClips = useServerFn(listChannelClips);
   const removeClip = useServerFn(deleteClip);
@@ -89,7 +148,10 @@ function ClipsPage() {
 
   const del = useMutation({
     mutationFn: (id: string) => removeClip({ data: { id } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["channel-clips"] }),
+    onSuccess: (_result, id) => {
+      if (active?.id === id) setActive(null);
+      void queryClient.invalidateQueries({ queryKey: ["channel-clips"] });
+    },
   });
 
   const visible = useMemo(() => {
@@ -133,181 +195,141 @@ function ClipsPage() {
   };
 
   return (
-    <AppShell
-      user={user}
-      profile={workspace?.profile}
-      title="Channel Clips"
-      subtitle="Browse and watch clips created by the community"
-    >
-      <div className="w-full">
-
-        <div className={`${card} mb-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center`}>
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-white/35" aria-hidden />
+    <AppShell user={user} profile={workspace?.profile} title={c.title} subtitle={c.subtitle}>
+      <div className="flex flex-col gap-10">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <div className="relative min-w-[12rem] flex-1 sm:max-w-sm">
+            <Search
+              className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by clip title or username"
-              aria-label="Search clips"
-              className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 ps-9 pe-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-emerald-400/50"
+              placeholder={c.search}
+              aria-label={c.search}
+              className={field}
+              dir="auto"
             />
           </div>
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value as SortId)}
-            aria-label="Sort clips"
-            className="rounded-xl border border-white/10 bg-black/60 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-400/50"
-          >
-            {SORTS.map((option) => (
-              <option key={option.id} value={option.id} className="bg-[#0B0D12]">
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {isLoading ? (
-          <p className="text-sm text-white/50">Loading clips…</p>
-        ) : visible.length === 0 ? (
-          <div className={`${card} flex flex-col items-center gap-3 p-14 text-center`}>
-            <Video className="size-8 text-white/25" aria-hidden />
-            <p className="text-sm text-white/55">
-              No clips yet — clips created on your channel will appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {visible.map((clip) => (
-              <article key={clip.id} className={`${card} group overflow-hidden`}>
-                <button
-                  type="button"
-                  onClick={() => setActive(clip)}
-                  className="relative block aspect-video w-full overflow-hidden bg-black/60"
-                  aria-label={`Play ${clip.title}`}
-                >
-                  {clip.thumbnail ? (
-                    <img
-                      src={clip.thumbnail}
-                      alt={clip.title}
-                      loading="lazy"
-                      className="size-full object-cover transition duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <span className="flex size-full items-center justify-center">
-                      <Video className="size-7 text-white/25" aria-hidden />
-                    </span>
-                  )}
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
-                    <Play className="size-9 rounded-full bg-emerald-400/90 p-2 text-black" aria-hidden />
-                  </span>
-                  <span className="absolute bottom-2 end-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[0.7rem] font-medium text-white">
-                    {formatDuration(clip.duration)}
-                  </span>
-                </button>
-
-                <div className="space-y-2 p-3">
-                  <h2 className="line-clamp-2 text-sm font-semibold text-white">{clip.title}</h2>
-                  <span className="inline-block rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.68rem] uppercase tracking-wide text-white/60">
-                    {clip.platform}
-                  </span>
-                  <p className="text-[0.75rem] text-white/50">
-                    Clipped by @{clip.clippedBy} · {clip.views} views · {timeAgo(clip.createdAt)}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    <ActionButton onClick={() => copy(clip)}>
-                      {copied === clip.id ? <Check className="size-3.5" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
-                      {copied === clip.id ? "Copied" : "Copy Link"}
-                    </ActionButton>
-                    <ActionButton onClick={() => share(clip)}>
-                      <Share2 className="size-3.5" aria-hidden />
-                      Share
-                    </ActionButton>
-                    <a
-                      href={clip.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[0.72rem] text-white/70 transition hover:bg-white/10"
-                    >
-                      <Download className="size-3.5" aria-hidden />
-                      Download
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => del.mutate(clip.id)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-rose-500/25 bg-rose-500/10 px-2 py-1 text-[0.72rem] text-rose-300 transition hover:bg-rose-500/20"
-                    >
-                      <Trash2 className="size-3.5" aria-hidden />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {active ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-label={active.title}
-          onClick={() => setActive(null)}
-        >
-          <div
-            className={`${card} w-full max-w-3xl overflow-hidden`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 p-4">
-              <div>
-                <h2 className="text-base font-semibold text-white">{active.title}</h2>
-                <p className="text-[0.75rem] text-white/50">
-                  Clipped by @{active.clippedBy} · {timeAgo(active.createdAt)}
-                </p>
-              </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {SORT_IDS.map((id) => (
               <button
+                key={id}
                 type="button"
-                onClick={() => setActive(null)}
-                aria-label="Close player"
-                className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-white/70 hover:bg-white/10"
+                onClick={() => setSort(id)}
+                className={`text-sm ${
+                  sort === id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <X className="size-4" aria-hidden />
+                {c.sorts[id]}
               </button>
-            </div>
-            <div className="aspect-video w-full bg-black">
-              <ClipPlayer src={active.url} poster={active.thumbnail ?? undefined} />
-            </div>
-            <div className="flex flex-wrap items-center gap-2 p-4">
-              <ActionButton onClick={() => copy(active)}>
-                {copied === active.id ? <Check className="size-3.5" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
-                Copy Clip URL
-              </ActionButton>
-              <a
-                href={active.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[0.75rem] text-white/70 transition hover:bg-white/10"
-              >
-                <Play className="size-3.5" aria-hidden />
-                Open original
-              </a>
-            </div>
+            ))}
           </div>
         </div>
-      ) : null}
-    </AppShell>
-  );
-}
 
-function ActionButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[0.72rem] text-white/70 transition hover:bg-white/10"
-    >
-      {children}
-    </button>
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] lg:gap-14">
+          <div className="min-w-0">
+            {active ? (
+              <>
+                <div className="aspect-video w-full bg-black">
+                  <ClipPlayer src={active.url} poster={active.thumbnail ?? undefined} />
+                </div>
+                <h2 className="mt-5 text-[1.05rem] font-semibold" dir="auto">
+                  {active.title}
+                </h2>
+                <p className="mt-1.5 text-[0.78rem] text-muted-foreground">
+                  {c.clippedBy} @{active.clippedBy} · {c.views(active.views)} · {timeAgo(active.createdAt, lang)} ·{" "}
+                  {active.platform}
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <button type="button" onClick={() => void copy(active)} className={textAction}>
+                    {copied === active.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Check className="size-3.5" aria-hidden />
+                        {c.copied}
+                      </span>
+                    ) : (
+                      c.copy
+                    )}
+                  </button>
+                  <button type="button" onClick={() => void share(active)} className={textAction}>
+                    {c.share}
+                  </button>
+                  <a href={active.url} target="_blank" rel="noreferrer" className={textAction}>
+                    {c.download}
+                  </a>
+                  <a href={active.url} target="_blank" rel="noreferrer" className={textAction}>
+                    {c.open}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => del.mutate(active.id)}
+                    className="text-sm text-red-400 hover:text-red-300"
+                  >
+                    {c.delete}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">{c.pick}</p>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">{c.loading}</p>
+            ) : clips.length === 0 ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">{c.empty}</p>
+            ) : visible.length === 0 ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">{c.noneMatch}</p>
+            ) : (
+              <ul className="max-h-[min(70vh,640px)] overflow-y-auto">
+                {visible.map((clip) => {
+                  const selected = active?.id === clip.id;
+                  return (
+                    <li key={clip.id} className="border-b border-zinc-800 last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => setActive(clip)}
+                        className="flex w-full items-center gap-3 py-3 text-start"
+                        aria-current={selected ? "true" : undefined}
+                        aria-label={`${c.play} ${clip.title}`}
+                      >
+                        <span className="relative size-16 shrink-0 overflow-hidden bg-black/40">
+                          {clip.thumbnail ? (
+                            <img
+                              src={clip.thumbnail}
+                              alt=""
+                              loading="lazy"
+                              className="size-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex size-full items-center justify-center">
+                              <Video className="size-4 text-muted-foreground/50" aria-hidden />
+                            </span>
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block truncate text-sm ${selected ? "text-foreground" : "text-foreground/90"}`}
+                            dir="auto"
+                          >
+                            {clip.title}
+                          </span>
+                          <span className="mt-0.5 block truncate text-[0.72rem] text-muted-foreground">
+                            @{clip.clippedBy} · {formatDuration(clip.duration)} · {c.views(clip.views)}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+    </AppShell>
   );
 }

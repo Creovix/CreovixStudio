@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/public/media-request/$token/live")({ 
   const { data: playback } = await supabaseAdmin.from("media_playback_state").select("*").eq("user_id",settings.user_id).maybeSingle();
   let current = null;
   if (playback?.current_request_id) {
-    const { data } = await supabaseAdmin.from("media_requests").select("id,youtube_video_id,title,requester_username,requester_avatar_url,duration_seconds,thumbnail_url").eq("id",playback.current_request_id).maybeSingle(); current = data;
+    const { data } = await supabaseAdmin.from("media_requests").select("id,platform,artist,youtube_video_id,youtube_url,title,requester_username,requester_avatar_url,duration_seconds,thumbnail_url").eq("id",playback.current_request_id).maybeSingle(); current = data;
   }
   return Response.json({settings,playback,current},{headers:{"Cache-Control":"no-store"}});
 } } } });

@@ -1,5 +1,15 @@
 import { useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+
+import {
+  customRange,
+  isoDay,
+  metricContribution,
+  presetRange,
+  type AnalyticsEvent,
+  type MetricKey,
+} from "@/lib/dashboardAnalytics";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import {
   Area,
   AreaChart,
@@ -12,42 +22,23 @@ import {
   YAxis,
 } from "recharts";
 
-export type MetricKey = "followers" | "subs" | "tips" | "bits";
+export type { MetricKey };
+export type MetricEvent = AnalyticsEvent;
 
-export type MetricEvent = {
-  id: string;
-  event_type: string;
-  amount: number | null;
-  quantity: number;
-  created_at: string;
-};
-
-const RANGES = [
-  { id: "7", label: "7 Days", days: 7 },
-  { id: "30", label: "30 Days", days: 30 },
-  { id: "90", label: "90 Days", days: 90 },
-  { id: "all", label: "All Time", days: 0 },
-] as const;
-
-/** Returns how much a single event contributes to the given metric. */
-function contribution(metric: MetricKey, event: MetricEvent): number {
-  const qty = event.quantity > 0 ? event.quantity : 1;
-  const amount = Number(event.amount ?? 0);
-  const type = event.event_type;
-
-  if (metric === "followers") return type === "FOLLOW" ? qty : 0;
-  if (metric === "subs") return type === "SUBSCRIPTION" || type === "GIFT_SUB" ? qty : 0;
-  if (metric === "tips") return type === "DONATION" && Number.isFinite(amount) ? amount : 0;
-  if (type !== "BITS") return 0;
-  return Number.isFinite(amount) && amount > 0 ? amount : qty;
-}
+const RANGES: { id: string; label: TranslationKey; days: number }[] = [
+  { id: "7", label: "activity.range.7", days: 7 },
+  { id: "30", label: "activity.range.30", days: 30 },
+  { id: "custom", label: "activity.range.custom", days: -1 },
+  { id: "90", label: "activity.range.90", days: 90 },
+  { id: "all", label: "activity.range.all", days: 0 },
+];
 
 function dayKey(iso: string) {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-function formatDay(key: string) {
-  return new Date(`${key}T00:00:00Z`).toLocaleDateString("en-US", {
+function formatDay(key: string, lang: string) {
+  return new Date(`${key}T00:00:00Z`).toLocaleDateString(lang === "ar" ? "ar" : "en-US", {
     month: "short",
     day: "numeric",
     timeZone: "UTC",
@@ -60,6 +51,7 @@ export function MetricAnalyticsModal({
   accent,
   money,
   events,
+  backLabel,
   onClose,
 }: {
   metric: MetricKey;
@@ -67,20 +59,32 @@ export function MetricAnalyticsModal({
   accent: string;
   money?: boolean;
   events: MetricEvent[];
+  backLabel?: string;
   onClose: () => void;
 }) {
-  const [range, setRange] = useState<string>("30");
+  const { t, lang, dir } = useLanguage();
+  const rtl = dir === "rtl";
+  const [range, setRange] = useState<string>("7");
+  const [customFrom, setCustomFrom] = useState(() => isoDay(presetRange(14).start));
+  const [customTo, setCustomTo] = useState(() => isoDay(new Date()));
 
   const { series, total } = useMemo(() => {
     const days = RANGES.find((r) => r.id === range)?.days ?? 0;
-    const cutoff = days ? Date.now() - days * 86400000 : 0;
+    const custom = range === "custom" ? customRange(customFrom, customTo) : null;
+    const cutoff = custom
+      ? custom.start.getTime()
+      : days > 0
+        ? Date.now() - days * 86400000
+        : 0;
+    const until = custom ? custom.end.getTime() : Number.POSITIVE_INFINITY;
 
     const buckets = new Map<string, number>();
     let sum = 0;
     for (const event of events) {
       const time = new Date(event.created_at).getTime();
       if (cutoff && time < cutoff) continue;
-      const value = contribution(metric, event);
+      if (time > until) continue;
+      const value = metricContribution(metric, event);
       if (value <= 0) continue;
       const key = dayKey(event.created_at);
       buckets.set(key, (buckets.get(key) ?? 0) + value);
@@ -92,13 +96,17 @@ export function MetricAnalyticsModal({
       total: sum,
       series: keys.map((key) => ({
         date: key,
-        label: formatDay(key),
+        label: formatDay(key, lang),
         value: Number(buckets.get(key)!.toFixed(2)),
       })),
     };
-  }, [events, metric, range]);
+  }, [customFrom, customTo, events, lang, metric, range]);
 
-  const fmt = (n: number) => (money ? `$${n.toFixed(2)}` : Math.round(n).toLocaleString("en-US"));
+  const locale = lang === "ar" ? "ar" : "en-US";
+  const fmt = (n: number) =>
+    money
+      ? `$${n.toLocaleString(locale, { minimumFractionDigits: n % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`
+      : Math.round(n).toLocaleString(locale);
 
   return (
     <div
@@ -124,8 +132,8 @@ export function MetricAnalyticsModal({
           onClick={onClose}
           className="mb-5 flex items-center gap-2 rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.04)] px-3.5 py-2 text-sm font-medium transition-colors hover:bg-[oklch(1_0_0/0.09)]"
         >
-          <ArrowLeft className="size-4" aria-hidden />
-          Back to Activity Feed
+          <ArrowLeft className={`size-4 ${rtl ? "rotate-180" : ""}`} aria-hidden />
+          {backLabel ?? t("activity.analyticsBack")}
         </button>
 
         <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
@@ -144,7 +152,7 @@ export function MetricAnalyticsModal({
                   key={option.id}
                   type="button"
                   onClick={() => setRange(option.id)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                     on
                       ? "text-foreground"
                       : "border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.03)] text-muted-foreground hover:bg-[oklch(1_0_0/0.07)]"
@@ -159,11 +167,35 @@ export function MetricAnalyticsModal({
                       : undefined
                   }
                 >
-                  {option.label}
+                  {t(option.label)}
                 </button>
               );
             })}
           </div>
+          {range === "custom" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-1.5 text-[0.68rem] text-muted-foreground">
+                {t("dash.rangeFrom")}
+                <input
+                  type="date"
+                  value={customFrom}
+                  max={customTo}
+                  onChange={(event) => setCustomFrom(event.target.value)}
+                  className="rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[0.72rem] text-foreground outline-none"
+                />
+              </label>
+              <label className="flex items-center gap-1.5 text-[0.68rem] text-muted-foreground">
+                {t("dash.rangeTo")}
+                <input
+                  type="date"
+                  value={customTo}
+                  min={customFrom}
+                  onChange={(event) => setCustomTo(event.target.value)}
+                  className="rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[0.72rem] text-foreground outline-none"
+                />
+              </label>
+            </div>
+          ) : null}
         </div>
 
         <div
@@ -174,9 +206,7 @@ export function MetricAnalyticsModal({
           }}
         >
           {series.length === 0 ? (
-            <p className="py-20 text-center text-sm text-muted-foreground">
-              No {title.toLowerCase()} recorded in this period yet.
-            </p>
+            <p className="py-20 text-center text-sm text-muted-foreground">{t("dash.modalEmpty")}</p>
           ) : (
             <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -191,11 +221,13 @@ export function MetricAnalyticsModal({
                     <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
                     <XAxis
                       dataKey="label"
+                      reversed={rtl}
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
+                      orientation={rtl ? "right" : "left"}
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
@@ -226,11 +258,13 @@ export function MetricAnalyticsModal({
                     <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
                     <XAxis
                       dataKey="label"
+                      reversed={rtl}
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
+                      orientation={rtl ? "right" : "left"}
                       tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
@@ -262,7 +296,8 @@ export function MetricAnalyticsModal({
 }
 
 function ChartTip({ date, value, accent }: { date: string; value: string; accent: string }) {
-  const pretty = new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
+  const { lang } = useLanguage();
+  const pretty = new Date(`${date}T00:00:00Z`).toLocaleDateString(lang === "ar" ? "ar" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

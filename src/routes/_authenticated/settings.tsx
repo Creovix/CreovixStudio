@@ -5,9 +5,11 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AdminCodesPanel } from "@/components/settings/AdminCodesPanel";
 import { ConnectionsPanel } from "@/components/settings/ConnectionsPanel";
 import { EventTestPanel } from "@/components/settings/EventTestPanel";
+import { SettingsBackupPanel } from "@/components/settings/SettingsBackupPanel";
 import { SubscriptionPanel } from "@/components/settings/SubscriptionPanel";
 import { useIsAdmin } from "@/hooks/useSubscription";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -15,12 +17,12 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { title: "Settings — Creovix" },
       {
         name: "description",
-        content: "Manage platform connections, your creator profile and workspace preferences.",
+        content: "Manage platform connections, your creator profile and account backup.",
       },
       { property: "og:title", content: "Settings — Creovix" },
       {
         property: "og:description",
-        content: "Connections, profile and workspace preferences in one place.",
+        content: "Connections, profile and account backup in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -29,84 +31,82 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
-const BASE_TABS = ["Profile", "Connections", "Subscription", "Workspace"] as const;
-const ADMIN_TAB = "🔑 Admin - Redeem Codes";
-const TEST_TAB = "🧪 Test Events";
-type Tab = (typeof BASE_TABS)[number] | typeof ADMIN_TAB | typeof TEST_TAB;
+const BASE_TABS = [
+  { id: "Profile", label: "settings.tab.profile" },
+  { id: "Connections", label: "settings.tab.connections" },
+] as const satisfies ReadonlyArray<{ id: string; label: TranslationKey }>;
 
+const ADMIN_TABS = [
+  { id: "Admin", label: "settings.tab.admin" },
+  { id: "Test", label: "settings.tab.test" },
+] as const satisfies ReadonlyArray<{ id: string; label: TranslationKey }>;
+
+type Tab = (typeof BASE_TABS)[number]["id"] | (typeof ADMIN_TABS)[number]["id"];
 
 function SettingsPage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
   const isAdmin = useIsAdmin(user.id);
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>("Profile");
-  const TABS: Tab[] = isAdmin.data ? [...BASE_TABS, ADMIN_TAB, TEST_TAB] : [...BASE_TABS];
 
+  const tabs = isAdmin.data ? [...BASE_TABS, ...ADMIN_TABS] : [...BASE_TABS];
 
   return (
     <AppShell
       user={user}
       profile={data?.profile}
-      title="Settings"
-      subtitle="Connections, account and workspace preferences."
+      title={t("settings.title")}
+      subtitle={t("settings.subtitle")}
     >
-      <div className="glass-3d mb-6 inline-flex flex-wrap gap-1 rounded-full p-1">
-        {TABS.map((entry) => (
+      <div className="mb-8 inline-flex flex-wrap gap-1 rounded-full border border-white/5 p-1">
+        {tabs.map((entry) => (
           <button
-            key={entry}
+            key={entry.id}
             type="button"
-            onClick={() => setTab(entry)}
+            onClick={() => setTab(entry.id)}
             className={`rounded-full px-4 py-1.5 text-[0.8rem] font-medium transition-colors ${
-              tab === entry
+              tab === entry.id
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {entry}
+            {t(entry.label)}
           </button>
         ))}
       </div>
 
-      {tab === ADMIN_TAB && isAdmin.data ? <AdminCodesPanel /> : null}
+      {tab === "Admin" && isAdmin.data ? <AdminCodesPanel /> : null}
 
-      {tab === TEST_TAB && isAdmin.data ? <EventTestPanel /> : null}
+      {tab === "Test" && isAdmin.data ? <EventTestPanel /> : null}
 
       {tab === "Connections" ? <ConnectionsPanel userId={user.id} /> : null}
 
-      {tab === "Subscription" ? <SubscriptionPanel userId={user.id} /> : null}
-
-
       {tab === "Profile" ? (
-        <section className="glass-3d max-w-xl rounded-2xl p-6">
-          <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
-            Profile
-          </p>
-          <p className="mt-3 text-sm">{data?.profile?.name ?? user.email}</p>
-          <p className="text-[0.8rem] text-muted-foreground">{user.email}</p>
-          <p className="mt-4 text-[0.8rem] text-muted-foreground">
-            Your account is linked through your streaming platform login.
-          </p>
-        </section>
-      ) : null}
-
-      {tab === "Workspace" ? (
-        <section className="glass-3d max-w-xl rounded-2xl p-6">
-          <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
-            Workspace
-          </p>
-          <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Widgets</dt>
-              <dd>{data?.subathons.length ?? 0} workspace(s)</dd>
+        <section className="max-w-2xl">
+          <h2 className="text-[0.95rem] font-semibold">{t("settings.profile.heading")}</h2>
+          <div className="mt-6 divide-y divide-white/5 border-y border-white/5">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 py-4">
+              <p className="text-[0.8rem] text-muted-foreground">{t("settings.profile.name")}</p>
+              <p className="text-sm font-medium">{data?.profile?.name ?? user.email}</p>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Active connections</dt>
-              <dd>{(data?.connections ?? []).filter((c) => c.is_active).length}</dd>
+            <div className="flex flex-wrap items-baseline justify-between gap-3 py-4">
+              <p className="text-[0.8rem] text-muted-foreground">{t("settings.profile.email")}</p>
+              <p className="text-sm" dir="ltr">
+                {user.email}
+              </p>
             </div>
-          </dl>
-          <p className="mt-4 text-[0.8rem] text-muted-foreground">
-            Widgets are created and customised from the Home hub.
-          </p>
+            <div className="flex flex-wrap items-baseline justify-between gap-3 py-4">
+              <p className="text-[0.8rem] text-muted-foreground">{t("settings.profile.login")}</p>
+              <p className="max-w-sm text-end text-[0.8rem] text-muted-foreground">
+                {t("settings.profile.loginHint")}
+              </p>
+            </div>
+            <SubscriptionPanel userId={user.id} />
+          </div>
+          <div className="mt-10 border-t border-white/5 pt-8">
+            <SettingsBackupPanel />
+          </div>
         </section>
       ) : null}
     </AppShell>

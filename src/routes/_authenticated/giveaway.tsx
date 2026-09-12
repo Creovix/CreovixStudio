@@ -2,16 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Copy, Gift, Loader2, Sparkles, Trash2, Users } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
+import { DarkSelect } from "@/components/ui/dark-select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { GiveawayDisplay, type DrawPhase } from "@/components/widgets/GiveawayDisplay";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useLiveChat } from "@/hooks/useLiveChat";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useLanguage } from "@/lib/i18n";
 import {
   DEFAULT_GIVEAWAY,
   announceGiveawayWinner,
@@ -48,18 +49,96 @@ export const Route = createFileRoute("/_authenticated/giveaway")({
   component: GiveawayPage,
 });
 
-const panel =
-  "rounded-2xl border border-[oklch(1_0_0/0.08)] bg-[oklch(0.19_0.02_265/0.55)] p-5 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.45)]";
+const COPY = {
+  en: {
+    title: "Giveaway",
+    subtitle: "Collect chat entries with a keyword, then pick a winner live on stream.",
+    how: "Viewers join by typing the keyword in Kick or Twitch chat. Open entries, wait for names, then draw.",
+    entryTitle: "How viewers enter",
+    entryHint: "Entries are captured automatically from every connected chat.",
+    keyword: "Keyword",
+    entriesOpen: "Entries open",
+    entriesClosed: "Entries closed",
+    subsOnly: "Paid subs only",
+    multiplier: "Subscriber multiplier",
+    multiplierOff: "Off",
+    multiplierN: (n: number) => `×${n} entries`,
+    drawTitle: "Draw",
+    drawHint: "Set the spin and claim window, then launch when the list is ready.",
+    spin: "Spin duration",
+    seconds: (n: number) => `${n} seconds`,
+    claim: "Claim window",
+    minutes: (n: number) => (n === 1 ? "1 minute" : `${n} minutes`),
+    pick: "Pick winner",
+    clear: "Clear list",
+    stageTitle: "Live stage",
+    overlayTitle: "OBS browser source",
+    overlayHint:
+      "Add this link as a Browser Source in OBS (1920×1080, transparent) to show the name cloud, winner reveal and claim countdown on stream.",
+    overlayPlaceholder: "Generating link…",
+    copy: "Copy",
+    copied: "Overlay URL copied",
+    saved: "Giveaway settings saved",
+    cleared: "Participant list cleared",
+    noParticipants: "No participants yet",
+    peopleTitle: "Live participants",
+    peopleEmpty: (keyword: string) =>
+      `Nobody has entered yet. Viewers join by typing ${keyword} in chat.`,
+    entriesCount: (people: number, entries: number) => `${people} · ${entries} entries`,
+  },
+  ar: {
+    title: "السحب",
+    subtitle: "اجمع المشاركات بكلمة من الشات ثم اسحب فائزاً مباشرة على البث.",
+    how: "ينضم المشاهدون بكتابة الكلمة في شات Kick أو Twitch. افتح المشاركات، انتظر الأسماء، ثم اسحب.",
+    entryTitle: "طريقة الدخول",
+    entryHint: "تُلتقط المشاركات تلقائياً من كل شات متصل.",
+    keyword: "الكلمة",
+    entriesOpen: "المشاركات مفتوحة",
+    entriesClosed: "المشاركات مغلقة",
+    subsOnly: "المشتركون المدفوعون فقط",
+    multiplier: "مضاعف المشتركين",
+    multiplierOff: "إيقاف",
+    multiplierN: (n: number) => `×${n} مشاركات`,
+    drawTitle: "السحب",
+    drawHint: "اضبط مدة الدوران ونافذة التأكيد، ثم ابدأ عندما تكون القائمة جاهزة.",
+    spin: "مدة الدوران",
+    seconds: (n: number) => `${n} ثوانٍ`,
+    claim: "نافذة التأكيد",
+    minutes: (n: number) => (n === 1 ? "دقيقة واحدة" : `${n} دقائق`),
+    pick: "اختيار فائز",
+    clear: "مسح القائمة",
+    stageTitle: "المسرح المباشر",
+    overlayTitle: "مصدر متصفح OBS",
+    overlayHint:
+      "أضف هذا الرابط كمصدر متصفح في OBS (1920×1080، شفاف) لعرض سحابة الأسماء وإعلان الفائز وعدّاد التأكيد على البث.",
+    overlayPlaceholder: "جاري إنشاء الرابط…",
+    copy: "نسخ",
+    copied: "تم نسخ رابط الأوفرلاي",
+    saved: "تم حفظ إعدادات السحب",
+    cleared: "تم مسح قائمة المشاركين",
+    noParticipants: "لا مشاركين بعد",
+    peopleTitle: "المشاركون الآن",
+    peopleEmpty: (keyword: string) => `لا أحد دخل بعد. ينضم المشاهدون بكتابة ${keyword} في الشات.`,
+    entriesCount: (people: number, entries: number) => `${people} · ${entries} مشاركة`,
+  },
+} as const;
+
 const field =
-  "w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(0.14_0.02_265/0.9)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-[color-mix(in_oklab,var(--primary)_55%,transparent)]";
-const label = "mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground";
+  "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-foreground outline-none focus:border-zinc-600";
+const label = "mb-1.5 block text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground";
+const primary =
+  "inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-40";
+const selectClass = "h-10 rounded-xl border-zinc-800 bg-zinc-900";
 
 const SPIN_DURATIONS = [3, 5, 8, 10, 15];
 const CLAIM_WINDOWS = [60, 120, 300, 600];
+const MULTIPLIERS = [1, 2, 3, 5, 10];
 
 function GiveawayPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
+  const { lang } = useLanguage();
+  const c = COPY[lang];
   const queryClient = useQueryClient();
 
   const fetchState = useServerFn(getGiveawayState);
@@ -133,7 +212,6 @@ function GiveawayPage() {
     return () => clearTimeout(id);
   }, [winner, drawPhase, claimState, claimLeft]);
 
-
   // ---- Live keyword capture from the connected chats (Twitch + Kick) ----
   const seen = useRef(new Set<string>());
   useLiveChat(
@@ -164,9 +242,7 @@ function GiveawayPage() {
       const key = `${message.platform}:${message.author.toLowerCase()}`;
       if (seen.current.has(key)) return;
       seen.current.add(key);
-      const isSubscriber = message.badges.some((badge) =>
-        /sub|founder|og|vip/i.test(badge),
-      );
+      const isSubscriber = message.badges.some((badge) => /sub|founder|og|vip/i.test(badge));
       void join({
         data: {
           platform: message.platform === "TWITCH" ? "TWITCH" : "KICK",
@@ -182,7 +258,7 @@ function GiveawayPage() {
     mutationFn: (next: GiveawaySettings) => save({ data: next }),
     onSuccess: (result) => {
       if (result.ok) {
-        toast.success("Giveaway settings saved");
+        toast.success(c.saved);
         void queryClient.invalidateQueries({ queryKey: ["giveaway"] });
       } else toast.error(result.error);
     },
@@ -202,7 +278,7 @@ function GiveawayPage() {
       setDrawPhase("idle");
       winnerRef.current = null;
       push({ phase: "idle" });
-      toast.success("Participant list cleared");
+      toast.success(c.cleared);
       void queryClient.invalidateQueries({ queryKey: ["giveaway"] });
     },
   });
@@ -218,7 +294,7 @@ function GiveawayPage() {
     if (!result.ok) {
       setSpinning(false);
       setDrawPhase("idle");
-      toast.error("No participants yet");
+      toast.error(c.noParticipants);
       return;
     }
 
@@ -248,220 +324,178 @@ function GiveawayPage() {
     }).catch(() => undefined);
   };
 
+  const display = (
+    <GiveawayDisplay
+      participants={participants}
+      winner={winner}
+      phase={drawPhase}
+      claimState={claimState}
+      claimLeft={claimLeft}
+      keyword={form.keyword}
+      lastWinner={state.data?.lastWinner}
+      expanded={false}
+      onToggleExpand={() => setExpanded(true)}
+      onReroll={() => void runDraw()}
+    />
+  );
+
   return (
-    <AppShell
-      user={user}
-      profile={workspace?.profile}
-      title="Giveaway"
-      subtitle="Collect chat entries with a keyword, then spin for a winner live on stream."
-    >
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-        {/* ------------------------------ Controls ------------------------------ */}
-        <div className="space-y-5">
-          <section className={panel}>
-            <header className="mb-5 flex items-center gap-2.5">
-              <span className="grid size-9 place-items-center rounded-xl border border-[oklch(1_0_0/0.1)] bg-[color-mix(in_oklab,var(--primary)_20%,transparent)]">
-                <Gift className="size-4 text-primary" aria-hidden />
-              </span>
-              <div>
-                <h2 className="text-sm font-semibold">Giveaway setup</h2>
-                <p className="text-xs text-muted-foreground">
-                  Entries are captured automatically from every connected chat.
-                </p>
-              </div>
-              <span
-                className={`ms-auto rounded-full border px-3 py-1 text-[0.7rem] ${
-                  form.isOpen
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                    : "border-[oklch(1_0_0/0.12)] text-muted-foreground"
-                }`}
-              >
-                {form.isOpen ? "Entries open" : "Entries closed"}
-              </span>
-            </header>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <span className={label}>Keyword</span>
-                <input
-                  className={field}
-                  value={form.keyword}
-                  onChange={(e) => setForm({ ...form, keyword: e.target.value })}
-                  onBlur={() => update({ keyword: form.keyword })}
-                  placeholder="+1"
-                />
-              </div>
-
-              <div>
-                <span className={label}>Subscriber multiplier</span>
-                <select
-                  className={field}
-                  value={form.subMultiplier}
-                  onChange={(e) => update({ subMultiplier: Number(e.target.value) })}
-                >
-                  <option value={1}>Off</option>
-                  <option value={2}>x2 entries</option>
-                  <option value={3}>x3 entries</option>
-                  <option value={5}>x5 entries</option>
-                  <option value={10}>x10 entries</option>
-                </select>
-              </div>
-
-              <div>
-                <span className={label}>Spin duration</span>
-                <select
-                  className={field}
-                  value={form.spinDuration}
-                  onChange={(e) => update({ spinDuration: Number(e.target.value) })}
-                >
-                  {SPIN_DURATIONS.map((seconds) => (
-                    <option key={seconds} value={seconds}>
-                      {seconds} seconds
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <span className={label}>Claim window</span>
-                <select
-                  className={field}
-                  value={form.claimSeconds}
-                  onChange={(e) => update({ claimSeconds: Number(e.target.value) })}
-                >
-                  {CLAIM_WINDOWS.map((seconds) => (
-                    <option key={seconds} value={seconds}>
-                      {seconds >= 60 ? `${seconds / 60} minutes` : `${seconds} seconds`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-end gap-4">
-                <label className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-4 accent-[var(--primary)]"
-                    checked={form.subsOnly}
-                    onChange={(e) => update({ subsOnly: e.target.checked })}
-                  />
-                  Paid subs only
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-4 accent-[var(--primary)]"
-                    checked={form.isOpen}
-                    onChange={(e) => update({ isOpen: e.target.checked })}
-                  />
-                  Accept entries
-                </label>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => void runDraw()}
-                disabled={spinning || participants.length === 0}
-                className="flex items-center gap-2 rounded-xl border border-[color-mix(in_oklab,var(--primary)_45%,transparent)] bg-[color-mix(in_oklab,var(--primary)_22%,transparent)] px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                {spinning ? (
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
-                ) : (
-                  <Sparkles className="size-4" aria-hidden />
-                )}
-                Pick winner
-              </button>
-              <button
-                type="button"
-                onClick={() => clearMutation.mutate()}
-                disabled={clearMutation.isPending}
-                className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-40"
-              >
-                <Trash2 className="size-4" aria-hidden />
-                Clear list
-              </button>
-            </div>
-          </section>
-
-          {/* --------------------------- OBS source --------------------------- */}
-          <section className={panel}>
-            <h2 className="text-sm font-semibold">OBS browser source</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Add this link as a Browser Source in OBS (1920×1080, transparent) to show the name
-              cloud, winner reveal and claim countdown on stream.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <input readOnly className={field} value={overlayUrl} placeholder="Generating link…" />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  if (!overlayUrl) return;
-                  void navigator.clipboard.writeText(overlayUrl);
-                  toast.success("Overlay URL copied");
-                }}
-                className="shrink-0 border-[oklch(1_0_0/0.12)]"
-              >
-                <Copy aria-hidden />
-                Copy
-              </Button>
-            </div>
-          </section>
-
-          {/* ------------------------ Floating name display ------------------------ */}
-          <GiveawayDisplay
-            participants={participants}
-            winner={winner}
-            phase={drawPhase}
-            claimState={claimState}
-            claimLeft={claimLeft}
-            keyword={form.keyword}
-            lastWinner={state.data?.lastWinner}
-            expanded={false}
-            onToggleExpand={() => setExpanded(true)}
-            onReroll={() => void runDraw()}
-          />
+    <AppShell user={user} profile={workspace?.profile} title={c.title} subtitle={c.subtitle}>
+      <div className="flex flex-col gap-12 lg:gap-16">
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-5">
+          <label className="min-w-[8.5rem] flex-1 basis-40 sm:max-w-[13rem]">
+            <span className={label}>{c.keyword}</span>
+            <input
+              className={field}
+              value={form.keyword}
+              onChange={(e) => setForm({ ...form, keyword: e.target.value })}
+              onBlur={() => update({ keyword: form.keyword })}
+              placeholder="+1"
+              dir="auto"
+            />
+          </label>
+          <label className="min-w-[8.5rem] flex-1 basis-36 sm:max-w-[12rem]">
+            <span className={label}>{c.multiplier}</span>
+            <DarkSelect
+              className={selectClass}
+              contentClassName="rounded-xl border-zinc-800 bg-zinc-900"
+              value={String(form.subMultiplier)}
+              onValueChange={(value) => update({ subMultiplier: Number(value) })}
+              options={MULTIPLIERS.map((n) => ({
+                value: String(n),
+                label: n === 1 ? c.multiplierOff : c.multiplierN(n),
+              }))}
+            />
+          </label>
+          <label className="min-w-[8.5rem] flex-1 basis-36 sm:max-w-[11rem]">
+            <span className={label}>{c.spin}</span>
+            <DarkSelect
+              className={selectClass}
+              contentClassName="rounded-xl border-zinc-800 bg-zinc-900"
+              value={String(form.spinDuration)}
+              onValueChange={(value) => update({ spinDuration: Number(value) })}
+              options={SPIN_DURATIONS.map((seconds) => ({
+                value: String(seconds),
+                label: c.seconds(seconds),
+              }))}
+            />
+          </label>
+          <label className="min-w-[8.5rem] flex-1 basis-36 sm:max-w-[11rem]">
+            <span className={label}>{c.claim}</span>
+            <DarkSelect
+              className={selectClass}
+              contentClassName="rounded-xl border-zinc-800 bg-zinc-900"
+              value={String(form.claimSeconds)}
+              onValueChange={(value) => update({ claimSeconds: Number(value) })}
+              options={CLAIM_WINDOWS.map((seconds) => ({
+                value: String(seconds),
+                label: seconds >= 60 ? c.minutes(seconds / 60) : c.seconds(seconds),
+              }))}
+            />
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4 accent-emerald-500"
+              checked={form.subsOnly}
+              onChange={(e) => update({ subsOnly: e.target.checked })}
+            />
+            {c.subsOnly}
+          </label>
+          <button
+            type="button"
+            onClick={() => update({ isOpen: !form.isOpen })}
+            className={`bg-transparent p-0 pb-2 text-sm font-medium ${
+              form.isOpen ? "text-emerald-400" : "text-red-400"
+            }`}
+          >
+            {form.isOpen ? c.entriesOpen : c.entriesClosed}
+          </button>
+          <div className="flex flex-wrap items-center gap-4 pb-0.5">
+            <button
+              type="button"
+              onClick={() => void runDraw()}
+              disabled={spinning || participants.length === 0}
+              className={primary}
+            >
+              {spinning ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Sparkles className="size-4" aria-hidden />
+              )}
+              {c.pick}
+            </button>
+            <button
+              type="button"
+              onClick={() => clearMutation.mutate()}
+              disabled={clearMutation.isPending}
+              className="text-sm text-red-400 hover:text-red-300 disabled:opacity-40"
+            >
+              {c.clear}
+            </button>
+          </div>
         </div>
 
-        {/* --------------------------- Participants --------------------------- */}
-        <aside className={`${panel} flex max-h-[720px] flex-col`}>
-          <header className="mb-4 flex items-center gap-2.5">
-            <Users className="size-4 text-primary" aria-hidden />
-            <h2 className="text-sm font-semibold">Live participants</h2>
-            <span className="ms-auto rounded-full border border-[oklch(1_0_0/0.12)] px-2.5 py-1 text-[0.7rem] text-muted-foreground">
-              {participants.length} · {totalEntries} entries
-            </span>
-          </header>
-
-          {participants.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[oklch(1_0_0/0.12)] p-6 text-center text-xs text-muted-foreground">
-              Nobody has entered yet. Viewers join by typing{" "}
-              <span className="text-foreground">{form.keyword || "+1"}</span> in chat.
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_15.5rem] lg:gap-14">
+          <div className="min-w-0">
+            <p className={label}>{c.stageTitle}</p>
+            {display}
+          </div>
+          <div className="min-w-0">
+            <p className={label}>
+              {c.peopleTitle} · {c.entriesCount(participants.length, totalEntries)}
             </p>
-          ) : (
-            <ul className="-me-2 space-y-1.5 overflow-y-auto pe-2">
-              {participants.map((participant) => (
-                <li
-                  key={participant.id}
-                  className="flex items-center gap-2.5 rounded-xl border border-[oklch(1_0_0/0.07)] bg-[oklch(0.14_0.02_265/0.6)] px-3 py-2"
-                >
-                  <PlatformIcon platform={participant.platform} size={16} />
-                  <span className="truncate text-sm">{participant.username}</span>
-                  <span className="ms-auto rounded-full bg-[color-mix(in_oklab,var(--primary)_18%,transparent)] px-2 py-0.5 text-[0.68rem]">
-                    ×{participant.entries}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </aside>
+            {participants.length === 0 ? (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {c.peopleEmpty(form.keyword || "+1")}
+              </p>
+            ) : (
+              <ul className="max-h-[min(52vh,420px)] overflow-y-auto">
+                {participants.map((participant) => (
+                  <li
+                    key={participant.id}
+                    className="flex items-center gap-2.5 border-b border-zinc-800 py-2.5 last:border-b-0"
+                  >
+                    <PlatformIcon platform={participant.platform} size={16} />
+                    <span className="min-w-0 flex-1 truncate text-sm">{participant.username}</span>
+                    <span className="font-mono text-[0.72rem] text-muted-foreground">
+                      ×{participant.entries}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-2xl">
+          <span className={label}>{c.overlayTitle}</span>
+          <div className="flex items-stretch overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+            <input
+              readOnly
+              className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 font-mono text-[0.78rem] text-foreground outline-none"
+              value={overlayUrl}
+              placeholder={c.overlayPlaceholder}
+              dir="ltr"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (!overlayUrl) return;
+                void navigator.clipboard.writeText(overlayUrl);
+                toast.success(c.copied);
+              }}
+              className="shrink-0 border-s border-zinc-800 px-3.5 text-sm text-muted-foreground transition-colors hover:bg-zinc-800/80 hover:text-foreground"
+            >
+              {c.copy}
+            </button>
+          </div>
+        </div>
       </div>
 
       <Dialog open={expanded} onOpenChange={setExpanded}>
-        <DialogContent className="h-[min(88vh,900px)] w-[min(94vw,1600px)] max-w-none overflow-hidden border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
-          <DialogTitle className="sr-only">Expanded giveaway display</DialogTitle>
+        <DialogContent className="h-[min(88vh,900px)] w-[min(94vw,1600px)] max-w-none overflow-hidden border-0 bg-background p-0 shadow-none [&>button]:hidden">
+          <DialogTitle className="sr-only">{c.stageTitle}</DialogTitle>
           <GiveawayDisplay
             participants={participants}
             winner={winner}

@@ -5,24 +5,20 @@ import {
   ArrowUp,
   Check,
   ChevronDown,
-  DollarSign,
   Filter,
-  Gem,
   Globe,
   Layers,
   Pause,
-  Star,
-  Users,
 } from "lucide-react";
 
 
 import { AppShell } from "@/components/layout/AppShell";
-import {
-  MetricAnalyticsModal,
-  type MetricKey,
-} from "@/components/activity/MetricAnalyticsModal";
+import { TestEventMenu, type InjectedFeedEvent } from "@/components/activity/TestEventMenu";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { supabase } from "@/lib/supabase/client";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
+import { isTestMode } from "@/lib/testMode";
+import { useWidgets } from "@/hooks/useWidgets";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 export const Route = createFileRoute("/_authenticated/activity-feed")({
@@ -60,101 +56,6 @@ type FeedEvent = {
 };
 
 
-/** Smoothly eases a number toward its new value whenever the stat updates. */
-function useCounter(value: number) {
-  const [shown, setShown] = useState(value);
-  const ref = useRef(value);
-
-  useEffect(() => {
-    const from = ref.current;
-    if (from === value) return;
-    const start = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 600);
-      const eased = 1 - Math.pow(1 - t, 3);
-      const next = from + (value - from) * eased;
-      ref.current = next;
-      setShown(next);
-      if (t < 1) frame = requestAnimationFrame(tick);
-      else ref.current = value;
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [value]);
-
-  return shown;
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  accent,
-  money = false,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  accent: string;
-  money?: boolean;
-  onClick?: () => void;
-}) {
-  const shown = useCounter(value);
-  const text = money
-    ? `$${shown.toFixed(2)}`
-    : Math.round(shown).toLocaleString("en-US");
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group rounded-2xl border p-4 text-start backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02]"
-      style={{
-        background: "rgba(255,255,255,0.035)",
-        borderColor: "rgba(255,255,255,0.09)",
-        boxShadow: "0 14px 34px rgba(0,0,0,0.35)",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = `color-mix(in oklab, ${accent} 55%, transparent)`;
-        e.currentTarget.style.boxShadow = `0 18px 44px rgba(0,0,0,0.45), 0 0 26px color-mix(in oklab, ${accent} 30%, transparent)`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)";
-        e.currentTarget.style.boxShadow = "0 14px 34px rgba(0,0,0,0.35)";
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <span
-          className="flex size-8 items-center justify-center rounded-xl"
-          style={{
-            color: accent,
-            background: `color-mix(in oklab, ${accent} 16%, transparent)`,
-            boxShadow: `0 0 18px color-mix(in oklab, ${accent} 28%, transparent)`,
-          }}
-        >
-          {icon}
-        </span>
-        <span className="text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </span>
-      </div>
-      <p className="mt-3 text-2xl font-bold tabular-nums text-foreground">{text}</p>
-    </button>
-  );
-}
-
-const METRIC_META: Record<
-  MetricKey,
-  { title: string; accent: string; money?: boolean }
-> = {
-  followers: { title: "New Followers", accent: "#9F77F7" },
-  subs: { title: "Total Subs", accent: "#53FC18" },
-  tips: { title: "Tips / Revenue", accent: "#80F5D2", money: true },
-  bits: { title: "Bits / Gifts", accent: "#4FC3F7" },
-};
-
 const PLATFORM_COLOR: Record<string, string> = {
   TWITCH: "#9F77F7",
   KICK: "#53FC18",
@@ -166,13 +67,13 @@ const PLATFORM_COLOR: Record<string, string> = {
   MANUAL: "#A1A1AA",
 };
 
-const EVENT_LABEL: Record<string, string> = {
-  FOLLOW: "New Follow",
-  SUBSCRIPTION: "New Subscription",
-  GIFT_SUB: "Gifted Sub",
-  BITS: "Bits / Cheer",
-  DONATION: "New Donation",
-  RAID: "Raid / Host",
+const EVENT_LABEL: Record<string, TranslationKey> = {
+  FOLLOW: "activity.type.FOLLOW",
+  SUBSCRIPTION: "activity.type.SUBSCRIPTION",
+  GIFT_SUB: "activity.type.GIFT_SUB",
+  BITS: "activity.type.BITS",
+  DONATION: "activity.type.DONATION",
+  RAID: "activity.type.RAID",
 };
 
 /**
@@ -193,7 +94,7 @@ const ALLOWED_BY_PLATFORM: Record<string, string[]> = {
 
 type FilterGroup = {
   id: string;
-  label: string;
+  label: TranslationKey;
   dot: string;
   icon: React.ReactNode;
   match: (event: FeedEvent) => boolean;
@@ -232,49 +133,49 @@ const KNOWN_PLATFORMS = [
 const FILTER_GROUPS: FilterGroup[] = [
   {
     id: "twitch",
-    label: "Twitch Events",
+    label: "activity.filter.twitch",
     dot: "#9F77F7",
     icon: <PlatformIcon platform="TWITCH" size={20} />,
     match: (e) => e.platform === "TWITCH",
   },
   {
     id: "kick",
-    label: "Kick Events",
+    label: "activity.filter.kick",
     dot: "#53FC18",
     icon: <PlatformIcon platform="KICK" size={20} />,
     match: (e) => e.platform === "KICK",
   },
   {
     id: "tiktok",
-    label: "TikTok Events",
+    label: "activity.filter.tiktok",
     dot: "#2DCCD3",
     icon: <PlatformIcon platform="TIKTOK" size={20} />,
     match: (e) => e.platform === "TIKTOK",
   },
   {
     id: "youtube",
-    label: "YouTube Events",
+    label: "activity.filter.youtube",
     dot: "#FF4444",
     icon: <PlatformIcon platform="YOUTUBE" size={20} />,
     match: (e) => e.platform === "YOUTUBE",
   },
   {
     id: "x",
-    label: "X (Twitter) Events",
+    label: "activity.filter.x",
     dot: "#E7E9EA",
     icon: <PlatformIcon platform="X" size={20} />,
     match: (e) => e.platform === "X",
   },
   {
     id: "streamlabs",
-    label: "Streamlabs Events",
+    label: "activity.filter.streamlabs",
     dot: "#31C3A2",
     icon: <StreamlabsMark />,
     match: (e) => e.platform === "STREAMLABS",
   },
   {
     id: "streamelements",
-    label: "StreamElements Events",
+    label: "activity.filter.streamelements",
     dot: "#236BE9",
     icon: <StreamElementsMark />,
     match: (e) => e.platform === "STREAMELEMENTS",
@@ -283,7 +184,7 @@ const FILTER_GROUPS: FilterGroup[] = [
     // Anything from a source outside the named groups (manual adds, future
     // integrations) still belongs in the all-platform totals.
     id: "other",
-    label: "Other Sources",
+    label: "activity.filter.other",
     dot: "#A1A1AA",
     icon: <Layers className="size-5 shrink-0" aria-hidden />,
     match: (e) => !KNOWN_PLATFORMS.includes(e.platform),
@@ -291,9 +192,31 @@ const FILTER_GROUPS: FilterGroup[] = [
 ];
 
 
-function relativeTime(iso: string) {
+const TEST_FEED_KEY = "creovix:test-activity-feed";
+
+function readTestFeed(): FeedEvent[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.sessionStorage.getItem(TEST_FEED_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as FeedEvent[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeTestFeed(events: FeedEvent[]) {
+  try {
+    window.sessionStorage.setItem(TEST_FEED_KEY, JSON.stringify(events.slice(0, 200)));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function relativeTime(iso: string, justNow: string) {
   const diff = Math.max(0, Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 10) return "Just now";
+  if (diff < 10) return justNow;
   if (diff < 60) return `${Math.floor(diff)}s`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
@@ -343,13 +266,22 @@ function toFeedEvent(row: EventRow): FeedEvent {
 function ActivityFeedPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
+  const widgets = useWidgets();
+  const { t } = useLanguage();
+  const testMode = isTestMode();
 
   const [live, setLive] = useState<FeedEvent[]>([]);
-  const [metric, setMetric] = useState<MetricKey | null>(null);
+  const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
   const [active, setActive] = useState<string[]>(() => FILTER_GROUPS.map((g) => g.id));
   const [filterOpen, setFilterOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+  const freshTimers = useRef<number[]>([]);
+
+  const chatWidgetId =
+    widgets.data?.widgets.find((widget) => widget.type === "CHAT_BOX")?.id ??
+    widgets.data?.widgets[0]?.id ??
+    null;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 150);
@@ -368,9 +300,58 @@ function ActivityFeedPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    if (testMode) setLive(readTestFeed());
+  }, [testMode]);
+
+  useEffect(() => {
+    const timers = freshTimers.current;
+    return () => {
+      for (const id of timers) window.clearTimeout(id);
+    };
+  }, []);
+
+  const markFresh = (id: string) => {
+    setFreshIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    const timer = window.setTimeout(() => {
+      setFreshIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 700);
+    freshTimers.current.push(timer);
+  };
+
+  const onInject = (event: InjectedFeedEvent) => {
+    setLive((prev) => {
+      const next = [event, ...prev.filter((item) => item.id !== event.id)].slice(0, 200);
+      if (isTestMode()) writeTestFeed(next);
+      return next;
+    });
+    markFresh(event.id);
+  };
+
+  const onPersisted = (localId: string, realId: string) => {
+    if (!realId || localId === realId) return;
+    setLive((prev) => prev.map((item) => (item.id === localId ? { ...item, id: realId } : item)));
+    setFreshIds((prev) => {
+      if (!prev.has(localId) && !prev.has(realId)) return prev;
+      const next = new Set(prev);
+      next.delete(localId);
+      next.add(realId);
+      return next;
+    });
+  };
+
   const query = useQuery({
     queryKey: ["activity-feed"],
-    refetchInterval: scrolled ? false : 8000,
+    enabled: !testMode,
+    refetchInterval: scrolled || testMode ? false : 8000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
@@ -388,6 +369,7 @@ function ActivityFeedPage() {
   // Streamlabs / StreamElements ingest paths lands in `events` and is streamed
   // here instantly, so the feed never waits for the next poll.
   useEffect(() => {
+    if (testMode) return;
     const channel = supabase
       .channel("activity-feed-events")
       .on(
@@ -401,6 +383,7 @@ function ActivityFeedPage() {
               ? prev
               : [toFeedEvent(row), ...prev].slice(0, 200),
           );
+          markFresh(row.id);
         },
       )
       .subscribe();
@@ -408,7 +391,7 @@ function ActivityFeedPage() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [testMode]);
 
   const events = useMemo(() => {
     const map = new Map<string, FeedEvent>();
@@ -459,66 +442,21 @@ function ActivityFeedPage() {
   const toggleAll = () =>
     setActive(allActive ? [] : FILTER_GROUPS.map((group) => group.id));
 
-  // Totals aggregate every connected source at once (Twitch, Kick, TikTok,
-  // YouTube, Streamlabs, StreamElements, manual) and shrink to the selected
-  // platforms whenever a filter is applied.
-  const stats = useMemo(() => {
-    let followers = 0;
-    let subs = 0;
-    let tips = 0;
-    let bits = 0;
-    for (const e of visible) {
-      const type = e.event_type;
-      const qty = e.quantity > 0 ? e.quantity : 1;
-      const amount = Number(e.amount ?? 0);
-      if (type === "FOLLOW") followers += qty;
-      else if (type === "SUBSCRIPTION" || type === "GIFT_SUB") subs += qty;
-      else if (type === "DONATION") tips += Number.isFinite(amount) ? amount : 0;
-      else if (type === "BITS") bits += Number.isFinite(amount) && amount > 0 ? amount : qty;
-    }
-    return { followers, subs, tips, bits };
-  }, [visible]);
-
-
   return (
     <AppShell
       user={user}
       profile={workspace?.profile}
-      title="Activity Feed"
-      subtitle="Your complete historical log of follows, subs, gifts, bits, raids and tips."
+      title={t("activity.title")}
+      subtitle={t("activity.subtitle")}
+      actions={
+        <TestEventMenu
+          connections={workspace?.connections ?? []}
+          widgetId={chatWidgetId}
+          onInject={onInject}
+          onPersisted={onPersisted}
+        />
+      }
     >
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard
-          icon={<Users className="size-4" aria-hidden />}
-          label="New Followers"
-          value={stats.followers}
-          accent="#9F77F7"
-          onClick={() => setMetric("followers")}
-        />
-        <StatCard
-          icon={<Star className="size-4" aria-hidden />}
-          label="Total Subs"
-          value={stats.subs}
-          accent="#53FC18"
-          onClick={() => setMetric("subs")}
-        />
-        <StatCard
-          icon={<DollarSign className="size-4" aria-hidden />}
-          label="Tips / Revenue"
-          value={stats.tips}
-          accent="#80F5D2"
-          money
-          onClick={() => setMetric("tips")}
-        />
-        <StatCard
-          icon={<Gem className="size-4" aria-hidden />}
-          label="Bits / Gifts"
-          value={stats.bits}
-          accent="#4FC3F7"
-          onClick={() => setMetric("bits")}
-        />
-      </div>
-
       <div className="mb-4 flex flex-wrap items-center gap-3">
 
         <div ref={filterRef} className="relative">
@@ -529,7 +467,7 @@ function ActivityFeedPage() {
             className="flex items-center gap-2 rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.04)] px-4 py-2.5 text-sm font-medium backdrop-blur transition-colors hover:bg-[oklch(1_0_0/0.08)]"
           >
             <Filter className="size-4 text-muted-foreground" aria-hidden />
-            Filter
+            {t("activity.filter")}
             <ChevronDown
               className={`size-3.5 text-muted-foreground transition-transform ${filterOpen ? "rotate-180" : ""}`}
               aria-hidden
@@ -560,7 +498,7 @@ function ActivityFeedPage() {
               >
                 <Globe className="size-5 shrink-0" aria-hidden />
                 <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden />
-                <span className="flex-1">All Platforms</span>
+                <span className="flex-1">{t("activity.allPlatforms")}</span>
                 <Check
                   className={`size-4 shrink-0 text-primary transition-opacity ${allActive ? "opacity-100" : "opacity-0"}`}
                   aria-hidden
@@ -589,7 +527,7 @@ function ActivityFeedPage() {
                       className="size-2 shrink-0 rounded-full"
                       style={{ background: group.dot }}
                     />
-                    <span className="flex-1">{group.label}</span>
+                    <span className="flex-1">{t(group.label)}</span>
                     <Check
                       className={`size-4 shrink-0 text-primary transition-opacity ${on ? "opacity-100" : "opacity-0"}`}
                       aria-hidden
@@ -602,29 +540,23 @@ function ActivityFeedPage() {
         </div>
 
         <span className="text-xs text-muted-foreground">
-          {visible.length} {visible.length === 1 ? "event" : "events"}
+          {visible.length} {visible.length === 1 ? t("activity.event") : t("activity.events")}
         </span>
       </div>
 
-      <section
-        className="rounded-2xl border p-2 sm:p-3"
-        style={{
-          background: "rgba(15, 17, 23, 0.6)",
-          backdropFilter: "blur(14px)",
-          borderColor: "rgba(255,255,255,0.08)",
-        }}
-      >
+      <section className="border-t border-white/5 pt-2">
         {visible.length === 0 ? (
-          <p className="px-4 py-14 text-center text-sm text-muted-foreground">
-            {query.isLoading
-              ? "Loading your activity history…"
-              : "No activity yet — events from your connected platforms will show up here."}
+          <p className="py-14 text-center text-sm text-muted-foreground">
+            {query.isLoading && !testMode
+              ? t("activity.loading")
+              : t("activity.empty")}
           </p>
         ) : (
-          <ul className="divide-y divide-[rgba(255,255,255,0.06)]">
+          <ul className="divide-y divide-white/5">
             {visible.map((event) => {
               const color = PLATFORM_COLOR[event.platform] ?? "#A1A1AA";
-              const label = EVENT_LABEL[event.event_type] ?? event.event_type.replace("_", " ");
+              const typeKey = EVENT_LABEL[event.event_type];
+              const label = typeKey ? t(typeKey) : event.event_type.replace("_", " ");
               const amount =
                 event.event_type === "DONATION" && event.amount
                   ? `${event.currency === "USD" || !event.currency ? "$" : ""}${event.amount}${
@@ -637,7 +569,10 @@ function ActivityFeedPage() {
                       : null;
 
               return (
-                <li key={event.id} className="flex items-start gap-3 px-2 py-3.5 sm:px-3">
+                <li
+                  key={event.id}
+                  className={`flex items-start gap-3 py-3.5 ${freshIds.has(event.id) ? "soft-rise" : ""}`}
+                >
                   <span
                     className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.72rem] font-semibold"
                     style={{
@@ -651,9 +586,9 @@ function ActivityFeedPage() {
                     {amount ? <span className="opacity-80">{amount}</span> : null}
                   </span>
 
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 text-start">
                     <p className="truncate text-sm font-semibold" style={{ color }}>
-                      {event.actor_name ?? "Anonymous"}
+                      {event.actor_name ?? t("activity.anonymous")}
                     </p>
                     {event.message ? (
                       <p className="mt-0.5 break-words text-[0.8rem] text-muted-foreground">
@@ -663,7 +598,7 @@ function ActivityFeedPage() {
                   </div>
 
                   <span className="shrink-0 pt-0.5 text-xs tabular-nums text-muted-foreground">
-                    {relativeTime(event.created_at)}
+                    {relativeTime(event.created_at, t("activity.justNow"))}
                   </span>
                 </li>
               );
@@ -684,7 +619,7 @@ function ActivityFeedPage() {
           >
             <span className="flex items-center gap-2">
               <Pause className="size-3.5 text-primary" aria-hidden />
-              Feed paused due to scroll
+              {t("activity.paused")}
             </span>
           </div>
 
@@ -700,21 +635,11 @@ function ActivityFeedPage() {
             }}
           >
             <ArrowUp className="size-4 text-primary" aria-hidden />
-            Scroll to top
+            {t("activity.scrollTop")}
           </button>
         </>
       ) : null}
 
-      {metric ? (
-        <MetricAnalyticsModal
-          metric={metric}
-          title={METRIC_META[metric].title}
-          accent={METRIC_META[metric].accent}
-          money={METRIC_META[metric].money ?? false}
-          events={visible}
-          onClose={() => setMetric(null)}
-        />
-      ) : null}
     </AppShell>
   );
 }

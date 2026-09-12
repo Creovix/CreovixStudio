@@ -124,18 +124,16 @@ export const Route = createFileRoute("/api/public/webhooks/kick")({
           const { deferRequestWork } = await import("@/lib/requestContext.server");
           const { handleClipCommand, warmKickClipBuffer } = await import("@/lib/clipCommand.server");
 
-          if (/^!clip\b/i.test(text.trim())) {
+          const identity = (body["sender"] as Record<string, unknown> | undefined)?.["identity"] as
+            | Record<string, unknown>
+            | undefined;
+          const identityBadges = Array.isArray(identity?.["badges"])
+            ? (identity["badges"] as Array<Record<string, unknown>>).map((badge) =>
+                String(badge["type"] ?? badge["text"] ?? ""),
+              )
+            : [];
 
-            const identityBadges = Array.isArray(
-              (body["sender"] as Record<string, unknown> | undefined)?.["identity"] &&
-                ((body["sender"] as Record<string, unknown>)["identity"] as Record<string, unknown>)["badges"],
-            )
-              ? (
-                  ((body["sender"] as Record<string, unknown>)["identity"] as Record<string, unknown>)[
-                    "badges"
-                  ] as Array<Record<string, unknown>>
-                ).map((badge) => String(badge["type"] ?? badge["text"] ?? ""))
-              : [];
+          if (/^!clip\b/i.test(text.trim())) {
             const command = handleClipCommand({
               userId: connection.user_id,
               broadcasterUserId: broadcasterId,
@@ -162,25 +160,79 @@ export const Route = createFileRoute("/api/public/webhooks/kick")({
             return jsonResponse({ status: "accepted", command: "clip" });
           }
 
+          const { matchMarkCommand } = await import("@/lib/markPoints");
+          const markMatch = matchMarkCommand(text);
+          if (markMatch) {
+            const { handleMarkCommand } = await import("@/lib/markPoints.server");
+            deferRequestWork(
+              request,
+              handleMarkCommand({
+                userId: connection.user_id,
+                broadcasterUserId: broadcasterId,
+                platform: "KICK",
+                text,
+                sender: {
+                  username,
+                  platformId: pickString(body, "sender", "user_id"),
+                  identityBadges,
+                },
+              })
+                .then((result) => {
+                  console.log("[kick-webhook] mark command", { messageId, ...result });
+                })
+                .catch((error) => console.error("[kick-webhook] mark command failed", error)),
+            );
+            deferRequestWork(
+              request,
+              warmKickClipBuffer(connection.user_id).catch((error) =>
+                console.error("[kick-webhook] clip buffer warm failed", error),
+              ),
+            );
+            return jsonResponse({ status: "accepted", command: markMatch.kind });
+          }
+
+          deferRequestWork(
+            request,
+            (async () => {
+              const { handleDefaultChatCommand } = await import("@/lib/defaultCommands.server");
+              const defaultResult = await handleDefaultChatCommand({
+                userId: connection.user_id,
+                broadcasterUserId: broadcasterId,
+                platform: "KICK",
+                text,
+                sender: { username },
+              });
+              if (defaultResult.status !== "ignored") {
+                console.log("[kick-webhook] default command", { messageId, ...defaultResult });
+                return;
+              }
+              if (defaultResult.reason === "cooldown") return;
+
+              const { handleCustomChatCommand } = await import("@/lib/customCommands.server");
+              const result = await handleCustomChatCommand({
+                userId: connection.user_id,
+                broadcasterUserId: broadcasterId,
+                platform: "KICK",
+                text,
+                sender: { username, identityBadges },
+              });
+              if (result.status !== "ignored") {
+                console.log("[kick-webhook] custom command", { messageId, ...result });
+              }
+            })().catch((error) => console.error("[kick-webhook] chat command failed", error)),
+          );
+
           // Giveaway keyword entries are captured server-side so they land
           // even when nobody has the dashboard open.
           deferRequestWork(
             request,
             (async () => {
               const { captureGiveawayEntry } = await import("@/lib/giveaway.server");
-              const identity = (body["sender"] as Record<string, unknown> | undefined)?.["identity"] as
-                | Record<string, unknown>
-                | undefined;
-              const badges = Array.isArray(identity?.["badges"])
-                ? (identity["badges"] as Array<Record<string, unknown>>).map((badge) =>
-                    String(badge["type"] ?? ""),
-                  )
-                : [];
               await captureGiveawayEntry(supabaseAdmin, connection.user_id, {
                 platform: "KICK",
                 username,
                 text,
-                isSubscriber: badges.some((badge) => /sub|founder|og|vip/i.test(badge)),
+                isSubscriber: identityBadges.some((badge) => /sub|founder|og|vip/i.test(badge)),
               });
             })().catch((error) => console.error("[kick-webhook] giveaway entry failed", error)),
           );

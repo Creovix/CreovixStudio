@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { MoreHorizontal, Pause, Play } from "lucide-react";
+import { MediaSourceBadge } from "@/components/media/MediaSourceBadge";
 import { paletteVars, usePlayerPalette, type PlayerLayout } from "@/lib/playerPalette";
 
 export type TrackView = {
@@ -8,6 +9,8 @@ export type TrackView = {
   thumbnailUrl: string | null;
   progress?: number;
   paused?: boolean;
+  platform?: string | null | undefined;
+  artist?: string | null | undefined;
 };
 
 /** Splits "Artist - Song" titles so layouts can show two lines of text. */
@@ -23,9 +26,12 @@ const pct = (v: number | undefined) => `${Math.max(0, Math.min(100, Math.round((
 export const MediaPlayerCard = memo(function MediaPlayerCard({ layout, track, className = "" }: { layout: PlayerLayout; track: TrackView; className?: string }) {
   const palette = usePlayerPalette(track.thumbnailUrl);
   const style = paletteVars(palette);
-  const { song, artist } = splitTitle(track.title);
+  const split = splitTitle(track.title);
+  const song = split.song;
+  const artist = track.artist?.trim() || split.artist;
   const art = track.thumbnailUrl;
   const Icon = track.paused ? Play : Pause;
+  const badge = track.platform ? <MediaSourceBadge platform={track.platform} size={12} className="shrink-0 text-white/90" /> : null;
 
   if (layout === "COMPACT_SLIM") {
     return (
@@ -37,7 +43,7 @@ export const MediaPlayerCard = memo(function MediaPlayerCard({ layout, track, cl
         <div className="relative flex w-full items-center gap-3">
           {art && <img src={art} alt="" className="size-9 shrink-0 rounded-full object-cover ring-1 ring-white/20" />}
           <div className="min-w-0 flex-1" style={{ color: "var(--player-color-light)" }}>
-            <p className="truncate text-sm font-bold leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,.65)]">{song}</p>
+            <p className="flex items-center gap-1.5 truncate text-sm font-bold leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,.65)]">{badge}<span className="truncate">{song}</span></p>
             <p className="truncate text-[11px] opacity-85 drop-shadow-[0_1px_2px_rgba(0,0,0,.65)]">{artist || track.requester}</p>
           </div>
           <Icon className="size-5 shrink-0" style={{ color: "var(--player-color-vibrant)" }} />
@@ -57,10 +63,13 @@ export const MediaPlayerCard = memo(function MediaPlayerCard({ layout, track, cl
           ? <img src={art} alt="" className="size-12 shrink-0 rounded-lg object-cover" />
           : <span className="size-12 shrink-0 rounded-lg" style={{ background: "var(--player-color-muted)" }} />}
         <div className="min-w-0 flex-1 text-white">
-          <p className="truncate text-sm font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,.7)]">
-            {song}
-            {artist && <span className="px-1.5 font-black" style={{ color: "var(--player-color-vibrant)" }}>·</span>}
-            {artist && <span className="opacity-75">{artist}</span>}
+          <p className="flex items-center gap-1.5 truncate text-sm font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,.7)]">
+            {badge}
+            <span className="truncate">
+              {song}
+              {artist && <span className="px-1.5 font-black" style={{ color: "var(--player-color-vibrant)" }}>·</span>}
+              {artist && <span className="opacity-75">{artist}</span>}
+            </span>
           </p>
           <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/12">
             <div className="h-full rounded-full" style={{ width: pct(track.progress), background: "var(--player-color-vibrant)" }} />
@@ -83,7 +92,7 @@ export const MediaPlayerCard = memo(function MediaPlayerCard({ layout, track, cl
         {!art && <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.7))" }} />}
       </div>
       <div className="space-y-0.5 p-3">
-        <p className="truncate text-sm font-semibold leading-tight" style={{ color: "var(--player-color-vibrant)" }}>{song}</p>
+        <p className="flex items-center gap-1.5 truncate text-sm font-semibold leading-tight" style={{ color: "var(--player-color-vibrant)" }}>{badge}<span className="truncate">{song}</span></p>
         <p className="truncate text-xs font-medium leading-tight opacity-90" style={{ color: "var(--player-color-vibrant)" }}>{artist || track.requester}</p>
         <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/12">
           <div className="h-full rounded-full" style={{ width: pct(track.progress), background: "var(--player-color-vibrant)" }} />

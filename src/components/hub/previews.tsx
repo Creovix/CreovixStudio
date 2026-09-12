@@ -32,7 +32,7 @@ export function TimerPreview() {
         className="absolute size-[70px] rounded-full border border-accent/30 [transform:rotateX(58deg)_rotateZ(20deg)]"
         aria-hidden
       />
-      <p className="relative rounded-lg border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-3 py-1.5 text-lg font-semibold tabular-nums tracking-tight">
+      <p className="relative rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] px-3 py-1.5 text-lg font-semibold tabular-nums tracking-tight">
         00:25:36
       </p>
     </div>
@@ -116,7 +116,7 @@ export function ChatPreview() {
       {lines.map(([who, msg], index) => (
         <div
           key={who}
-          className="rounded-lg border border-[oklch(1_0_0/0.07)] bg-[oklch(1_0_0/0.035)] px-2.5 py-1.5 text-[0.68rem] shadow-[0_8px_18px_-12px_oklch(0_0_0/0.9)]"
+          className="rounded-xl border border-[oklch(1_0_0/0.07)] bg-[oklch(1_0_0/0.035)] px-2.5 py-1.5 text-[0.68rem] shadow-[0_8px_18px_-12px_oklch(0_0_0/0.9)]"
           style={{ marginInlineStart: `${index * 10}px` }}
         >
           <span className="font-semibold text-primary">{who}</span>{" "}
@@ -161,23 +161,55 @@ export function WheelPreview() {
   );
 }
 
+const HUB_EMOTES = [
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0", alt: "Kappa" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/1.0", alt: "LUL" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/1.0", alt: "PogChamp" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/354/default/dark/1.0", alt: "4Head" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/58127/default/dark/1.0", alt: "CoolCat" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/81997/default/dark/1.0", alt: "KappaPride" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/114836/default/dark/1.0", alt: "Jebaited" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/41/default/dark/1.0", alt: "Kreygasm" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/58765/default/dark/1.0", alt: "NotLikeThis" },
+  { src: "https://static-cdn.jtvnw.net/emoticons/v2/555555584/default/dark/1.0", alt: "<3" },
+] as const;
+
+const HUB_EMOTE_FALLS = [
+  { left: "6%", delay: "-0.4s", duration: "4.4s", size: 18, spin: "150deg" },
+  { left: "18%", delay: "-1.9s", duration: "5.2s", size: 16, spin: "-190deg" },
+  { left: "31%", delay: "-3.3s", duration: "4.8s", size: 20, spin: "210deg" },
+  { left: "44%", delay: "-0.8s", duration: "5.6s", size: 17, spin: "-140deg" },
+  { left: "57%", delay: "-2.6s", duration: "4.2s", size: 15, spin: "175deg" },
+  { left: "69%", delay: "-4.1s", duration: "5.4s", size: 19, spin: "-205deg" },
+  { left: "81%", delay: "-1.4s", duration: "4.9s", size: 16, spin: "185deg" },
+  { left: "91%", delay: "-3.0s", duration: "5.1s", size: 18, spin: "-165deg" },
+] as const;
+
 export function EmotePreview() {
   return (
-    <div className="relative h-full">
-      {["✦", "★", "◆", "✦", "●", "✧"].map((glyph, index) => (
-        <span
-          key={index}
-          className="absolute text-base text-primary/70 drop-shadow-[0_4px_10px_var(--primary)]"
-          style={{
-            left: `${8 + index * 15}%`,
-            top: `${10 + ((index * 27) % 62)}%`,
-            opacity: 0.4 + index * 0.1,
-          }}
-          aria-hidden
-        >
-          {glyph}
-        </span>
-      ))}
+    <div className="hub-emote-rain relative isolate h-full w-full overflow-hidden" aria-hidden>
+      {HUB_EMOTE_FALLS.map((fall, index) => {
+        const emote = HUB_EMOTES[index % HUB_EMOTES.length]!;
+        return (
+          <img
+            key={`${emote.alt}-${index}`}
+            src={emote.src}
+            alt=""
+            width={fall.size}
+            height={fall.size}
+            className="hub-emote-drop pointer-events-none absolute start-0 top-0 select-none"
+            style={{
+              insetInlineStart: fall.left,
+              width: fall.size,
+              height: fall.size,
+              animationDelay: fall.delay,
+              animationDuration: fall.duration,
+              ["--emote-spin" as string]: fall.spin,
+            }}
+            draggable={false}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -193,7 +225,7 @@ export function ActivityPreview() {
       {rows.map(([kind, value]) => (
         <div
           key={kind}
-          className="flex items-center justify-between rounded-md border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.025)] px-2.5 py-1.5"
+          className="flex items-center justify-between rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.025)] px-2.5 py-1.5"
         >
           <span className="text-muted-foreground">{kind}</span>
           <span className="font-medium">{value}</span>
@@ -209,7 +241,7 @@ export function CountdownPreview() {
       {["02", "14", "09"].map((unit) => (
         <div
           key={unit}
-          className="rounded-lg border border-[oklch(1_0_0/0.09)] bg-[oklch(1_0_0/0.04)] px-3 py-2.5 text-lg font-semibold tabular-nums shadow-[0_14px_24px_-16px_oklch(0_0_0/0.9)] [transform:rotateX(8deg)]"
+          className="rounded-xl border border-[oklch(1_0_0/0.09)] bg-[oklch(1_0_0/0.04)] px-3 py-2.5 text-lg font-semibold tabular-nums shadow-[0_14px_24px_-16px_oklch(0_0_0/0.9)] [transform:rotateX(8deg)]"
         >
           {unit}
         </div>
@@ -261,9 +293,9 @@ export function MediaPreview() {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex w-full max-w-[170px] gap-1.5">
-        <div className="h-16 flex-1 rounded-lg bg-[oklch(1_0_0/0.06)]" />
-        <div className="h-16 w-10 rounded-lg bg-primary/25" />
-        <div className="h-16 w-6 rounded-lg bg-accent/25" />
+        <div className="h-16 flex-1 rounded-xl bg-[oklch(1_0_0/0.06)]" />
+        <div className="h-16 w-10 rounded-xl bg-primary/25" />
+        <div className="h-16 w-6 rounded-xl bg-accent/25" />
       </div>
     </div>
   );
@@ -290,7 +322,7 @@ export function QueuePreview() {
       {["1. kira", "2. mox", "3. ari"].map((row) => (
         <p
           key={row}
-          className="rounded-md border border-[oklch(1_0_0/0.05)] bg-[oklch(1_0_0/0.03)] px-2.5 py-1.5"
+          className="rounded-xl border border-[oklch(1_0_0/0.05)] bg-[oklch(1_0_0/0.03)] px-2.5 py-1.5"
         >
           {row}
         </p>
@@ -310,7 +342,7 @@ export function TappersPreview() {
       {rows.map((row) => (
         <div
           key={row.rank}
-          className="flex items-center gap-2 rounded-lg border border-[#FE2C55]/25 bg-[oklch(1_0_0/0.04)] px-2 py-1"
+          className="flex items-center gap-2 rounded-xl border border-[#FE2C55]/25 bg-[oklch(1_0_0/0.04)] px-2 py-1"
         >
           <span className="text-[0.68rem] font-bold" style={{ color: row.color }}>
             #{row.rank}
@@ -344,17 +376,17 @@ export function TapGoalPreview() {
 export function MediaRequestPreview() {
   return (
     <div className="flex h-full w-full flex-col justify-center gap-1.5 p-3">
-      <div className="flex items-center gap-2 rounded-lg border border-[#53FC18]/35 bg-[#53FC18]/10 px-2 py-1.5">
-        <span className="grid size-5 place-items-center rounded-md bg-[#53FC18]/20 text-[0.55rem] font-bold text-[#53FC18]">
+      <div className="flex items-center gap-2 rounded-xl border border-[#53FC18]/35 bg-[#53FC18]/10 px-2 py-1.5">
+        <span className="grid size-5 place-items-center rounded-xl bg-[#53FC18]/20 text-[0.55rem] font-bold text-[#53FC18]">
           ▶
         </span>
-        <span className="truncate text-[0.62rem] font-medium">Now playing · YouTube</span>
+        <span className="truncate text-[0.62rem] font-medium">Now playing · YouTube · Spotify</span>
       </div>
-      <div className="flex items-center gap-2 rounded-lg border border-white/10 px-2 py-1">
+      <div className="flex items-center gap-2 rounded-xl border border-white/10 px-2 py-1">
         <span className="text-[0.55rem] text-muted-foreground">2.</span>
         <span className="h-1.5 flex-1 rounded-full bg-white/15" />
       </div>
-      <div className="flex items-center gap-2 rounded-lg border border-white/10 px-2 py-1">
+      <div className="flex items-center gap-2 rounded-xl border border-white/10 px-2 py-1">
         <span className="text-[0.55rem] text-muted-foreground">3.</span>
         <span className="h-1.5 w-2/3 rounded-full bg-white/10" />
       </div>

@@ -194,7 +194,7 @@ export function AdminCodesPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="glass-3d rounded-2xl p-6">
+      <section>
         <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
           🔑 {ar ? "مولّد أكواد التفعيل" : "Activation code generator"}
         </p>
@@ -281,7 +281,7 @@ export function AdminCodesPanel() {
         ) : null}
       </section>
 
-      <section className="glass-3d rounded-2xl p-6">
+      <section className="border-t border-white/5 pt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
             {ar ? "إدارة الأكواد" : "Codes management"} · {rows.length}

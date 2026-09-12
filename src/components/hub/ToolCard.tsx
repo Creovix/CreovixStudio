@@ -2,6 +2,9 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Check, Copy, Lock, Trash2 } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 
+import { PLATFORM_META, type PlatformId } from "@/components/hub/platforms";
+import { useLanguage } from "@/lib/i18n";
+
 export type ToolCardProps = {
   name: string;
   description: string;
@@ -21,8 +24,8 @@ export type ToolCardProps = {
   removing?: boolean;
   locked?: boolean;
   lockLabel?: string;
-  /** Platform brand colour used for the hover border/glow accent. */
-  accent?: string | undefined;
+  platforms?: PlatformId[];
+  comingSoon?: boolean;
 };
 
 export function ToolCard({
@@ -42,13 +45,17 @@ export function ToolCard({
   removing = false,
   locked = false,
   lockLabel = "Subscription required",
-  accent,
+  platforms = [],
+  comingSoon = false,
 }: ToolCardProps) {
-
+  const { t, lang } = useLanguage();
   const [copied, setCopied] = useState(false);
 
+  const previewLocked = locked || comingSoon;
+  const overlayLabel = comingSoon ? t("home.comingSoon") : lockLabel;
+
   const copy = async () => {
-    if (locked) return;
+    if (previewLocked) return;
     const origin = typeof window === "undefined" ? "" : window.location.origin;
     const url = overlayUrl ?? (publicToken ? `${origin}/overlay/${publicToken}` : null);
     if (!url) return;
@@ -57,51 +64,57 @@ export function ToolCard({
     setTimeout(() => setCopied(false), 1600);
   };
 
-
   return (
     <div
-      className={`glass-3d glass-lift group relative flex h-full flex-col overflow-hidden rounded-2xl p-3 text-start transition-all duration-300 ${
+      className={`glass-3d relative flex h-full flex-col overflow-hidden rounded-2xl p-3 text-start ${
         removing ? "pointer-events-none scale-95 opacity-0" : "scale-100 opacity-100"
-      }`}
-      style={accent ? ({ "--tool-accent": accent } as CSSProperties) : undefined}
+      } ${comingSoon ? "pointer-events-none" : ""}`}
     >
-      {accent ? (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-2xl border border-transparent opacity-0 transition-all duration-300 group-hover:border-[color:var(--tool-accent)] group-hover:opacity-70 group-hover:shadow-[0_0_28px_-8px_var(--tool-accent)]"
-        />
-      ) : null}
-
-      <div className="pointer-events-none absolute inset-x-0 -top-16 h-32 bg-[radial-gradient(60%_100%_at_50%_100%,color-mix(in_oklab,var(--primary)_28%,transparent),transparent_70%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-      <div className="relative h-[120px] overflow-hidden rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.02)] [perspective:900px]">
-        <div
-          className={`h-full transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:translateY(-3px)_rotateX(6deg)_scale(1.04)] ${
-            locked ? "blur-[3px] saturate-50" : ""
-          }`}
-        >
+      <div className="relative h-[120px] overflow-hidden rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.02)]">
+        <div className={`h-full overflow-hidden ${previewLocked ? "blur-[3px] saturate-50" : ""}`}>
           {preview}
         </div>
-        {locked ? (
+        {previewLocked ? (
           <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">
             <span
-              className="flex items-center gap-1.5 rounded-full border border-[oklch(1_0_0/0.14)] px-3 py-1.5 text-[0.66rem] font-semibold text-foreground shadow-[0_10px_26px_-10px_rgba(0,0,0,0.9),inset_0_1px_0_oklch(1_0_0/0.14)]"
+              className="flex items-center gap-1.5 rounded-full border border-[oklch(1_0_0/0.14)] px-3 py-1.5 text-[0.66rem] font-semibold text-foreground"
               style={{ background: "rgba(15, 17, 23, 0.85)" }}
             >
               <Lock className="size-3.5 text-primary" aria-hidden />
-              {lockLabel}
+              {overlayLabel}
             </span>
           </div>
         ) : null}
       </div>
 
-
       <div className="relative mt-3.5 flex items-start gap-2.5">
-        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)] shadow-[inset_0_1px_0_oklch(1_0_0/0.08)]">
+        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)]">
           <Icon className="size-4 text-primary" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
+            {platforms.length > 0 ? (
+              <span className="flex shrink-0 items-center gap-1.5" aria-hidden>
+                {platforms.map((id) => {
+                  const meta = PLATFORM_META[id];
+                  return (
+                    <span
+                      key={id}
+                      title={lang === "ar" ? meta.label.ar : meta.label.en}
+                      className="size-1.5 rounded-full"
+                      style={{ background: meta.color } as CSSProperties}
+                    />
+                  );
+                })}
+              </span>
+            ) : null}
+            {comingSoon ? (
+              <span className="rounded-full bg-zinc-800/80 px-2 py-0.5 text-[0.62rem] text-muted-foreground">
+                {t("home.comingSoon")}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 line-clamp-2 text-[0.74rem] leading-relaxed text-muted-foreground">
             {description}
           </p>
@@ -112,7 +125,7 @@ export function ToolCard({
         <span className="flex items-center gap-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           {status ? (
             <span
-              className={`size-1.5 rounded-full ${live ? "bg-primary shadow-[0_0_8px_var(--primary)]" : "bg-muted-foreground/50"}`}
+              className={`size-1.5 rounded-full ${live ? "bg-primary" : "bg-muted-foreground/50"}`}
               aria-hidden
             />
           ) : null}
@@ -120,12 +133,12 @@ export function ToolCard({
         </span>
 
         <div className="flex items-center gap-1.5">
-          {(publicToken || overlayUrl) && !locked ? (
+          {(publicToken || overlayUrl) && !locked && !comingSoon ? (
             <button
               type="button"
               onClick={copy}
               aria-label={`Copy OBS browser source URL for ${name}`}
-              className="rounded-lg border border-[oklch(1_0_0/0.08)] p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-xl border border-[oklch(1_0_0/0.08)] p-1.5 text-muted-foreground transition-opacity hover:opacity-80"
             >
               {copied ? (
                 <Check className="size-3.5 text-primary" aria-hidden />
@@ -134,13 +147,13 @@ export function ToolCard({
               )}
             </button>
           ) : null}
-          {onDelete && !locked ? (
+          {onDelete && !locked && !comingSoon ? (
             <button
               type="button"
               onClick={onDelete}
               aria-label={`${deleteLabel}: ${name}`}
               title={deleteLabel}
-              className="rounded-lg border border-transparent bg-[oklch(1_0_0/0.05)] p-1.5 text-muted-foreground transition-all duration-200 hover:scale-110 hover:border-red-500/30 hover:bg-red-500/20 hover:text-red-400"
+              className="rounded-xl bg-[oklch(1_0_0/0.05)] p-1.5 text-muted-foreground transition-opacity hover:opacity-80 hover:text-red-400"
             >
               <Trash2 className="size-3.5" aria-hidden />
             </button>
@@ -148,19 +161,19 @@ export function ToolCard({
 
           <button
             type="button"
-            onClick={onOpen}
-            disabled={disabled}
-            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[0.74rem] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-55 ${
-              locked ? "text-primary" : "text-muted-foreground hover:text-primary"
+            onClick={() => {
+              if (comingSoon) return;
+              onOpen();
+            }}
+            disabled={disabled || comingSoon}
+            className={`flex items-center gap-1 rounded-xl px-2 py-1 text-[0.74rem] font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-55 ${
+              locked ? "text-primary" : "text-muted-foreground hover:opacity-80"
             }`}
           >
-            {locked ? <Lock className="size-3" aria-hidden /> : null}
-            {locked ? lockLabel : actionLabel}
-            {locked ? null : (
-              <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
-            )}
+            {locked || comingSoon ? <Lock className="size-3" aria-hidden /> : null}
+            {comingSoon ? t("home.comingSoon") : locked ? lockLabel : actionLabel}
+            {locked || comingSoon ? null : <ArrowRight className="size-3" aria-hidden />}
           </button>
-
         </div>
       </div>
     </div>

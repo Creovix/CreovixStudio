@@ -81,7 +81,7 @@
 }
 
 :root {
-  --radius: 0.85rem;
+  --radius: 1rem;
   /* #0B0D12 */
   --background: oklch(0.155 0.008 265);
   --foreground: oklch(0.968 0.001 285);
@@ -199,6 +199,7 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     overflow-x: hidden;
+    color-scheme: dark;
   }
 
   /* ---------- Hidden but functional scrollbars ---------- */
@@ -295,6 +296,20 @@ body.overlay-transparent {
 }
 
 .overlay-emote { animation: overlay-emote-fall var(--emote-duration, 4000ms) linear forwards; }
+
+@keyframes hub-emote-rain {
+  0% { opacity: 0; transform: translateY(-18px) rotate(0deg); }
+  12% { opacity: 1; }
+  86% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(102px) rotate(var(--emote-spin, 180deg)); }
+}
+
+.hub-emote-drop {
+  animation-name: hub-emote-rain;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
 
 
 /* ---------- Premium studio surfaces & spatial motion ---------- */
@@ -457,5 +472,6 @@ html[dir="rtl"] {
 @media (prefers-reduced-motion: reduce) {
   .spatial-float, .spatial-spin, .soft-rise,
   .overlay-live-dot, .overlay-glass-glow, .overlay-cyber-scan,
-  .giveaway-cloud-name, .giveaway-winner-reveal { animation: none; }
+  .giveaway-cloud-name, .giveaway-winner-reveal,
+  .hub-emote-drop { animation: none; opacity: 0.88; transform: translateY(2.2rem); }
 }

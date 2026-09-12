@@ -5,10 +5,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { Radio, Search, Star, Swords, Trash2, Users } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { DarkSelect } from "@/components/ui/dark-select";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
   lookupChannel,
+  searchTwitchChannels,
+  type ChannelSearchHit,
   type ChannelSnapshot,
   type CounterPlatform,
 } from "@/lib/liveCounter.functions";
@@ -36,6 +39,23 @@ export const Route = createFileRoute("/_authenticated/live-counter")({
 
 type Target = { platform: CounterPlatform; username: string };
 type Saved = { platform: string; username: string; displayName: string; avatarUrl: string | null };
+type SuggestionSource = "connected" | "favorite" | "recent" | "twitch";
+type ChannelSuggestion = {
+  platform: "KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE";
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  source: SuggestionSource;
+  isLive?: boolean;
+};
+
+const TRACKABLE: ChannelSuggestion["platform"][] = ["KICK", "TWITCH", "X", "TIKTOK", "YOUTUBE"];
+const SOURCE_LABEL: Record<SuggestionSource, string> = {
+  connected: "Connected",
+  favorite: "Favorite",
+  recent: "Recent",
+  twitch: "Twitch",
+};
 
 const PLATFORMS: { id: CounterPlatform; label: string }[] = [
   { id: "ALL", label: "All Platforms" },
@@ -50,11 +70,36 @@ const POLL_MS = 5_000;
 const FAVORITES_KEY = "creovix.live-counter.favorites";
 const DAILY_KEY = "creovix.live-counter.daily";
 const SNAPSHOT_KEY = "creovix.live-counter.snapshots";
+const RECENT_KEY = "creovix.live-counter.recent";
 
-const glass =
-  "rounded-2xl border border-[oklch(1_0_0/0.08)] bg-[oklch(0.18_0.02_275/0.55)] backdrop-blur-xl";
 const field =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
+  "h-11 w-full rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary";
+
+function isTrackable(platform: string): platform is ChannelSuggestion["platform"] {
+  return TRACKABLE.includes(platform as ChannelSuggestion["platform"]);
+}
+
+function suggestionKey(item: { platform: string; username: string }) {
+  return `${item.platform}:${item.username.trim().toLowerCase()}`;
+}
+
+function matchesQuery(item: ChannelSuggestion, query: string) {
+  const needle = query.trim().replace(/^@/, "").toLowerCase();
+  if (!needle) return false;
+  return (
+    item.username.toLowerCase().includes(needle) ||
+    item.displayName.toLowerCase().includes(needle)
+  );
+}
+
+function useDebounced<T>(value: T, ms: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), ms);
+    return () => window.clearTimeout(timer);
+  }, [value, ms]);
+  return debounced;
+}
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -211,20 +256,114 @@ function SearchBar({
   onPlatform,
   onSubmit,
   label,
+  localSuggestions,
 }: {
   value: string;
   platform: CounterPlatform;
   onValue: (next: string) => void;
   onPlatform: (next: CounterPlatform) => void;
-  onSubmit: () => void;
+  onSubmit: (username: string, platform: CounterPlatform) => void;
   label: string;
+  localSuggestions: ChannelSuggestion[];
 }) {
+  const listId = useMemo(
+    () => `channel-suggest-${label.replace(/\s+/g, "-").toLowerCase()}`,
+    [label],
+  );
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const blurTimer = useRef<number | null>(null);
+  const searchTwitch = useServerFn(searchTwitchChannels);
+  const typed = value.trim().replace(/^@/, "");
+  const debounced = useDebounced(typed, 280);
+  const canSearchTwitch =
+    debounced.length >= 2 && (platform === "ALL" || platform === "TWITCH");
+
+  const twitchQuery = useQuery({
+    queryKey: ["live-counter-search", debounced.toLowerCase(), platform],
+    enabled: canSearchTwitch,
+    staleTime: 30_000,
+    retry: 0,
+    queryFn: async () => {
+      try {
+        return (await searchTwitch({ data: { query: debounced } })) as ChannelSearchHit[];
+      } catch {
+        // Guest sessions and missing Twitch credentials should not break typing.
+        return [] as ChannelSearchHit[];
+      }
+    },
+  });
+
+  const suggestions = useMemo(() => {
+    const needle = typed.toLowerCase();
+    if (!needle) return [] as ChannelSuggestion[];
+
+    const seen = new Set<string>();
+    const next: ChannelSuggestion[] = [];
+    const push = (item: ChannelSuggestion) => {
+      if (platform !== "ALL" && item.platform !== platform) return;
+      if (!matchesQuery(item, typed)) return;
+      const key = suggestionKey(item);
+      if (seen.has(key)) return;
+      seen.add(key);
+      next.push(item);
+    };
+
+    for (const item of localSuggestions) push(item);
+    if (platform === "ALL" || platform === "TWITCH") {
+      for (const hit of twitchQuery.data ?? []) {
+        push({
+          platform: "TWITCH",
+          username: hit.username,
+          displayName: hit.displayName,
+          avatarUrl: hit.avatarUrl,
+          source: "twitch",
+          isLive: hit.isLive,
+        });
+      }
+    }
+    return next.slice(0, 8);
+  }, [localSuggestions, platform, typed, twitchQuery.data]);
+
+  const showList = open && typed.length > 0;
+  const emptyHint =
+    platform === "ALL" || platform === "TWITCH"
+      ? "No matching channels in connected accounts, recent comparisons, or Twitch search."
+      : "No matching channels in connected accounts or recent comparisons.";
+
+  const pick = (item: ChannelSuggestion) => {
+    onValue(item.username);
+    onPlatform(item.platform);
+    onSubmit(item.username, item.platform);
+    setOpen(false);
+  };
+
+  const moveActive = (delta: number) => {
+    if (suggestions.length === 0) return;
+    setActive((index) => (index + delta + suggestions.length) % suggestions.length);
+  };
+
+  useEffect(() => {
+    setActive(0);
+  }, [typed, platform]);
+
+  useEffect(
+    () => () => {
+      if (blurTimer.current) window.clearTimeout(blurTimer.current);
+    },
+    [],
+  );
+
   return (
     <form
       className="flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        onSubmit();
+        if (showList && suggestions[active]) {
+          pick(suggestions[active]);
+          return;
+        }
+        onSubmit(value, platform);
       }}
     >
       <div className="relative min-w-[180px] flex-1">
@@ -234,27 +373,115 @@ function SearchBar({
         />
         <input
           value={value}
-          onChange={(event) => onValue(event.target.value)}
+          onChange={(event) => {
+            onValue(event.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => {
+            blurTimer.current = window.setTimeout(() => setOpen(false), 140);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setOpen(true);
+              moveActive(1);
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setOpen(true);
+              moveActive(-1);
+            } else if (event.key === "Escape") {
+              setOpen(false);
+            }
+          }}
           placeholder={label}
           className={`${field} ps-9`}
           aria-label={label}
+          aria-autocomplete="list"
+          aria-expanded={showList}
+          aria-controls={listId}
+          aria-activedescendant={
+            showList && suggestions[active] ? `${listId}-${active}` : undefined
+          }
+          role="combobox"
+          autoComplete="off"
         />
+        {showList ? (
+          <ul
+            id={listId}
+            role="listbox"
+            className="absolute start-0 end-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-[#12151e]/95 py-1 text-sm shadow-2xl shadow-black/60 backdrop-blur-2xl"
+          >
+            {suggestions.length === 0 ? (
+              <li className="px-3 py-3 text-center text-xs text-muted-foreground">
+                {canSearchTwitch && twitchQuery.isFetching
+                  ? "Searching Twitch…"
+                  : emptyHint}
+              </li>
+            ) : (
+              suggestions.map((item, index) => (
+                <li key={suggestionKey(item)} role="presentation">
+                  <button
+                    type="button"
+                    id={`${listId}-${index}`}
+                    role="option"
+                    aria-selected={index === active}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-start transition-colors ${
+                      index === active
+                        ? "bg-violet-600/20 text-violet-100"
+                        : "text-slate-100 hover:bg-violet-600/15"
+                    }`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setActive(index)}
+                    onClick={() => pick(item)}
+                  >
+                    {item.avatarUrl ? (
+                      <img
+                        src={item.avatarUrl}
+                        alt=""
+                        className="size-7 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-[0.65rem] font-bold">
+                        {item.displayName.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{item.displayName}</span>
+                      <span className="block truncate text-[0.7rem] text-muted-foreground">
+                        @{item.username}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+                      <PlatformIcon platform={item.platform} size={12} />
+                      {SOURCE_LABEL[item.source]}
+                      {item.isLive ? " · Live" : ""}
+                    </span>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        ) : null}
       </div>
-      <select
+      <DarkSelect
         value={platform}
-        onChange={(event) => onPlatform(event.target.value as CounterPlatform)}
-        className={`${field} w-auto`}
+        onValueChange={(next) => onPlatform(next as CounterPlatform)}
         aria-label="Platform"
-      >
-        {PLATFORMS.map((entry) => (
-          <option key={entry.id} value={entry.id}>
-            {entry.label}
-          </option>
-        ))}
-      </select>
+        className="h-11 w-[12.5rem] shrink-0"
+        options={PLATFORMS.map((entry) => ({
+          value: entry.id,
+          label: (
+            <span className="flex items-center gap-2">
+              {entry.id !== "ALL" ? <PlatformIcon platform={entry.id} size={14} /> : null}
+              {entry.label}
+            </span>
+          ),
+        }))}
+      />
       <button
         type="submit"
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+        className="h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
         Track Live
       </button>
@@ -280,7 +507,7 @@ function ChannelCard({
   if (error) {
     const notFound = error.toLowerCase().includes("not found");
     return (
-      <div className={`${glass} flex flex-col items-center gap-3 p-8 text-center`}>
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/5 p-8 text-center">
         <span
           className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
             notFound
@@ -297,14 +524,14 @@ function ChannelCard({
 
   if (!snapshot) {
     return (
-      <div className={`${glass} p-10 text-center text-sm text-muted-foreground`}>
+      <div className="p-10 text-center text-sm text-muted-foreground">
         {loading ? "Loading channel…" : "Search a channel to start tracking."}
       </div>
     );
   }
 
   return (
-    <div className={`${glass} flex flex-col items-center gap-4 p-8 text-center`}>
+    <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/5 p-8 text-center">
       <div className="flex items-center gap-4">
         {snapshot.avatarUrl ? (
           <img
@@ -370,14 +597,54 @@ function LiveCounterPage() {
 
   const [vsMode, setVsMode] = useState(false);
   const [saved, setSaved] = useState<Saved[]>([]);
+  const [recent, setRecent] = useState<Saved[]>([]);
 
   useEffect(() => {
     setSaved(readJson<Saved[]>(FAVORITES_KEY, []));
+    const stored = readJson<Saved[]>(RECENT_KEY, []);
+    const snapshots = Object.values(readJson<Record<string, ChannelSnapshot>>(SNAPSHOT_KEY, {}));
+    const seen = new Set(stored.map((entry) => suggestionKey(entry)));
+    const extras = snapshots
+      .filter((snapshot) => !seen.has(suggestionKey(snapshot)))
+      .map((snapshot) => ({
+        platform: snapshot.platform,
+        username: snapshot.username,
+        displayName: snapshot.displayName,
+        avatarUrl: snapshot.avatarUrl,
+      }));
+    setRecent([...stored, ...extras].slice(0, 20));
   }, []);
 
   const persist = (next: Saved[]) => {
     setSaved(next);
     window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+  };
+
+  const rememberRecent = (snapshot: ChannelSnapshot) => {
+    const entry: Saved = {
+      platform: snapshot.platform,
+      username: snapshot.username,
+      displayName: snapshot.displayName,
+      avatarUrl: snapshot.avatarUrl,
+    };
+    setRecent((prev) => {
+      const key = suggestionKey(entry);
+      const existing = prev.find((item) => suggestionKey(item) === key);
+      if (
+        existing &&
+        existing.displayName === entry.displayName &&
+        existing.avatarUrl === entry.avatarUrl
+      ) {
+        return prev;
+      }
+      const next = [entry, ...prev.filter((item) => suggestionKey(item) !== key)].slice(0, 20);
+      try {
+        window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {
+        /* storage full or unavailable */
+      }
+      return next;
+    });
   };
 
   // Single view
@@ -395,6 +662,55 @@ function LiveCounterPage() {
   const [targetB, setTargetB] = useState<Target | null>(null);
   const sideA = useChannel(vsMode ? targetA : null);
   const sideB = useChannel(vsMode ? targetB : null);
+
+  useEffect(() => {
+    if (main.data) rememberRecent(main.data);
+  }, [main.data]);
+  useEffect(() => {
+    if (sideA.data) rememberRecent(sideA.data);
+  }, [sideA.data]);
+  useEffect(() => {
+    if (sideB.data) rememberRecent(sideB.data);
+  }, [sideB.data]);
+
+  const localSuggestions = useMemo(() => {
+    const items: ChannelSuggestion[] = [];
+    const seen = new Set<string>();
+    const push = (
+      item: Saved,
+      source: Exclude<SuggestionSource, "twitch">,
+    ) => {
+      if (!item.username || !isTrackable(item.platform)) return;
+      const next: ChannelSuggestion = {
+        platform: item.platform,
+        username: item.username,
+        displayName: item.displayName || item.username,
+        avatarUrl: item.avatarUrl,
+        source,
+      };
+      const key = suggestionKey(next);
+      if (seen.has(key)) return;
+      seen.add(key);
+      items.push(next);
+    };
+
+    for (const connection of workspace?.connections ?? []) {
+      if (!connection.is_active || !connection.username) continue;
+      const meta = (connection.metadata ?? {}) as { avatar_url?: string | null };
+      push(
+        {
+          platform: connection.platform,
+          username: connection.username,
+          displayName: connection.username,
+          avatarUrl: meta.avatar_url ?? null,
+        },
+        "connected",
+      );
+    }
+    for (const entry of saved) push(entry, "favorite");
+    for (const entry of recent) push(entry, "recent");
+    return items;
+  }, [workspace?.connections, saved, recent]);
 
   const isFavorite = useMemo(
     () =>
@@ -451,7 +767,7 @@ function LiveCounterPage() {
       subtitle="Track live follower counts, save your favourite creators and run head-to-head comparisons."
     >
       <div className="space-y-6">
-        <div className={`${glass} flex flex-wrap items-center gap-2 p-2`}>
+        <div className="flex flex-wrap items-center gap-1 border-b border-white/5 pb-4">
           <button type="button" className={toggleClass(!vsMode)} onClick={() => setVsMode(false)}>
             <Radio className="size-4" aria-hidden /> Single View
           </button>
@@ -462,14 +778,19 @@ function LiveCounterPage() {
 
         {!vsMode ? (
           <>
-            <div className={`${glass} space-y-4 p-4`}>
+            <div className="space-y-4">
               <SearchBar
                 value={input}
                 platform={platform}
                 onValue={setInput}
                 onPlatform={setPlatform}
-                onSubmit={() => setTarget({ platform, username: input })}
+                onSubmit={(username, nextPlatform) => {
+                  setInput(username);
+                  setPlatform(nextPlatform);
+                  setTarget({ platform: nextPlatform, username });
+                }}
                 label="Channel username"
+                localSuggestions={localSuggestions}
               />
 
               {saved.length > 0 ? (
@@ -556,7 +877,7 @@ function LiveCounterPage() {
         ) : (
           <div className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">
-              <div className={`${glass} space-y-4 p-4`}>
+              <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
                   Creator A
                 </p>
@@ -565,8 +886,13 @@ function LiveCounterPage() {
                   platform={platformA}
                   onValue={setInputA}
                   onPlatform={setPlatformA}
-                  onSubmit={() => setTargetA({ platform: platformA, username: inputA })}
+                  onSubmit={(username, nextPlatform) => {
+                    setInputA(username);
+                    setPlatformA(nextPlatform);
+                    setTargetA({ platform: nextPlatform, username });
+                  }}
                   label="Creator A username"
+                  localSuggestions={localSuggestions}
                 />
                 <ChannelCard
                   snapshot={sideA.data}
@@ -575,7 +901,7 @@ function LiveCounterPage() {
                   compact
                 />
               </div>
-              <div className={`${glass} space-y-4 p-4`}>
+              <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
                   Creator B
                 </p>
@@ -584,8 +910,13 @@ function LiveCounterPage() {
                   platform={platformB}
                   onValue={setInputB}
                   onPlatform={setPlatformB}
-                  onSubmit={() => setTargetB({ platform: platformB, username: inputB })}
+                  onSubmit={(username, nextPlatform) => {
+                    setInputB(username);
+                    setPlatformB(nextPlatform);
+                    setTargetB({ platform: nextPlatform, username });
+                  }}
                   label="Creator B username"
+                  localSuggestions={localSuggestions}
                 />
                 <ChannelCard
                   snapshot={sideB.data}
@@ -596,7 +927,7 @@ function LiveCounterPage() {
               </div>
             </div>
 
-            <div className={`${glass} p-6 text-center`}>
+            <div className="border-t border-white/5 p-6 text-center">
               {gap === null ? (
                 <p className="text-sm text-muted-foreground">
                   Track two channels with public follower counts to see the live gap.

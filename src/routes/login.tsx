@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { enableTestMode, isTestMode } from "@/lib/testMode";
+import { useLanguage } from "@/lib/i18n";
 
 type LoginSearch = { error?: string | undefined; detail?: string | undefined };
 
@@ -42,6 +44,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { error, detail } = useSearch({ from: "/login" });
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +59,7 @@ function LoginPage() {
   }, [navigate]);
 
   const signIn = (provider: "twitch" | "kick" | "tiktok") => {
+    if (provider === "tiktok") return;
     setPending(provider);
     window.location.href = `/api/auth/${provider}/start`;
   };
@@ -135,17 +139,24 @@ function LoginPage() {
             {pending === "kick" ? "Redirecting…" : "Continue with Kick"}
           </button>
 
-          <button
-            type="button"
-            onClick={() => signIn("tiktok")}
-            disabled={pending !== null || !isSupabaseConfigured()}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-black px-5 py-3.5 text-base font-semibold text-white transition-all hover:border-[#25F4EE]/60 hover:shadow-[0_0_0_1px_rgba(254,44,85,0.35),0_10px_30px_-12px_rgba(37,244,238,0.6)] disabled:opacity-60"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
-              <path d="M16.5 2h-3v13.1a2.6 2.6 0 1 1-2.2-2.6v-3a5.6 5.6 0 1 0 5.2 5.6V9.3a7 7 0 0 0 4 1.3v-3a4 4 0 0 1-4-4Z" />
-            </svg>
-            {pending === "tiktok" ? "Redirecting…" : "Continue with TikTok"}
-          </button>
+          <div className="relative overflow-hidden rounded-xl">
+            <button
+              type="button"
+              disabled
+              className="pointer-events-none flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-black px-5 py-3.5 text-base font-semibold text-white opacity-60 blur-[2px] saturate-50"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+                <path d="M16.5 2h-3v13.1a2.6 2.6 0 1 1-2.2-2.6v-3a5.6 5.6 0 1 0 5.2 5.6V9.3a7 7 0 0 0 4 1.3v-3a4 4 0 0 1-4-4Z" />
+              </svg>
+              Continue with TikTok
+            </button>
+            <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">
+              <span className="flex items-center gap-1.5 rounded-full border border-white/15 bg-zinc-950/85 px-3 py-1.5 text-[0.72rem] font-semibold text-foreground">
+                <Lock className="size-3.5 text-primary" aria-hidden />
+                {t("home.comingSoon")}
+              </span>
+            </div>
+          </div>
 
           <button
             type="button"

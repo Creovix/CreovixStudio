@@ -271,6 +271,102 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_chat_command_settings: {
+        Row: {
+          created_at: string
+          default_prefix: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_prefix?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_prefix?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      custom_chat_commands: {
+        Row: {
+          cooldown_seconds: number
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+          platforms: string[]
+          prefix: string | null
+          response: string
+          roles: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cooldown_seconds?: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name: string
+          platforms?: string[]
+          prefix?: string | null
+          response: string
+          roles?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cooldown_seconds?: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          platforms?: string[]
+          prefix?: string | null
+          response?: string
+          roles?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      default_chat_commands: {
+        Row: {
+          command_id: string
+          cooldown_seconds: number
+          enabled: boolean
+          fallback_response: string
+          platforms: string[]
+          response: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          command_id: string
+          cooldown_seconds?: number
+          enabled?: boolean
+          fallback_response?: string
+          platforms?: string[]
+          response: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          command_id?: string
+          cooldown_seconds?: number
+          enabled?: boolean
+          fallback_response?: string
+          platforms?: string[]
+          response?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           actor_name: string | null
@@ -620,6 +716,8 @@ export type Database = {
           view_count: number | null
           youtube_url: string
           youtube_video_id: string
+          platform: string
+          artist: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -644,6 +742,8 @@ export type Database = {
           view_count?: number | null
           youtube_url: string
           youtube_video_id: string
+          platform?: string
+          artist?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -668,6 +768,8 @@ export type Database = {
           view_count?: number | null
           youtube_url?: string
           youtube_video_id?: string
+          platform?: string
+          artist?: string | null
         }
         Relationships: [
           {
@@ -678,6 +780,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mark_point_settings: {
+        Row: {
+          cached_staff: string[]
+          created_at: string
+          kick_username: string
+          share_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cached_staff?: string[]
+          created_at?: string
+          kick_username?: string
+          share_token?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cached_staff?: string[]
+          created_at?: string
+          kick_username?: string
+          share_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mark_point_allowlist: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      message_timers: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          interval_minutes: number
+          last_sent_at: string | null
+          message: string
+          platforms: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          interval_minutes?: number
+          last_sent_at?: string | null
+          message: string
+          platforms?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          interval_minutes?: number
+          last_sent_at?: string | null
+          message?: string
+          platforms?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       overlays: {
         Row: {
@@ -873,6 +1059,141 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stream_marks: {
+        Row: {
+          author: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          note: string
+          offline: boolean
+          status: string
+          source: string
+          started_at: string
+          stream_started_at: string | null
+          updated_at: string
+          uptime_end_seconds: number | null
+          uptime_start_seconds: number | null
+          user_id: string
+          viewer_is_mod: boolean
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          note?: string
+          offline?: boolean
+          status?: string
+          source?: string
+          started_at?: string
+          stream_started_at?: string | null
+          updated_at?: string
+          uptime_end_seconds?: number | null
+          uptime_start_seconds?: number | null
+          user_id: string
+          viewer_is_mod?: boolean
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          note?: string
+          offline?: boolean
+          status?: string
+          source?: string
+          started_at?: string
+          stream_started_at?: string | null
+          updated_at?: string
+          uptime_end_seconds?: number | null
+          uptime_start_seconds?: number | null
+          user_id?: string
+          viewer_is_mod?: boolean
+        }
+        Relationships: []
+      }
+      stream_schedule_settings: {
+        Row: {
+          created_at: string
+          reminder_note: string
+          share_token: string
+          timezone: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          reminder_note?: string
+          share_token?: string
+          timezone?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          reminder_note?: string
+          share_token?: string
+          timezone?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stream_schedule_slots: {
+        Row: {
+          cover_url: string
+          created_at: string
+          duration_minutes: number
+          enabled: boolean
+          game: string
+          id: string
+          notes: string
+          occurs_on: string | null
+          start_minutes: number
+          title: string
+          updated_at: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          cover_url?: string
+          created_at?: string
+          duration_minutes?: number
+          enabled?: boolean
+          game?: string
+          id?: string
+          notes?: string
+          occurs_on?: string | null
+          start_minutes: number
+          title: string
+          updated_at?: string
+          user_id: string
+          weekday: number
+        }
+        Update: {
+          cover_url?: string
+          created_at?: string
+          duration_minutes?: number
+          enabled?: boolean
+          game?: string
+          id?: string
+          notes?: string
+          occurs_on?: string | null
+          start_minutes?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: []
       }
       subathons: {
         Row: {

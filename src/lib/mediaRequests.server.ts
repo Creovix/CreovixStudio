@@ -1,29 +1,39 @@
 import { supabaseAdmin } from "@/lib/supabase/client.server";
+import {
+  extractMediaUrl,
+  extractYouTubeId,
+  MEDIA_URL_PATTERN,
+  parseMediaUrl,
+  type MediaPlatform,
+  type ParsedMediaUrl,
+} from "./mediaRequests";
+
+export { extractYouTubeId, extractMediaUrl, parseMediaUrl, MEDIA_URL_PATTERN };
 
 export type YouTubeMetadata = {
   videoId: string; url: string; title: string; thumbnailUrl: string | null;
   durationSeconds: number; viewCount: number | null; embeddable: boolean; source: "api" | "oembed";
+  artist: string | null;
 };
 
-
-export function extractYouTubeId(input: string): string | null {
-  const text = input.trim();
-  const direct = text.match(/^[A-Za-z0-9_-]{11}$/)?.[0];
-  if (direct) return direct;
-  const match = text.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/|embed\/|live\/|v\/)|(?:^|\s)v=)([A-Za-z0-9_-]{11})/i,
-  );
-  if (match?.[1]) return match[1];
-  const loose = text.match(/(?:youtube|youtu)[^\s]*?([A-Za-z0-9_-]{11})(?:[?&#\s]|$)/i);
-  return loose?.[1] ?? null;
-}
+export type MediaMetadata = {
+  platform: MediaPlatform;
+  sourceId: string;
+  url: string;
+  title: string;
+  artist: string | null;
+  thumbnailUrl: string | null;
+  durationSeconds: number;
+  viewCount: number | null;
+  embeddable: boolean;
+  source: "api" | "oembed" | "opengraph" | "fallback";
+};
 
 const INPUT_KEYS = new Set([
   "user_input", "userinput", "rawinput", "raw_input", "%rawinput%", "input",
   "optional_input", "user_message", "message", "text", "content", "prompt", "value",
 ]);
 
-const YOUTUBE_URL_PATTERN = /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s"'<>]+/i;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -62,7 +72,7 @@ export function extractRedemptionInput(payload: unknown, depth = 0): string | nu
     }
     return null;
   }
-  if (typeof payload === "string") return payload.match(YOUTUBE_URL_PATTERN)?.[0] ?? null;
+  if (typeof payload === "string") return extractMediaUrl(payload);
   if (typeof payload !== "object") return null;
   const entries = Object.entries(payload as Record<string, unknown>);
   for (const [key, value] of entries) {
@@ -77,7 +87,7 @@ export function extractRedemptionInput(payload: unknown, depth = 0): string | nu
   // Kick has changed the nesting of channel-point input between webhook
   // versions. A final serialized scan keeps URL extraction resilient without
   // treating unrelated text as the viewer's request.
-  try { return JSON.stringify(payload).match(YOUTUBE_URL_PATTERN)?.[0] ?? null; }
+  try { return extractMediaUrl(JSON.stringify(payload)); }
   catch { return null; }
 }
 
@@ -98,6 +108,7 @@ export async function fetchYouTubeOEmbed(videoId: string): Promise<YouTubeMetada
   return {
     videoId, url: watchUrl, title: json.title, thumbnailUrl: json.thumbnail_url ?? null,
     durationSeconds: 0, viewCount: null, embeddable: true, source: "oembed",
+    artist: json.author_name ?? null,
   };
 }
 
@@ -112,7 +123,7 @@ export async function fetchYouTubeMetadata(videoId: string): Promise<YouTubeMeta
     url.search = new URLSearchParams({ part: "snippet,contentDetails,statistics,status", id: videoId, key }).toString();
     const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok) throw new Error(`youtube_api_${response.status}`);
-    const json = await response.json() as { items?: Array<{ snippet?: { title?: string; thumbnails?: Record<string,{url?:string}> }; contentDetails?: { duration?: string }; statistics?: { viewCount?: string }; status?: { embeddable?: boolean; privacyStatus?: string } }> };
+    const json = await response.json() as { items?: Array<{ snippet?: { title?: string; channelTitle?: string; thumbnails?: Record<string,{url?:string}> }; contentDetails?: { duration?: string }; statistics?: { viewCount?: string }; status?: { embeddable?: boolean; privacyStatus?: string } }> };
     const item = json.items?.[0];
     if (!item?.snippet?.title || !item.contentDetails?.duration) throw new Error("youtube_video_not_found");
     const thumbnails = item.snippet.thumbnails ?? {};
@@ -123,6 +134,7 @@ export async function fetchYouTubeMetadata(videoId: string): Promise<YouTubeMeta
       viewCount: item.statistics?.viewCount ? Number(item.statistics.viewCount) : null,
       embeddable: item.status?.embeddable === true && item.status?.privacyStatus === "public",
       source: "api",
+      artist: item.snippet.channelTitle ?? null,
     };
   } catch (error) {
     console.warn("YouTube API Key 403 — Bypassing strict metadata checks using oEmbed fallback", error instanceof Error ? error.message : error);
@@ -139,6 +151,105 @@ export async function checkYouTubeApiHealth(): Promise<"api" | "oembed"> {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
     return response.ok ? "api" : "oembed";
   } catch { return "oembed"; }
+}
+
+function titleFromSlug(sourceId: string): string {
+  const last = sourceId.includes(":") ? sourceId.split(":").pop() ?? sourceId : sourceId.split("/").pop() ?? sourceId;
+  return decodeURIComponent(last).replace(/[-_]+/g, " ").trim() || "Requested track";
+}
+
+function asOEmbed(json: unknown): { title?: string; author_name?: string; thumbnail_url?: string } {
+  return json && typeof json === "object" ? json as { title?: string; author_name?: string; thumbnail_url?: string } : {};
+}
+
+async function fetchOEmbedJson(endpoint: string): Promise<{ title?: string; author_name?: string; thumbnail_url?: string } | null> {
+  try {
+    const response = await fetch(endpoint, { headers: { Accept: "application/json" } });
+    if (!response.ok) return null;
+    return asOEmbed(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+function ogContent(html: string, prop: string): string | null {
+  const property = html.match(new RegExp(`property=["']og:${prop}["'][^>]*content=["']([^"']+)`, "i"))?.[1]
+    ?? html.match(new RegExp(`content=["']([^"']+)["'][^>]*property=["']og:${prop}["']`, "i"))?.[1];
+  return property?.trim() || null;
+}
+
+async function fetchOpenGraph(url: string): Promise<{ title: string | null; artist: string | null; thumbnailUrl: string | null }> {
+  try {
+    const response = await fetch(url, { headers: { Accept: "text/html", "User-Agent": "CreovixStudio/1.0" } });
+    if (!response.ok) return { title: null, artist: null, thumbnailUrl: null };
+    const html = (await response.text()).slice(0, 80_000);
+    const rawTitle = ogContent(html, "title") ?? ogContent(html, "site_name");
+    const title = rawTitle?.replace(/\s*[|·]\s*Anghami.*$/i, "").trim() ?? null;
+    const description = ogContent(html, "description");
+    const artist = description?.split(/[-–—|·]/)[0]?.trim() || null;
+    return { title, artist, thumbnailUrl: ogContent(html, "image") };
+  } catch {
+    return { title: null, artist: null, thumbnailUrl: null };
+  }
+}
+
+async function resolveRedirect(url: string): Promise<string> {
+  try {
+    const response = await fetch(url, { redirect: "follow", headers: { Accept: "text/html" } });
+    return response.url || url;
+  } catch {
+    return url;
+  }
+}
+
+function fallbackMeta(parsed: ParsedMediaUrl): MediaMetadata {
+  return {
+    platform: parsed.platform, sourceId: parsed.sourceId, url: parsed.url,
+    title: titleFromSlug(parsed.sourceId), artist: null, thumbnailUrl: null,
+    durationSeconds: 0, viewCount: null, embeddable: parsed.platform !== "YOUTUBE", source: "fallback",
+  };
+}
+
+export async function fetchMediaMetadata(parsed: ParsedMediaUrl): Promise<MediaMetadata> {
+  if (parsed.platform === "YOUTUBE") {
+    const yt = await fetchYouTubeMetadata(parsed.sourceId);
+    return {
+      platform: "YOUTUBE", sourceId: yt.videoId, url: yt.url, title: yt.title, artist: yt.artist,
+      thumbnailUrl: yt.thumbnailUrl, durationSeconds: yt.durationSeconds, viewCount: yt.viewCount,
+      embeddable: yt.embeddable, source: yt.source,
+    };
+  }
+
+  let resolved = parsed;
+  if (parsed.platform === "SPOTIFY" && parsed.sourceId.startsWith("link:")) {
+    const dest = await resolveRedirect(parsed.url);
+    resolved = parseMediaUrl(dest) ?? parsed;
+  }
+
+  const oembedUrl = resolved.platform === "SPOTIFY"
+    ? `https://open.spotify.com/oembed?url=${encodeURIComponent(resolved.url)}`
+    : resolved.platform === "SOUNDCLOUD"
+      ? `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(resolved.url)}`
+      : `https://api.anghami.com/rest/v1/oembed.view?url=${encodeURIComponent(resolved.url)}`;
+  const oembed = await fetchOEmbedJson(oembedUrl);
+  if (oembed?.title) {
+    return {
+      platform: resolved.platform, sourceId: resolved.sourceId, url: resolved.url,
+      title: oembed.title.replace(/\s*[|·]\s*Anghami.*$/i, "").trim() || oembed.title,
+      artist: oembed.author_name ?? null, thumbnailUrl: oembed.thumbnail_url ?? null,
+      durationSeconds: 0, viewCount: null, embeddable: true, source: "oembed",
+    };
+  }
+
+  const og = await fetchOpenGraph(resolved.url);
+  if (og.title) {
+    return {
+      platform: resolved.platform, sourceId: resolved.sourceId, url: resolved.url,
+      title: og.title, artist: og.artist, thumbnailUrl: og.thumbnailUrl,
+      durationSeconds: 0, viewCount: null, embeddable: true, source: "opengraph",
+    };
+  }
+  return { ...fallbackMeta(resolved) };
 }
 
 
@@ -180,8 +291,8 @@ export async function createKickMediaReward(userId: string, input: { title: stri
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      title: input.title, cost: input.cost, description: "Paste a YouTube link to request a video in the stream queue.",
-      is_enabled: true, is_user_input_required: true, prompt: "Paste your YouTube link",
+      title: input.title, cost: input.cost, description: "Paste a YouTube, Spotify, Anghami, or SoundCloud link to request a track.",
+      is_enabled: true, is_user_input_required: true, prompt: "Paste a YouTube, Spotify, Anghami, or SoundCloud link",
       should_redemptions_skip_request_queue: false,
     }),
   });
@@ -245,11 +356,11 @@ export async function ingestKickMediaRedemption(input: { messageId: string; body
     console.log("Media Request DB Insert Result:", null, "missing_broadcaster_identity");
     return { status: "ignored" as const, reason: "missing_broadcaster_identity" };
   }
-  // Identity beyond the broadcaster is optional: a valid YouTube link is enough.
+  // Identity beyond the broadcaster is optional: a valid media link is enough.
   const effectiveRedemptionId = redemptionId || `kick-chat-${providerEventId}`;
   // Reward identity is optional: fall back to a stable title-derived id so a
-  // valid YouTube link from a connected Kick account is never blocked solely
-  // because Kick omitted (or remapped) the reward id.
+  // valid media link from a connected Kick account is never blocked solely
+  // because Kick omitted (or remapped) the reward id. A valid media URL is enough.
   const effectiveRewardId = rewardId ?? `kick-reward-${normalizeRewardTitle(rewardTitle ?? "media-request") || "unmapped"}`;
   if (redemptionStatus && !["pending", "unfulfilled", "requested"].includes(redemptionStatus.toLowerCase())) {
     return { status: "ignored" as const, reason: "redemption_not_pending" };
@@ -283,28 +394,27 @@ export async function ingestKickMediaRedemption(input: { messageId: string; body
     nestedData?.["user_input"], envelope["user_input"], envelope["userInput"], envelope["message"],
   );
   let serializedUrl: string | null = null;
-  try { serializedUrl = JSON.stringify(body).match(YOUTUBE_URL_PATTERN)?.[0] ?? null; } catch { /* malformed objects are rejected below */ }
+  try { serializedUrl = extractMediaUrl(JSON.stringify(body)); } catch { /* malformed objects are rejected below */ }
   const deepInput = extractRedemptionInput(body);
-  const extractedUrl = directInput.match(YOUTUBE_URL_PATTERN)?.[0]
+  const extractedUrl = extractMediaUrl(directInput)
     ?? serializedUrl
-    ?? deepInput?.match(YOUTUBE_URL_PATTERN)?.[0]
+    ?? (deepInput ? extractMediaUrl(deepInput) : null)
     ?? directInput
     ?? deepInput;
   console.log("Extracted Media Link:", extractedUrl);
-  const videoId = extractYouTubeId(String(extractedUrl ?? ""));
+  const parsed = parseMediaUrl(String(extractedUrl ?? ""));
 
-  if (!videoId) return reject("invalid_youtube_url");
+  if (!parsed) return reject("invalid_media_url");
   const { data: priorRedemption } = await supabaseAdmin.from("media_requests").select("id")
     .eq("user_id", connection.user_id).eq("reward_redemption_id", effectiveRedemptionId).maybeSingle();
   if (priorRedemption) return { status: "duplicate" as const, requestId: priorRedemption.id };
-  let meta: YouTubeMetadata;
-  try { meta = await fetchYouTubeMetadata(videoId); } catch (error) { return reject(error instanceof Error ? error.message : "youtube_validation_failed"); }
-  // No duration/embeddability filters: every valid YouTube URL is accepted.
+  let meta: MediaMetadata;
+  try { meta = await fetchMediaMetadata(parsed); } catch (error) { return reject(error instanceof Error ? error.message : "media_validation_failed"); }
 
   const title = meta.title.toLowerCase();
   if (settings.keyword_blacklist.some((word) => word.trim() && title.includes(word.trim().toLowerCase()))) return reject("keyword_blacklisted");
   const { data: duplicate } = await supabaseAdmin.from("media_requests").select("id").eq("user_id", connection.user_id)
-    .eq("youtube_video_id", videoId).in("status", ["PENDING", "QUEUED", "PLAYING"]).maybeSingle();
+    .eq("youtube_video_id", meta.sourceId).in("status", ["PENDING", "QUEUED", "PLAYING"]).maybeSingle();
   // A reward can surface through both chat.message.sent and the dedicated
   // redemption webhook. Treat the second delivery as successful deduplication
   // instead of rejecting/refunding a valid request.
@@ -317,7 +427,8 @@ export async function ingestKickMediaRedemption(input: { messageId: string; body
     user_id: connection.user_id, provider_event_id: providerEventId, reward_redemption_id: effectiveRedemptionId, reward_id: effectiveRewardId,
     requester_platform_id: firstString(redeemer?.["user_id"], redeemer?.["id"]), requester_username: username,
     requester_avatar_url: firstString(redeemer?.["profile_picture"], redeemer?.["profile_picture_url"], redeemer?.["avatar"]) || null,
-    youtube_video_id: videoId, youtube_url: meta.url, title: meta.title, thumbnail_url: meta.thumbnailUrl,
+    platform: meta.platform, artist: meta.artist,
+    youtube_video_id: meta.sourceId, youtube_url: meta.url, title: meta.title, thumbnail_url: meta.thumbnailUrl,
     duration_seconds: meta.durationSeconds, view_count: meta.viewCount, status, position: Number(tail?.position ?? 0) + 1,
     approved_at: status === "QUEUED" ? new Date().toISOString() : null,
   }).select("id,status,position,youtube_url,requester_username").single();
@@ -346,34 +457,33 @@ export async function ingestChatMediaRequest(input: {
   const { data: settings } = await supabaseAdmin.from("media_request_settings").select("*").eq("user_id", userId).maybeSingle();
   if (!settings) return { ok: false, reason: "media_request_settings_not_found" };
 
-  const url = text.match(YOUTUBE_URL_PATTERN)?.[0] ?? null;
-  if (!url) return { ok: false, reason: "no_youtube_link" };
+  const url = extractMediaUrl(text);
+  if (!url) return { ok: false, reason: "no_media_link" };
   if (resolveRequestMode(settings) === "PAUSED") return { ok: false, reason: "requests_paused" };
 
-  // Any chat message carrying a YouTube link becomes a request: Kick surfaces
-  // redemptions inconsistently, so trigger text is treated as optional.
+  // Any chat message carrying a supported media link becomes a request: Kick
+  // surfaces redemptions inconsistently, so trigger text is treated as optional.
 
   if (settings.user_blacklist.some((v) => v.toLowerCase() === username.toLowerCase())) {
     return { ok: false, reason: "user_blacklisted" };
   }
-  const videoId = extractYouTubeId(url);
-  if (!videoId) return { ok: false, reason: "invalid_youtube_url" };
+  const parsed = parseMediaUrl(url);
+  if (!parsed) return { ok: false, reason: "invalid_media_url" };
 
   const providerEventId = `kick-chat-${messageId}`;
   const { data: prior } = await supabaseAdmin.from("media_requests").select("id")
     .eq("user_id", userId).eq("provider_event_id", providerEventId).maybeSingle();
   if (prior) return { ok: false, reason: "duplicate_message" };
 
-  let meta: YouTubeMetadata;
-  try { meta = await fetchYouTubeMetadata(videoId); }
-  catch { return { ok: false, reason: "youtube_validation_failed" }; }
-  // No duration/embeddability filters: every valid YouTube URL is accepted.
+  let meta: MediaMetadata;
+  try { meta = await fetchMediaMetadata(parsed); }
+  catch { return { ok: false, reason: "media_validation_failed" }; }
   const title = meta.title.toLowerCase();
   if (settings.keyword_blacklist.some((word) => word.trim() && title.includes(word.trim().toLowerCase()))) {
     return { ok: false, reason: "keyword_blacklisted" };
   }
   const { data: duplicate } = await supabaseAdmin.from("media_requests").select("id").eq("user_id", userId)
-    .eq("youtube_video_id", videoId).in("status", ["PENDING", "QUEUED", "PLAYING"]).maybeSingle();
+    .eq("youtube_video_id", meta.sourceId).in("status", ["PENDING", "QUEUED", "PLAYING"]).maybeSingle();
   if (duplicate) return { ok: false, reason: "duplicate_video" };
 
   const status = resolveRequestMode(settings) === "MANUAL" ? "PENDING" : "QUEUED";
@@ -381,7 +491,8 @@ export async function ingestChatMediaRequest(input: {
     .in("status", ["PENDING", "QUEUED"]).order("position", { ascending: false }).limit(1).maybeSingle();
   const { data: inserted, error } = await supabaseAdmin.from("media_requests").insert({
     user_id: userId, provider_event_id: providerEventId, requester_username: username || "Kick viewer",
-    youtube_video_id: videoId, youtube_url: meta.url, title: meta.title, thumbnail_url: meta.thumbnailUrl,
+    platform: meta.platform, artist: meta.artist,
+    youtube_video_id: meta.sourceId, youtube_url: meta.url, title: meta.title, thumbnail_url: meta.thumbnailUrl,
     duration_seconds: meta.durationSeconds, view_count: meta.viewCount, status,
     position: Number(tail?.position ?? 0) + 1, approved_at: status === "QUEUED" ? new Date().toISOString() : null,
   }).select("id").single();

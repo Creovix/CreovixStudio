@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import {
   Gauge,
   Lock,
@@ -20,7 +20,13 @@ import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
-import { ExpandableToolSection } from "@/components/hub/ExpandableToolSection";
+import {
+  ALL_PLATFORMS,
+  FILTER_ORDER,
+  PLATFORM_META,
+  type PlatformFilter,
+  type PlatformId,
+} from "@/components/hub/platforms";
 
 import {
   ChatPreview,
@@ -46,7 +52,7 @@ import { useWidgets } from "@/hooks/useWidgets";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { createWidget } from "@/lib/createWidget";
 import type { WidgetType } from "@/lib/widgets";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { isTestMode } from "@/lib/testMode";
 import { DarkSelect } from "@/components/ui/dark-select";
 
@@ -71,6 +77,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: HomePage,
 });
 
+const HUB_INITIAL_VISIBLE = 12;
+const HUB_LOAD_MORE = 8;
+
 type Tool = {
   id: string;
   name: string;
@@ -80,63 +89,17 @@ type Tool = {
   preview: () => ReactElement;
   type?: WidgetType;
   keywords?: string;
-  platforms: PlatformSectionId[];
+  platforms: PlatformId[];
+  comingSoon?: boolean;
 };
 
-type PlatformSectionId = "KICK" | "TWITCH" | "YOUTUBE" | "TIKTOK" | "GENERAL";
-
-const PLATFORM_SECTIONS: {
-  id: PlatformSectionId;
-  title: { en: string; ar: string };
-  accent: string;
-  titleClass: string;
-  badgeClass: string;
-  icon: PlatformSectionId;
-}[] = [
-  {
-    id: "KICK",
-    title: { en: "Kick Stream Tools", ar: "أدوات بث كيك" },
-    accent: "#53FC18",
-    titleClass: "text-[#53FC18] [text-shadow:0_0_18px_rgba(83,252,24,0.55)]",
-    badgeClass: "border-[#53FC18]/40 bg-[#53FC18]/10 shadow-[0_0_22px_-6px_#53FC18]",
-    icon: "KICK",
-  },
-  {
-    id: "TWITCH",
-    title: { en: "Twitch Stream Tools", ar: "أدوات بث تويتش" },
-    accent: "#9146FF",
-    titleClass:
-      "bg-[linear-gradient(90deg,#C7A8FF,#9146FF)] bg-clip-text text-transparent [filter:drop-shadow(0_0_14px_rgba(145,70,255,0.5))]",
-    badgeClass: "border-[#9146FF]/40 bg-[#9146FF]/12 shadow-[0_0_22px_-6px_#9146FF]",
-    icon: "TWITCH",
-  },
-  {
-    id: "TIKTOK",
-    title: { en: "TikTok Stream Tools", ar: "أدوات بث تيك توك" },
-    accent: "#FE2C55",
-    titleClass:
-      "bg-[linear-gradient(90deg,#00F2FE,#FE2C55)] bg-clip-text text-transparent [filter:drop-shadow(0_0_14px_rgba(254,44,85,0.45))]",
-    badgeClass: "border-[#FE2C55]/40 bg-[linear-gradient(135deg,rgba(0,242,254,0.16),rgba(254,44,85,0.16))] shadow-[0_0_22px_-6px_#FE2C55]",
-    icon: "TIKTOK",
-  },
-  {
-    id: "YOUTUBE",
-    title: { en: "YouTube Stream Tools", ar: "أدوات بث يوتيوب" },
-    accent: "#FF0000",
-    titleClass: "text-[#FF0000]",
-    badgeClass: "border-[#FF0000]/40 bg-[#FF0000]/10 shadow-[0_0_22px_-6px_#FF0000]",
-    icon: "YOUTUBE",
-  },
-  {
-    id: "GENERAL",
-    title: { en: "General & Cross-Platform Utilities", ar: "أدوات عامة لكل المنصات" },
-    accent: "#7DD3FC",
-    titleClass:
-      "bg-[linear-gradient(90deg,#E2E8F0,#7DD3FC)] bg-clip-text text-transparent [filter:drop-shadow(0_0_14px_rgba(125,211,252,0.4))]",
-    badgeClass: "border-[#7DD3FC]/40 bg-[#7DD3FC]/10 shadow-[0_0_22px_-6px_#7DD3FC]",
-    icon: "GENERAL",
-  },
-];
+const FILTER_KEYS: Record<PlatformFilter, TranslationKey> = {
+  ALL: "home.filterAll",
+  KICK: "home.filterKick",
+  TWITCH: "home.filterTwitch",
+  YOUTUBE: "home.filterYouTube",
+  TIKTOK: "home.filterTikTok",
+};
 
 const TOOLS: Tool[] = [
   {
@@ -148,7 +111,7 @@ const TOOLS: Tool[] = [
     preview: ChatPreview,
     type: "CHAT_BOX",
     keywords: "chat messages live island bubbles transparent",
-    platforms: ["KICK", "TWITCH", "YOUTUBE", "TIKTOK"],
+    platforms: [...ALL_PLATFORMS],
   },
   {
     id: "subathon-timer",
@@ -159,7 +122,7 @@ const TOOLS: Tool[] = [
     preview: TimerPreview,
     type: "SUBATHON_TIMER",
     keywords: "countdown subathon clock timer rules logic",
-    platforms: ["GENERAL"],
+    platforms: [...ALL_PLATFORMS],
   },
   {
     id: "custom-goal",
@@ -170,7 +133,7 @@ const TOOLS: Tool[] = [
     preview: CustomGoalPreview,
     type: "GOAL_BAR",
     keywords: "goal donation follower subscriber custom progress bar target",
-    platforms: ["GENERAL"],
+    platforms: [...ALL_PLATFORMS],
   },
   {
     id: "chat-spotlight",
@@ -193,6 +156,7 @@ const TOOLS: Tool[] = [
     type: "TIKTOK_TAPPERS",
     keywords: "tiktok taps likes leaderboard top tappers ranking",
     platforms: ["TIKTOK"],
+    comingSoon: true,
   },
   {
     id: "tiktok-tap-goal",
@@ -204,16 +168,17 @@ const TOOLS: Tool[] = [
     type: "TIKTOK_TAP_GOAL",
     keywords: "tiktok taps likes goal target progress bar confetti",
     platforms: ["TIKTOK"],
+    comingSoon: true,
   },
   {
     id: "kick-media-requests",
     name: "Media Requests",
     description:
-      "Channel-point YouTube song requests with auto queue, approval rules and a dedicated OBS player.",
+      "Channel-point song requests from YouTube, Spotify, Anghami and SoundCloud with a moderated queue and OBS player.",
     category: "Kick",
     icon: PlaySquare,
     preview: MediaRequestPreview,
-    keywords: "media request song request youtube kick channel points queue player",
+    keywords: "media request song request youtube spotify anghami soundcloud kick channel points queue player",
     platforms: ["KICK"],
   },
   {
@@ -258,6 +223,17 @@ function HomePage() {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("ALL");
+  const [visibleCount, setVisibleCount] = useState(HUB_INITIAL_VISIBLE);
+
+  const visibleTools = TOOLS.filter(
+    (tool) => platformFilter === "ALL" || tool.platforms.includes(platformFilter),
+  ).sort((a, b) => Number(Boolean(a.comingSoon)) - Number(Boolean(b.comingSoon)));
+  const shownTools = visibleTools.slice(0, visibleCount);
+
+  useEffect(() => {
+    setVisibleCount(HUB_INITIAL_VISIBLE);
+  }, [platformFilter]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -316,6 +292,7 @@ function HomePage() {
   };
 
   const open = async (tool: Tool) => {
+    if (tool.comingSoon) return;
     if (locked) {
       setRedeemModal(true);
       return;
@@ -380,76 +357,119 @@ function HomePage() {
           <button
             type="button"
             onClick={() => setRedeemModal(true)}
-            className="ms-auto rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            className="ms-auto rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             {lang === "ar" ? "تفعيل الكود" : "Activate code"}
           </button>
         </div>
       ) : null}
 
-      <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {PLATFORM_SECTIONS.map((section) => {
-          const tools = TOOLS.filter((tool) => tool.platforms.includes(section.id));
-          if (tools.length === 0) return null;
+      <div
+        role="toolbar"
+        aria-label={t("home.platformFilter")}
+        className="mb-5 flex flex-wrap items-center gap-1"
+      >
+        {FILTER_ORDER.map((id) => {
+          const active = platformFilter === id;
+          const color = id === "ALL" ? "var(--foreground)" : PLATFORM_META[id].color;
+          const label = t(FILTER_KEYS[id]);
           return (
-            <ExpandableToolSection
-              key={section.id}
-              title={lang === "ar" ? section.title.ar : section.title.en}
-              accent={section.accent}
-              titleClass={section.titleClass}
-              wide={section.id === "GENERAL"}
-              items={tools}
-              itemKey={(tool) => `${section.id}-${tool.id}`}
-              renderItem={(tool) => {
-                const existing = existingFor(tool);
-                const Preview = tool.preview;
-                return (
-                  <ToolCard
-                    name={tool.name}
-                    description={tool.description}
-                    category={tool.category}
-                    icon={tool.icon}
-                    accent={section.accent}
-                    preview={<Preview />}
-                    status={
-                      tool.id === "kick-media-requests"
-                        ? "Live"
-                        : existing?.is_enabled
-                          ? "Live"
-                          : existing
-                            ? "Paused"
-                            : "Ready"
-                    }
-                    live={Boolean(existing?.is_enabled)}
-                    publicToken={existing?.public_token}
-                    overlayUrl={tool.id === "kick-media-requests" ? mediaOverlayUrl : undefined}
-                    disabled={busy === tool.id}
-                    actionLabel={
-                      tool.id === "kick-media-requests"
-                        ? "Open queue"
-                        : busy === tool.id
-                          ? "Opening…"
-                          : existing
-                            ? "Customize"
-                            : "Open"
-                    }
-                    onOpen={() => void open(tool)}
-                    removing={Boolean(existing && removingId === existing.id)}
-                    deleteLabel={t("home.delete")}
-                    locked={locked}
-                    lockLabel={lockLabel}
-                    onDelete={
-                      existing && !locked
-                        ? () => setPendingDelete({ id: existing.id, name: existing.name })
-                        : undefined
-                    }
-                  />
-                );
-              }}
-            />
+            <button
+              key={id}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setPlatformFilter((prev) => (prev === id && id !== "ALL" ? "ALL" : id))}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.72rem] transition-colors ${
+                active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+              style={active && id !== "ALL" ? { color } : undefined}
+            >
+              {id === "ALL" ? (
+                <span className="flex items-center gap-2" aria-hidden>
+                  {ALL_PLATFORMS.map((dot) => (
+                    <span
+                      key={dot}
+                      className="size-1.5 rounded-full"
+                      style={{ background: PLATFORM_META[dot].color }}
+                    />
+                  ))}
+                </span>
+              ) : (
+                <span className="size-1.5 rounded-full" style={{ background: color }} aria-hidden />
+              )}
+              {label}
+            </button>
           );
         })}
       </div>
+
+      {visibleTools.length === 0 ? (
+        <p className="py-12 text-sm text-muted-foreground">{t("home.empty")}</p>
+      ) : (
+        <>
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
+            {shownTools.map((tool) => {
+              const existing = existingFor(tool);
+              const Preview = tool.preview;
+              return (
+                <ToolCard
+                  key={tool.id}
+                  name={tool.name}
+                  description={tool.description}
+                  category={tool.category}
+                  icon={tool.icon}
+                  platforms={tool.platforms}
+                  comingSoon={Boolean(tool.comingSoon)}
+                  preview={<Preview />}
+                  status={
+                    tool.id === "kick-media-requests"
+                      ? "Live"
+                      : existing?.is_enabled
+                        ? "Live"
+                        : existing
+                          ? "Paused"
+                          : "Ready"
+                  }
+                  live={Boolean(existing?.is_enabled)}
+                  publicToken={existing?.public_token}
+                  overlayUrl={tool.id === "kick-media-requests" ? mediaOverlayUrl : undefined}
+                  disabled={busy === tool.id}
+                  actionLabel={
+                    tool.id === "kick-media-requests"
+                      ? "Open queue"
+                      : busy === tool.id
+                        ? "Opening…"
+                        : existing
+                          ? "Customize"
+                          : "Open"
+                  }
+                  onOpen={() => void open(tool)}
+                  removing={Boolean(existing && removingId === existing.id)}
+                  deleteLabel={t("home.delete")}
+                  locked={locked}
+                  lockLabel={lockLabel}
+                  onDelete={
+                    existing && !locked
+                      ? () => setPendingDelete({ id: existing.id, name: existing.name })
+                      : undefined
+                  }
+                />
+              );
+            })}
+          </div>
+          {visibleTools.length > visibleCount ? (
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((count) => count + HUB_LOAD_MORE)}
+                className="rounded-full px-3 py-1.5 text-[0.78rem] text-muted-foreground hover:text-foreground"
+              >
+                {t("home.loadMore")}
+              </button>
+            </div>
+          ) : null}
+        </>
+      )}
 
 
       {goalModal ? (
@@ -477,7 +497,7 @@ function HomePage() {
                 {goalWidgets.map((widget) => (
                   <div
                     key={widget.id}
-                    className="flex items-center gap-2 rounded-lg border border-[oklch(1_0_0/0.08)] px-3 py-2 text-[0.78rem]"
+                    className="flex items-center gap-2 rounded-xl border border-[oklch(1_0_0/0.08)] px-3 py-2 text-[0.78rem]"
                   >
                     <button
                       type="button"
@@ -497,7 +517,7 @@ function HomePage() {
                         setGoalModal(false);
                         setPendingDelete({ id: widget.id, name: widget.name });
                       }}
-                      className="rounded-lg bg-[oklch(1_0_0/0.05)] p-1.5 text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-red-500/20 hover:text-red-400"
+                      className="rounded-xl bg-[oklch(1_0_0/0.05)] p-1.5 text-muted-foreground transition-all duration-200 hover:scale-110 hover:bg-red-500/20 hover:text-red-400"
                     >
                       <Trash2 className="size-3.5" aria-hidden />
                     </button>
@@ -531,19 +551,19 @@ function HomePage() {
             </div>
 
             <dl className="mt-4 grid grid-cols-2 gap-2 text-[0.72rem]">
-              <div className="rounded-lg border border-[oklch(1_0_0/0.06)] p-2.5">
+              <div className="rounded-xl border border-[oklch(1_0_0/0.06)] p-2.5">
                 <dt className="text-muted-foreground">Target</dt>
                 <dd className="mt-0.5 font-medium">
                   {goalPreset.target.toLocaleString()} {goalPreset.unit}
                 </dd>
               </div>
-              <div className="rounded-lg border border-[oklch(1_0_0/0.06)] p-2.5">
+              <div className="rounded-xl border border-[oklch(1_0_0/0.06)] p-2.5">
                 <dt className="text-muted-foreground">Triggers</dt>
                 <dd className="mt-0.5 font-medium">{goalPreset.triggers.join(", ")}</dd>
               </div>
             </dl>
 
-            <p className="mt-3 truncate rounded-lg border border-[oklch(1_0_0/0.06)] px-2.5 py-2 font-mono text-[0.68rem] text-muted-foreground">
+            <p className="mt-3 truncate rounded-xl border border-[oklch(1_0_0/0.06)] px-2.5 py-2 font-mono text-[0.68rem] text-muted-foreground">
               /overlay/&lt;token&gt;{goalOverlayParams(goalType)}
             </p>
 
@@ -551,7 +571,7 @@ function HomePage() {
               <button
                 type="button"
                 onClick={() => setGoalModal(false)}
-                className="rounded-lg border border-[oklch(1_0_0/0.1)] px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+                className="rounded-xl border border-[oklch(1_0_0/0.1)] px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -559,7 +579,7 @@ function HomePage() {
                 type="button"
                 disabled={busy === "custom-goal"}
                 onClick={() => void createGoalWidget()}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {busy === "custom-goal" ? "Creating…" : "Create goal"}
               </button>

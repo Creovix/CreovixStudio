@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Eye, EyeOff, ExternalLink, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ExternalLink, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/lib/supabase/client";
@@ -11,7 +11,8 @@ import {
   connectStreamlabsSocket,
   startPlatformLink,
 } from "@/lib/connections.functions";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
+import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 
 type OAuthProviderId = "twitch" | "kick" | "tiktok";
 
@@ -19,52 +20,138 @@ const OAUTH_PLATFORMS: Array<{
   platform: "TWITCH" | "KICK" | "TIKTOK";
   provider: OAuthProviderId;
   label: string;
-  dot: string;
-  description: string;
-  descriptionAr: string;
+  hint: TranslationKey;
   buttonClass: string;
-  accent: string;
+  comingSoon?: boolean;
 }> = [
   {
     platform: "TWITCH",
     provider: "twitch",
     label: "Twitch",
-    dot: "bg-twitch",
-    description: "Follows, subs, gift subs and bits via EventSub.",
-    descriptionAr: "المتابعات والاشتراكات والهدايا والبِتس عبر EventSub.",
+    hint: "settings.connections.twitchHint",
     buttonClass: "bg-twitch text-twitch-foreground",
-    accent: "border-twitch/45 shadow-[0_16px_40px_-28px_var(--twitch)]",
   },
   {
     platform: "KICK",
     provider: "kick",
     label: "Kick",
-    dot: "bg-kick",
-    description: "Follows, subscriptions and gift subs via Kick webhooks.",
-    descriptionAr: "المتابعات والاشتراكات والهدايا عبر ويبهوك Kick.",
+    hint: "settings.connections.kickHint",
     buttonClass: "bg-kick text-kick-foreground",
-    accent: "border-kick/45 shadow-[0_16px_40px_-28px_var(--kick)]",
   },
   {
     platform: "TIKTOK",
     provider: "tiktok",
     label: "TikTok",
-    dot: "bg-[#FE2C55]",
-    description: "Profile, avatar and live follower stats via Login Kit.",
-    descriptionAr: "الملف الشخصي والصورة وعدد المتابعين عبر TikTok Login Kit.",
+    hint: "settings.connections.tiktokHint",
     buttonClass: "bg-[#FE2C55] text-white",
-    accent: "border-[#FE2C55]/45 shadow-[0_16px_40px_-28px_#FE2C55]",
+    comingSoon: true,
   },
 ];
 
-const CARD =
-  "glass-3d flex h-[28rem] w-full min-w-0 flex-col overflow-hidden rounded-3xl border p-6";
+const quietBtn =
+  "h-8 rounded-lg border border-white/5 px-3 text-[0.75rem] font-medium text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground";
+const dangerBtn =
+  "h-8 rounded-lg border border-white/5 px-3 text-[0.75rem] font-medium text-destructive transition-colors hover:bg-destructive/10";
+const tokenField =
+  "h-9 min-w-[12rem] flex-1 rounded-lg border border-white/5 bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-primary";
+
+function StatusBadge({
+  connection,
+  t,
+}: {
+  connection: { is_active: boolean } | undefined;
+  t: (key: TranslationKey) => string;
+}) {
+  if (!connection) {
+    return (
+      <span className="shrink-0 rounded-full bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+        {t("settings.connections.disconnected")}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+        connection.is_active
+          ? "bg-emerald-500/15 text-emerald-400"
+          : "bg-white/[0.04] text-muted-foreground"
+      }`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          connection.is_active ? "animate-pulse bg-emerald-400" : "bg-muted-foreground"
+        }`}
+      />
+      {connection.is_active
+        ? t("settings.connections.connected")
+        : t("settings.connections.paused")}
+    </span>
+  );
+}
+
+function ConnectionRow({
+  icon,
+  label,
+  hint,
+  account,
+  status,
+  actions,
+  extra,
+  comingSoon = false,
+  comingSoonLabel,
+}: {
+  icon: ReactNode;
+  label: string;
+  hint: string;
+  account?: string | null;
+  status: ReactNode;
+  actions: ReactNode;
+  extra?: ReactNode;
+  comingSoon?: boolean;
+  comingSoonLabel?: string;
+}) {
+  return (
+    <div className={`relative py-4 ${comingSoon ? "pointer-events-none" : ""}`}>
+      <div className={comingSoon ? "blur-[3px] saturate-50" : undefined}>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="grid size-8 shrink-0 place-items-center">{icon}</span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{label}</p>
+              <p className="mt-0.5 text-[0.75rem] leading-relaxed text-muted-foreground">{hint}</p>
+              {account ? (
+                <p className="mt-0.5 text-[0.75rem] text-muted-foreground">
+                  <span>{account}</span>
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
+            {status}
+            {actions}
+          </div>
+        </div>
+        {extra}
+      </div>
+      {comingSoon ? (
+        <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">
+          <span
+            className="flex items-center gap-1.5 rounded-full border border-[oklch(1_0_0/0.14)] px-3 py-1.5 text-[0.66rem] font-semibold text-foreground"
+            style={{ background: "rgba(15, 17, 23, 0.85)" }}
+          >
+            <Lock className="size-3.5 text-primary" aria-hidden />
+            {comingSoonLabel}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function ConnectionsPanel({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
   const { data } = useWorkspace(userId);
-  const { lang } = useLanguage();
-  const ar = lang === "ar";
+  const { t } = useLanguage();
 
   const linkFn = useServerFn(startPlatformLink);
   const connectSeFn = useServerFn(connectStreamElements);
@@ -83,22 +170,24 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("connected");
     if (!connected) return;
-    const labels: Record<string, string> = {
-      tiktok: ar ? "تم ربط حساب TikTok بنجاح!" : "TikTok Account Connected Successfully!",
-      twitch: ar ? "تم ربط حساب Twitch بنجاح!" : "Twitch Account Connected Successfully!",
-      kick: ar ? "تم ربط حساب Kick بنجاح!" : "Kick Account Connected Successfully!",
+    const labels: Record<string, TranslationKey> = {
+      tiktok: "settings.connections.toast.tiktok",
+      twitch: "settings.connections.toast.twitch",
+      kick: "settings.connections.toast.kick",
     };
-    toast.success(labels[connected] ?? (ar ? "تم الربط بنجاح!" : "Account Connected Successfully!"));
+    toast.success(t(labels[connected] ?? "settings.connections.toast.generic"));
     params.delete("connected");
     const rest = params.toString();
     window.history.replaceState({}, "", window.location.pathname + (rest ? `?${rest}` : ""));
-  }, [ar]);
+  }, [t]);
 
   const connections = data?.connections ?? [];
   const findConnection = (platform: string) => connections.find((c) => c.platform === platform);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["workspace", userId] });
 
   const startOAuth = async (provider: OAuthProviderId) => {
+    const blocked = OAUTH_PLATFORMS.find((entry) => entry.provider === provider);
+    if (blocked?.comingSoon) return;
     setBusy(provider);
     setError(null);
     try {
@@ -118,18 +207,12 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
     try {
       const result = await connectSeFn({ data: { token } });
       if (!result.ok) {
-        setSeError(
-          ar
-            ? "توكن StreamElements غير صالح. تأكد منه وحاول مرة أخرى."
-            : "Invalid StreamElements Token. Please check and try again.",
-        );
+        setSeError(t("settings.connections.seInvalid"));
         return;
       }
       setJwtDraft("");
       setShowJwt(false);
-      toast.success(
-        ar ? `تم ربط StreamElements (${result.username})` : `StreamElements connected (${result.username})`,
-      );
+      toast.success(`${t("settings.connections.toast.se")} (${result.username})`);
       void refresh();
     } catch (err) {
       setSeError(err instanceof Error ? err.message : String(err));
@@ -146,16 +229,12 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
     try {
       const result = await connectSlFn({ data: { token } });
       if (!result.ok) {
-        setSlError(
-          ar
-            ? "توكن Socket API غير صالح. انسخه كاملاً من إعدادات Streamlabs."
-            : "Invalid Socket API Token. Copy the full token from Streamlabs settings.",
-        );
+        setSlError(t("settings.connections.slInvalid"));
         return;
       }
       setSlDraft("");
       setShowSl(false);
-      toast.success(ar ? "تم ربط Streamlabs مباشرة" : "Streamlabs connected via Socket API");
+      toast.success(t("settings.connections.toast.sl"));
       void refresh();
       void queryClient.invalidateQueries({ queryKey: ["streamlabs-socket-token"] });
     } catch (err) {
@@ -180,28 +259,6 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
     void refresh();
   };
 
-  const StatusBadge = ({ connection }: { connection: { is_active: boolean } | undefined }) =>
-    connection ? (
-      <span
-        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-          connection.is_active
-            ? "bg-emerald-500/15 text-emerald-400"
-            : "bg-secondary text-secondary-foreground"
-        }`}
-      >
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            connection.is_active ? "animate-pulse bg-emerald-400" : "bg-muted-foreground"
-          }`}
-        />
-        {connection.is_active ? (ar ? "متصل" : "CONNECTED") : ar ? "متوقف" : "PAUSED"}
-      </span>
-    ) : (
-      <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-secondary-foreground">
-        {ar ? "غير متصل" : "Not connected"}
-      </span>
-    );
-
   const seConnection = findConnection("STREAMELEMENTS");
   const slSocketConnection = connections.find(
     (c) =>
@@ -209,245 +266,248 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
       (c.metadata as { source?: string } | null)?.source === "socket_token",
   );
 
-  return (
-    <div className="w-full">
-      {error ? (
-        <p className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+  const connectedActions = (connection: { id: string; is_active: boolean }) => (
+    <>
+      <button
+        type="button"
+        onClick={() => toggleActive(connection.id, !connection.is_active)}
+        className={quietBtn}
+      >
+        {connection.is_active
+          ? t("settings.connections.pause")
+          : t("settings.connections.resume")}
+      </button>
+      <button type="button" onClick={() => disconnect(connection.id)} className={dangerBtn}>
+        {t("settings.connections.disconnect")}
+      </button>
+    </>
+  );
 
-      <div className="flex w-full justify-center overflow-x-auto pb-1">
-        <div className="grid w-full min-w-[80rem] max-w-[96rem] grid-cols-5 items-stretch gap-8">
-          {OAUTH_PLATFORMS.map((entry) => {
-            const connection = findConnection(entry.platform);
-            return (
-              <section key={entry.platform} className={`${CARD} ${entry.accent}`}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    {connection?.metadata &&
-                    (connection.metadata as { avatar_url?: string | null }).avatar_url ? (
-                      <img
-                        src={(connection.metadata as { avatar_url?: string }).avatar_url}
-                        alt=""
-                        className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-white/10"
-                      />
-                    ) : (
-                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${entry.dot}`} />
-                    )}
-                    <h3 className="truncate text-base font-semibold">{entry.label}</h3>
-                  </div>
-                  <StatusBadge connection={connection} />
-                </div>
-                <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-                  {ar ? entry.descriptionAr : entry.description}
-                </p>
-                <p className="mt-4 min-h-12 text-sm text-muted-foreground">
-                  {connection?.username ? (
-                    <>
-                      <span>{ar ? "الحساب" : "Account"}: </span>
-                      <span className="font-medium text-foreground">{connection.username}</span>
-                    </>
-                  ) : (
-                    <span className="opacity-0">.</span>
-                  )}
-                </p>
-                <div className="mt-auto flex flex-col gap-2">
-                  <button
-                    type="button"
-                    disabled={busy === entry.provider}
-                    onClick={() => startOAuth(entry.provider)}
-                    className={`inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${entry.buttonClass}`}
-                  >
-                    {busy === entry.provider ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                    {connection ? (ar ? "إعادة الربط" : "Reconnect") : ar ? "ربط" : "Connect"} {entry.label}
-                  </button>
-                  {connection ? (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => toggleActive(connection.id, !connection.is_active)}
-                        className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium hover:bg-secondary"
-                      >
-                        {connection.is_active ? (ar ? "إيقاف" : "Pause") : ar ? "استئناف" : "Resume"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => disconnect(connection.id)}
-                        className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium text-destructive hover:bg-destructive/10"
-                      >
-                        {ar ? "فصل" : "Disconnect"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="h-8" aria-hidden />
-                  )}
-                </div>
-              </section>
-            );
-          })}
+  const liveOauth = OAUTH_PLATFORMS.filter((entry) => !entry.comingSoon);
+  const soonOauth = OAUTH_PLATFORMS.filter((entry) => entry.comingSoon);
 
-          <section className={`${CARD} border-[#31C48D]/45 shadow-[0_16px_40px_-28px_#31C48D]`}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#31C48D]" />
-                <h3 className="truncate text-base font-semibold">Streamlabs</h3>
-              </div>
-              <StatusBadge connection={slSocketConnection} />
-            </div>
-            <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-              {ar
-                ? "الصق توكن Socket API لاستقبال التبرعات والتنبيهات مباشرة."
-                : "Paste your Socket API token to receive tips, subs and raids live."}
-            </p>
-            <div className="relative mt-4">
-              <input
-                type={showSl ? "text" : "password"}
-                value={slDraft}
-                onChange={(event) => {
-                  setSlDraft(event.target.value);
-                  setSlError(null);
-                }}
-                placeholder="Socket API Token"
-                autoComplete="off"
-                spellCheck={false}
-                className="h-10 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#31C48D]"
-              />
+  const renderOAuthRow = (entry: (typeof OAUTH_PLATFORMS)[number]) => {
+    const connection = findConnection(entry.platform);
+    const avatar = connection?.metadata
+      ? (connection.metadata as { avatar_url?: string | null }).avatar_url
+      : null;
+    return (
+      <ConnectionRow
+        key={entry.platform}
+        comingSoon={Boolean(entry.comingSoon)}
+        comingSoonLabel={t("home.comingSoon")}
+        icon={
+          avatar ? (
+            <img
+              src={avatar}
+              alt=""
+              className="h-7 w-7 rounded-full object-cover ring-1 ring-white/10"
+            />
+          ) : (
+            <PlatformIcon platform={entry.platform} size={18} />
+          )
+        }
+        label={entry.label}
+        hint={t(entry.hint)}
+        account={
+          connection?.username
+            ? `${t("settings.connections.account")}: ${connection.username}`
+            : null
+        }
+        status={
+          entry.comingSoon ? (
+            <span className="shrink-0 rounded-full bg-zinc-800/80 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+              {t("home.comingSoon")}
+            </span>
+          ) : (
+            <StatusBadge connection={connection} t={t} />
+          )
+        }
+        actions={
+          entry.comingSoon ? (
+            <button
+              type="button"
+              disabled
+              className="inline-flex h-8 cursor-not-allowed items-center justify-center gap-1.5 rounded-lg bg-zinc-800/80 px-3 text-[0.75rem] font-semibold text-muted-foreground opacity-70"
+            >
+              <Lock className="h-3.5 w-3.5" aria-hidden />
+              {t("home.comingSoon")}
+            </button>
+          ) : (
+            <>
               <button
                 type="button"
-                onClick={() => setShowSl((v) => !v)}
-                aria-label={showSl ? "Hide token" : "Show token"}
-                className="absolute inset-y-0 end-1 my-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+                disabled={busy === entry.provider}
+                onClick={() => startOAuth(entry.provider)}
+                className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-3 text-[0.75rem] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 ${entry.buttonClass}`}
               >
-                {showSl ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {busy === entry.provider ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : null}
+                {connection
+                  ? t("settings.connections.reconnect")
+                  : t("settings.connections.connect")}
               </button>
-            </div>
-            {slError ? (
-              <p className="mt-1 line-clamp-1 text-[11px] text-destructive">{slError}</p>
-            ) : null}
-            <a
-              href="https://streamlabs.com/dashboard#/settings/api-settings"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              <ExternalLink className="h-3 w-3" />
-              {ar ? "إعدادات API" : "API settings"}
-            </a>
-            <div className="mt-auto flex flex-col gap-2">
+              {connection ? connectedActions(connection) : null}
+            </>
+          )
+        }
+      />
+    );
+  };
+
+  return (
+    <section>
+      <h2 className="text-[0.95rem] font-semibold">{t("settings.connections.heading")}</h2>
+      <p className="mt-1 max-w-2xl text-[0.78rem] text-muted-foreground">
+        {t("settings.connections.hint")}
+      </p>
+
+      {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
+
+      <div className="mt-6 divide-y divide-white/5 border-y border-white/5">
+        {liveOauth.map(renderOAuthRow)}
+
+        <ConnectionRow
+          icon={<span className="h-2.5 w-2.5 rounded-full bg-[#31C48D]" />}
+          label="Streamlabs"
+          hint={t("settings.connections.slHint")}
+          account={
+            slSocketConnection?.username
+              ? `${t("settings.connections.account")}: ${slSocketConnection.username}`
+              : null
+          }
+          status={<StatusBadge connection={slSocketConnection} t={t} />}
+          actions={
+            <>
               <button
                 type="button"
                 disabled={busy === "STREAMLABS_TOKEN" || !slDraft.trim()}
                 onClick={saveStreamlabsToken}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#31C48D] px-3 text-sm font-semibold text-[#04231a] transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#31C48D] px-3 text-[0.75rem] font-semibold text-[#04231a] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {busy === "STREAMLABS_TOKEN" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                {ar ? "حفظ وربط" : "Save & Connect"}
+                {busy === "STREAMLABS_TOKEN" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : null}
+                {t("settings.connections.saveConnect")}
               </button>
-              {slSocketConnection ? (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleActive(slSocketConnection.id, !slSocketConnection.is_active)}
-                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium hover:bg-secondary"
-                  >
-                    {slSocketConnection.is_active ? (ar ? "إيقاف" : "Pause") : ar ? "استئناف" : "Resume"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => disconnect(slSocketConnection.id)}
-                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium text-destructive hover:bg-destructive/10"
-                  >
-                    {ar ? "فصل" : "Disconnect"}
-                  </button>
-                </div>
-              ) : (
-                <div className="h-8" aria-hidden />
-              )}
-            </div>
-          </section>
-
-          <section className={`${CARD} border-[#0066FF]/45 shadow-[0_16px_40px_-28px_#0066FF]`}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#0066FF]" />
-                <h3 className="truncate text-base font-semibold">StreamElements</h3>
+              {slSocketConnection ? connectedActions(slSocketConnection) : null}
+            </>
+          }
+          extra={
+            <div className="mt-3 max-w-xl space-y-1.5 ps-11">
+              <div className="relative flex items-center">
+                <input
+                  type={showSl ? "text" : "password"}
+                  value={slDraft}
+                  onChange={(event) => {
+                    setSlDraft(event.target.value);
+                    setSlError(null);
+                  }}
+                  placeholder={t("settings.connections.socketPlaceholder")}
+                  autoComplete="off"
+                  spellCheck={false}
+                  dir="ltr"
+                  className={`${tokenField} w-full`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSl((v) => !v)}
+                  aria-label={
+                    showSl
+                      ? t("settings.connections.hideToken")
+                      : t("settings.connections.showToken")
+                  }
+                  className="absolute inset-y-0 end-1 my-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-white/[0.04]"
+                >
+                  {showSl ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
               </div>
-              <StatusBadge connection={seConnection} />
-            </div>
-            <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-              {ar
-                ? "أدخل توكن JWT لمزامنة التبرعات والتنبيهات."
-                : "Enter your account JWT token to sync donations and alerts."}
-            </p>
-            <div className="relative mt-4">
-              <input
-                type={showJwt ? "text" : "password"}
-                value={jwtDraft}
-                onChange={(event) => {
-                  setJwtDraft(event.target.value);
-                  setSeError(null);
-                }}
-                placeholder="JWT Token"
-                autoComplete="off"
-                spellCheck={false}
-                className="h-10 w-full rounded-lg border border-border bg-background px-3 pe-9 font-mono text-xs outline-none focus:border-[#0066FF]"
-              />
-              <button
-                type="button"
-                onClick={() => setShowJwt((v) => !v)}
-                aria-label={showJwt ? "Hide token" : "Show token"}
-                className="absolute inset-y-0 end-1 my-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+              {slError ? <p className="text-[11px] text-destructive">{slError}</p> : null}
+              <a
+                href="https://streamlabs.com/dashboard#/settings/api-settings"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
               >
-                {showJwt ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </button>
+                <ExternalLink className="h-3 w-3" />
+                {t("settings.connections.apiSettings")}
+              </a>
             </div>
-            {seError ? (
-              <p className="mt-1 line-clamp-1 text-[11px] text-destructive">{seError}</p>
-            ) : null}
-            <a
-              href="https://streamelements.com/dashboard/account/channels"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              <ExternalLink className="h-3 w-3" />
-              {ar ? "أين أجد JWT؟" : "Where is my JWT?"}
-            </a>
-            <div className="mt-auto flex flex-col gap-2">
+          }
+        />
+
+        <ConnectionRow
+          icon={<span className="h-2.5 w-2.5 rounded-full bg-[#0066FF]" />}
+          label="StreamElements"
+          hint={t("settings.connections.seHint")}
+          account={
+            seConnection?.username
+              ? `${t("settings.connections.account")}: ${seConnection.username}`
+              : null
+          }
+          status={<StatusBadge connection={seConnection} t={t} />}
+          actions={
+            <>
               <button
                 type="button"
                 disabled={busy === "STREAMELEMENTS" || !jwtDraft.trim()}
                 onClick={saveStreamElements}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#0066FF] px-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#0066FF] px-3 text-[0.75rem] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {busy === "STREAMELEMENTS" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                {ar ? "حفظ وربط" : "Save & Connect"}
+                {busy === "STREAMELEMENTS" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : null}
+                {t("settings.connections.saveConnect")}
               </button>
-              {seConnection ? (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleActive(seConnection.id, !seConnection.is_active)}
-                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium hover:bg-secondary"
-                  >
-                    {seConnection.is_active ? (ar ? "إيقاف" : "Pause") : ar ? "استئناف" : "Resume"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => disconnect(seConnection.id)}
-                    className="h-8 flex-1 rounded-lg border border-border text-[11px] font-medium text-destructive hover:bg-destructive/10"
-                  >
-                    {ar ? "فصل" : "Disconnect"}
-                  </button>
-                </div>
-              ) : (
-                <div className="h-8" aria-hidden />
-              )}
+              {seConnection ? connectedActions(seConnection) : null}
+            </>
+          }
+          extra={
+            <div className="mt-3 max-w-xl space-y-1.5 ps-11">
+              <div className="relative flex items-center">
+                <input
+                  type={showJwt ? "text" : "password"}
+                  value={jwtDraft}
+                  onChange={(event) => {
+                    setJwtDraft(event.target.value);
+                    setSeError(null);
+                  }}
+                  placeholder={t("settings.connections.jwtPlaceholder")}
+                  autoComplete="off"
+                  spellCheck={false}
+                  dir="ltr"
+                  className={`${tokenField} w-full`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowJwt((v) => !v)}
+                  aria-label={
+                    showJwt
+                      ? t("settings.connections.hideToken")
+                      : t("settings.connections.showToken")
+                  }
+                  className="absolute inset-y-0 end-1 my-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-white/[0.04]"
+                >
+                  {showJwt ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+              {seError ? <p className="text-[11px] text-destructive">{seError}</p> : null}
+              <a
+                href="https://streamelements.com/dashboard/account/channels"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <ExternalLink className="h-3 w-3" />
+                {t("settings.connections.jwtHelp")}
+              </a>
             </div>
-          </section>
-        </div>
+          }
+        />
+
+        {soonOauth.map(renderOAuthRow)}
       </div>
-    </div>
+    </section>
   );
 }

@@ -93,10 +93,11 @@ export const sendTestChatMessage = createServerFn({ method: "POST" })
   });
 
 export type TestEventInput = {
-  platform: "TWITCH" | "KICK" | "TIKTOK" | "YOUTUBE" | "X" | "STREAMLABS" | "STREAMELEMENTS";
+  platform: "TWITCH" | "KICK" | "TIKTOK" | "YOUTUBE" | "X" | "STREAMLABS" | "STREAMELEMENTS" | "MANUAL";
   eventType: "FOLLOW" | "SUBSCRIPTION" | "GIFT_SUB" | "BITS" | "DONATION" | "RAID";
   amount?: number | null;
   actorName?: string | null;
+  message?: string | null;
 };
 
 /**
@@ -122,7 +123,17 @@ export const fireTestEvent = createServerFn({ method: "POST" })
       };
     }
 
-    const target = await activeSubathonFor(supabaseAdmin, userId);
+    let target = await activeSubathonFor(supabaseAdmin, userId);
+    if (!target) {
+      const { data: latest } = await supabaseAdmin
+        .from("subathons")
+        .select("id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latest) target = { subathonId: latest.id, userId };
+    }
     if (!target) {
       return { ok: false as const, error: "Create a widget first so events have somewhere to land." };
     }
@@ -134,6 +145,8 @@ export const fireTestEvent = createServerFn({ method: "POST" })
           ? (data.amount ?? 100)
           : null;
 
+    const message = data.message?.trim().slice(0, 400) || null;
+
     const result = await ingestEvent(supabaseAdmin, target, {
       platform: data.platform,
       eventType: data.eventType,
@@ -143,7 +156,7 @@ export const fireTestEvent = createServerFn({ method: "POST" })
       amount,
       currency: data.eventType === "DONATION" ? "USD" : null,
       quantity: 1,
-      rawPayload: { test_harness: true, platform: data.platform },
+      rawPayload: { test_harness: true, platform: data.platform, ...(message ? { message } : {}) },
     });
 
     return { ok: true as const, result };

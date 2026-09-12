@@ -88,17 +88,18 @@ export const mediaRequestAction = createServerFn({ method: "POST" }).middleware(
 export const addManualMediaRequest = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: { url: string }) => ({ url: String(input.url ?? "").trim().slice(0, 500) }))
   .handler(async ({ data, context }) => {
-    const { extractYouTubeId, fetchYouTubeMetadata } = await import("@/lib/mediaRequests.server");
-    const videoId = extractYouTubeId(data.url);
-    if (!videoId) return { ok: false as const, error: "invalid_youtube_url" };
+    const { parseMediaUrl, fetchMediaMetadata } = await import("@/lib/mediaRequests.server");
+    const parsed = parseMediaUrl(data.url);
+    if (!parsed) return { ok: false as const, error: "invalid_media_url" };
     let meta;
-    try { meta = await fetchYouTubeMetadata(videoId); }
-    catch (error) { return { ok: false as const, error: error instanceof Error ? error.message : "youtube_validation_failed" }; }
+    try { meta = await fetchMediaMetadata(parsed); }
+    catch (error) { return { ok: false as const, error: error instanceof Error ? error.message : "media_validation_failed" }; }
     const { data: tail } = await context.supabase.from("media_requests").select("position").eq("user_id", context.userId)
       .in("status", ["PENDING", "QUEUED"]).order("position", { ascending: false }).limit(1).maybeSingle();
     const { data: row, error } = await context.supabase.from("media_requests").insert({
-      user_id: context.userId, provider_event_id: `manual-${videoId}-${Date.now()}`,
-      requester_username: "Manual Test", youtube_video_id: videoId, youtube_url: meta.url, title: meta.title,
+      user_id: context.userId, provider_event_id: `manual-${parsed.platform}-${parsed.sourceId}-${Date.now()}`,
+      requester_username: "Manual Test", platform: meta.platform, artist: meta.artist,
+      youtube_video_id: meta.sourceId, youtube_url: meta.url, title: meta.title,
       thumbnail_url: meta.thumbnailUrl, duration_seconds: meta.durationSeconds, view_count: meta.viewCount,
       status: "QUEUED", position: Number(tail?.position ?? 0) + 1, approved_at: new Date().toISOString(),
     }).select("id").single();

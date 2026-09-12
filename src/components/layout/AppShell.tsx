@@ -3,10 +3,15 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
+  BarChart3,
+  Bookmark,
+  CalendarDays,
   Check,
   ChevronsLeft,
   Gift,
+  Home,
   LogOut,
+  MessageSquareCode,
   Radio,
   Scissors,
   Settings,
@@ -15,7 +20,6 @@ import {
 
 import { StreamlabsBridge } from "@/components/layout/StreamlabsBridge";
 import { StreamElementsBridge } from "@/components/layout/StreamElementsBridge";
-import { SubscriptionStatusPill } from "@/components/settings/SubscriptionPanel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -27,7 +31,7 @@ import { cn } from "@/lib/utils";
 type AppShellProps = {
   children: ReactNode;
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   actions?: ReactNode;
   user: { email?: string | undefined; id: string };
   profile?: { name: string | null; image: string | null } | null | undefined;
@@ -45,10 +49,15 @@ const LANGUAGES: { id: Lang; flag: string; label: TranslationKey }[] = [
 ];
 
 const NAV = [
-  { to: "/activity-feed" as const, icon: Activity, en: "Activity Feed", ar: "سجل النشاط" },
+  { to: "/dashboard" as const, icon: Home, en: "Home", ar: "الرئيسية" },
+  { to: "/analytics" as const, icon: BarChart3, en: "Analytics", ar: "الإحصائيات" },
+  { to: "/activity-feed" as const, icon: Activity, en: "Activity", ar: "سجل النشاط" },
   { to: "/live-counter" as const, icon: Radio, en: "Live Counter", ar: "العداد المباشر" },
   { to: "/giveaway" as const, icon: Gift, en: "Giveaway", ar: "السحب" },
+  { to: "/custom-commands" as const, icon: MessageSquareCode, en: "Chat Commands", ar: "أوامر الشات" },
   { to: "/clip-command" as const, icon: Scissors, en: "Clip Command", ar: "أمر القص" },
+  { to: "/schedule" as const, icon: CalendarDays, en: "Schedule", ar: "الجدول" },
+  { to: "/mark-points" as const, icon: Bookmark, en: "Mark Points", ar: "نقاط البث" },
 ];
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";
@@ -135,7 +144,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
   const initials = (profile?.name ?? user.email ?? "?").slice(0, 2).toUpperCase();
   const currentLang = LANGUAGES.find((l) => l.id === lang) ?? LANGUAGES[1]!;
   const menuItem =
-    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-start text-[0.8rem] transition-colors";
+    "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-start text-[0.8rem] transition-colors";
   const sidebarW = collapsed ? COLLAPSED_W : EXPANDED_W;
 
   const navBtn = (active: boolean) =>
@@ -337,9 +346,6 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                     <p className="mt-0.5 truncate text-[0.72rem] text-muted-foreground">
                       {user.email ?? "creovix0@gmail.com"}
                     </p>
-                    <div className="mt-2">
-                      <SubscriptionStatusPill userId={user.id} />
-                    </div>
                   </div>
                   <div className="my-1 border-t border-[rgba(255,255,255,0.08)]" />
                   <button
@@ -376,9 +382,9 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
         >
           <div className="mx-auto w-full max-w-[1800px] px-4 pb-16 pt-8 md:px-8">
             <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-              <div>
+              <div className="min-w-0 text-start">
                 <h1 className="text-[1.6rem] font-semibold tracking-tight">{title}</h1>
-                {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
+                {subtitle ? <div className="mt-1 text-start text-sm text-muted-foreground">{subtitle}</div> : null}
               </div>
               {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
             </div>

@@ -18,7 +18,7 @@ export async function resolveModOwner(token: string) {
 export async function loadModQueue(userId: string) {
   const [{ data: requests }, { data: playback }] = await Promise.all([
     supabaseAdmin.from("media_requests")
-      .select("id,title,status,position,requester_username,youtube_video_id,thumbnail_url,duration_seconds,created_at")
+      .select("id,title,status,position,requester_username,platform,artist,youtube_video_id,youtube_url,thumbnail_url,duration_seconds,created_at")
       .eq("user_id", userId).in("status", ["PENDING", "QUEUED", "PLAYING"])
       .order("position", { ascending: true }).limit(100),
     supabaseAdmin.from("media_playback_state")

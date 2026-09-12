@@ -5,12 +5,13 @@ import { Zap } from "lucide-react";
 
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { fireTestEvent, type TestEventInput } from "@/lib/simulate.functions";
+import { useLanguage } from "@/lib/i18n";
 
 type Group = {
   platform: TestEventInput["platform"];
   label: string;
   color: string;
-  events: { type: TestEventInput["eventType"]; label: string; amount?: number }[];
+  events: { type: TestEventInput["eventType"]; labelEn: string; labelAr: string; amount?: number }[];
 };
 
 /**
@@ -23,10 +24,10 @@ const GROUPS: Group[] = [
     label: "Kick",
     color: "#53FC18",
     events: [
-      { type: "FOLLOW", label: "Follow" },
-      { type: "SUBSCRIPTION", label: "Sub" },
-      { type: "GIFT_SUB", label: "Gift Sub" },
-      { type: "RAID", label: "Raid" },
+      { type: "FOLLOW", labelEn: "Follow", labelAr: "متابعة" },
+      { type: "SUBSCRIPTION", labelEn: "Sub", labelAr: "اشتراك" },
+      { type: "GIFT_SUB", labelEn: "Gift Sub", labelAr: "هدية اشتراك" },
+      { type: "RAID", labelEn: "Raid", labelAr: "غارة" },
     ],
   },
   {
@@ -34,11 +35,11 @@ const GROUPS: Group[] = [
     label: "Twitch",
     color: "#9F77F7",
     events: [
-      { type: "FOLLOW", label: "Follow" },
-      { type: "SUBSCRIPTION", label: "Sub" },
-      { type: "GIFT_SUB", label: "Gift Sub" },
-      { type: "BITS", label: "100 Bits", amount: 100 },
-      { type: "RAID", label: "Raid" },
+      { type: "FOLLOW", labelEn: "Follow", labelAr: "متابعة" },
+      { type: "SUBSCRIPTION", labelEn: "Sub", labelAr: "اشتراك" },
+      { type: "GIFT_SUB", labelEn: "Gift Sub", labelAr: "هدية اشتراك" },
+      { type: "BITS", labelEn: "100 Bits", labelAr: "100 بت", amount: 100 },
+      { type: "RAID", labelEn: "Raid", labelAr: "غارة" },
     ],
   },
   {
@@ -46,9 +47,9 @@ const GROUPS: Group[] = [
     label: "YouTube",
     color: "#FF4444",
     events: [
-      { type: "FOLLOW", label: "Subscribe" },
-      { type: "SUBSCRIPTION", label: "Membership" },
-      { type: "DONATION", label: "Super Chat $5", amount: 5 },
+      { type: "FOLLOW", labelEn: "Subscribe", labelAr: "اشتراك قناة" },
+      { type: "SUBSCRIPTION", labelEn: "Membership", labelAr: "عضوية" },
+      { type: "DONATION", labelEn: "Super Chat $5", labelAr: "سوبر شات $5", amount: 5 },
     ],
   },
   {
@@ -56,32 +57,34 @@ const GROUPS: Group[] = [
     label: "TikTok",
     color: "#2DCCD3",
     events: [
-      { type: "FOLLOW", label: "Follow" },
-      { type: "DONATION", label: "Gift $2", amount: 2 },
+      { type: "FOLLOW", labelEn: "Follow", labelAr: "متابعة" },
+      { type: "DONATION", labelEn: "Gift $2", labelAr: "هدية $2", amount: 2 },
     ],
   },
   {
     platform: "X",
     label: "X (Twitter)",
     color: "#E7E9EA",
-    events: [{ type: "FOLLOW", label: "Follower" }],
+    events: [{ type: "FOLLOW", labelEn: "Follower", labelAr: "متابع" }],
   },
   {
     platform: "STREAMLABS",
     label: "Streamlabs",
     color: "#80F5D2",
-    events: [{ type: "DONATION", label: "Donation $10", amount: 10 }],
+    events: [{ type: "DONATION", labelEn: "Donation $10", labelAr: "تبرع $10", amount: 10 }],
   },
   {
     platform: "STREAMELEMENTS",
     label: "StreamElements",
     color: "#4FC3F7",
-    events: [{ type: "DONATION", label: "Tip $5", amount: 5 }],
+    events: [{ type: "DONATION", labelEn: "Tip $5", labelAr: "إكرامية $5", amount: 5 }],
   },
 ];
 
 /** Developer harness for firing one simulated event per platform. */
 export function EventTestPanel() {
+  const { t, lang } = useLanguage();
+  const ar = lang === "ar";
   const run = useServerFn(fireTestEvent);
   const [name, setName] = useState("");
   const [log, setLog] = useState<{ text: string; ok: boolean }[]>([]);
@@ -96,6 +99,7 @@ export function EventTestPanel() {
 
   const fire = async (group: Group, event: Group["events"][number]) => {
     const id = `${group.platform}-${event.type}`;
+    const label = ar ? event.labelAr : event.labelEn;
     setPending(id);
     try {
       const response = await mutation.mutateAsync({
@@ -105,15 +109,15 @@ export function EventTestPanel() {
         actorName: name || null,
       });
       const text = response.ok
-        ? `${group.label} · ${event.label} → ${response.result.status}${
+        ? `${group.label} · ${label} → ${response.result.status}${
             response.result.secondsAdded ? ` (+${response.result.secondsAdded}s)` : ""
           }`
-        : `${group.label} · ${event.label} → ${response.error}`;
+        : `${group.label} · ${label} → ${response.error}`;
       setLog((prev) => [{ text, ok: response.ok }, ...prev].slice(0, 12));
     } catch (error) {
       setLog((prev) =>
         [
-          { text: `${group.label} · ${event.label} → ${(error as Error).message}`, ok: false },
+          { text: `${group.label} · ${label} → ${(error as Error).message}`, ok: false },
           ...prev,
         ].slice(0, 12),
       );
@@ -123,41 +127,37 @@ export function EventTestPanel() {
   };
 
   return (
-    <section className="glass-3d space-y-5 rounded-2xl p-6">
-      <div>
-        <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
-          Test events
-        </p>
-        <h2 className="mt-1 flex items-center gap-2 text-lg font-semibold">
-          <Zap className="size-4 text-primary" aria-hidden /> Simulate platform events
-        </h2>
-        <p className="mt-1 text-[0.8rem] text-muted-foreground">
-          Each button sends one real event through the live pipeline, so your widgets and the
-          Activity Feed update exactly as they would for a real viewer.
-        </p>
-      </div>
+    <section>
+      <p className="text-[0.66rem] uppercase tracking-[0.22em] text-muted-foreground">
+        {t("settings.test.title")}
+      </p>
+      <h2 className="mt-1 flex items-center gap-2 text-[0.95rem] font-semibold">
+        <Zap className="size-4 text-primary" aria-hidden />
+        {t("settings.test.heading")}
+      </h2>
+      <p className="mt-1 max-w-2xl text-[0.78rem] text-muted-foreground">{t("settings.test.body")}</p>
 
-      <label className="block max-w-xs text-sm">
-        <span className="text-[0.8rem] text-muted-foreground">Sender name (optional)</span>
+      <label className="mt-6 block max-w-xs text-sm">
+        <span className="text-[0.8rem] text-muted-foreground">{t("settings.test.sender")}</span>
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="TestViewer"
-          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+          className="mt-1 w-full rounded-lg border border-white/5 bg-background px-3 py-2 text-sm outline-none focus:border-primary"
         />
       </label>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="mt-6 divide-y divide-white/5 border-y border-white/5">
         {GROUPS.map((group) => (
           <div
             key={group.platform}
-            className="rounded-xl border border-[oklch(1_0_0/0.08)] bg-background/40 p-4"
+            className="flex flex-wrap items-center justify-between gap-3 py-4"
           >
             <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: group.color }}>
               <PlatformIcon platform={group.platform} size={14} />
               {group.label}
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {group.events.map((event) => {
                 const id = `${group.platform}-${event.type}`;
                 return (
@@ -166,9 +166,13 @@ export function EventTestPanel() {
                     type="button"
                     disabled={pending !== null}
                     onClick={() => void fire(group, event)}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+                    className="rounded-full border border-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                   >
-                    {pending === id ? "Sending…" : event.label}
+                    {pending === id
+                      ? t("settings.test.sending")
+                      : ar
+                        ? event.labelAr
+                        : event.labelEn}
                   </button>
                 );
               })}
@@ -178,7 +182,7 @@ export function EventTestPanel() {
       </div>
 
       {log.length > 0 ? (
-        <ul className="space-y-1 text-xs">
+        <ul className="mt-6 space-y-1 text-xs">
           {log.map((entry, index) => (
             <li
               key={`${entry.text}-${index}`}

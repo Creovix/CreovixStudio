@@ -59,7 +59,6 @@ const DEFAULTS: Settings = {
   response: "@{user} {clip_url}",
 };
 
-const card = "glass-3d rounded-2xl border border-[oklch(1_0_0/0.08)] p-6";
 const pill =
   "rounded-full border px-4 py-1.5 text-[0.78rem] font-medium transition-colors";
 
@@ -158,10 +157,10 @@ function ClipCommandPage() {
       title="Clip Command"
       subtitle="Let viewers instantly create clips by typing !clip in chat"
     >
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <section className={card}>
-            <div className="flex items-center justify-between gap-4 border-b border-[oklch(1_0_0/0.08)] pb-4">
+      <div className="grid gap-10 lg:grid-cols-3">
+        <div className="space-y-10 lg:col-span-2">
+          <section>
+            <div className="flex items-center justify-between gap-4 border-b border-white/5 pb-4">
               <div>
                 <h2 className="text-[0.95rem] font-semibold">Command Settings</h2>
                 <p className="mt-1 text-[0.78rem] text-muted-foreground">
@@ -242,7 +241,7 @@ function ClipCommandPage() {
               })}
             </div>
 
-            <div className="mt-6 space-y-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5">
+            <div className="mt-8 space-y-5 border-t border-white/5 pt-6">
               <div className="flex items-center gap-2">
                 <Scissors className="size-4 text-emerald-400" aria-hidden />
                 <span className="text-[0.75rem] font-semibold text-emerald-300">
@@ -294,7 +293,7 @@ function ClipCommandPage() {
                 </span>
               </label>
 
-              <div className="rounded-lg border border-[oklch(1_0_0/0.08)] bg-[oklch(0_0_0/0.4)] p-3 font-mono text-[0.78rem]">
+              <div className="rounded-lg border border-white/5 p-3 font-mono text-[0.78rem]">
                 <span className="text-emerald-400">CreovixStudio:</span>{" "}
                 <span className="text-muted-foreground">{preview}</span>
               </div>
@@ -314,7 +313,7 @@ function ClipCommandPage() {
             </div>
           </section>
 
-          <section className={card}>
+          <section className="border-t border-white/5 pt-8">
             <div className="flex items-center gap-2">
               <h2 className="text-[0.95rem] font-semibold">Created Clips</h2>
               <span className="rounded-full border border-[oklch(1_0_0/0.12)] px-2 py-0.5 text-[0.7rem] text-muted-foreground">
@@ -334,7 +333,7 @@ function ClipCommandPage() {
                 {clips.map((clip) => (
                   <article
                     key={clip.id}
-                    className="overflow-hidden rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(0_0_0/0.3)]"
+                    className="overflow-hidden rounded-xl border border-white/5"
                   >
                     <div className="relative aspect-video bg-[oklch(0_0_0/0.5)]">
                       {clip.thumbnail ? (
@@ -389,8 +388,8 @@ function ClipCommandPage() {
           </section>
         </div>
 
-        <div className="space-y-6">
-          <section className={card}>
+        <div className="space-y-10 lg:border-s lg:border-white/5 lg:ps-8">
+          <section>
             <h2 className="text-[0.95rem] font-semibold">How it works</h2>
             <ol className="mt-4 space-y-3 text-[0.82rem]">
               {[
@@ -411,7 +410,7 @@ function ClipCommandPage() {
             </p>
           </section>
 
-          <section className={card}>
+          <section className="border-t border-white/5 pt-8">
             <h2 className="text-[0.95rem] font-semibold">Your clips</h2>
             <p className="mt-2 text-[0.82rem] text-muted-foreground">
               View and manage all clips created on your channel.

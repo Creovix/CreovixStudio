@@ -87,7 +87,7 @@ export function WidgetCard({
         <button
           type="button"
           onClick={copy}
-          className="rounded-lg border border-border px-3 py-1.5 hover:border-primary hover:text-primary"
+          className="rounded-xl border border-border px-3 py-1.5 hover:border-primary hover:text-primary"
         >
           {copied ? "Copied!" : "Copy OBS URL"}
         </button>
@@ -95,7 +95,7 @@ export function WidgetCard({
           <Link
             to="/widgets/$widgetId/goal"
             params={{ widgetId: widget.id }}
-            className="rounded-lg border border-border px-3 py-1.5 hover:border-primary hover:text-primary"
+            className="rounded-xl border border-border px-3 py-1.5 hover:border-primary hover:text-primary"
           >
             Goal
           </Link>
@@ -103,7 +103,7 @@ export function WidgetCard({
         <Link
           to="/widgets/$widgetId"
           params={{ widgetId: widget.id }}
-          className="rounded-lg bg-primary px-3 py-1.5 font-semibold text-primary-foreground hover:opacity-90"
+          className="rounded-xl bg-primary px-3 py-1.5 font-semibold text-primary-foreground hover:opacity-90"
         >
           Edit
         </Link>

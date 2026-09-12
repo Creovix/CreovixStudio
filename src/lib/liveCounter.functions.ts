@@ -305,3 +305,56 @@ export const lookupChannel = createServerFn({ method: "POST" })
 
     throw new Error(`Channel Not Found: "${username}"`);
   });
+
+export type ChannelSearchHit = {
+  platform: "TWITCH";
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  isLive: boolean;
+};
+
+/**
+ * Official Twitch Helix channel search. Kick has no documented search helper
+ * in this codebase — do not scrape Kick for autocomplete.
+ */
+export const searchTwitchChannels = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { query: string }) => input)
+  .handler(async ({ data }): Promise<ChannelSearchHit[]> => {
+    const query = data.query.trim().replace(/^@/, "");
+    if (query.length < 2) return [];
+
+    const clientId = process.env["TWITCH_CLIENT_ID"];
+    const token = await twitchAppToken();
+    if (!clientId || !token) return [];
+
+    const response = await fetch(
+      `https://api.twitch.tv/helix/search/channels?query=${encodeURIComponent(query)}&first=8`,
+      { headers: { Authorization: `Bearer ${token}`, "Client-Id": clientId } },
+    );
+    if (!response.ok) return [];
+
+    const payload = (await response.json()) as {
+      data?: {
+        broadcaster_login?: string;
+        display_name?: string;
+        thumbnail_url?: string;
+        is_live?: boolean;
+      }[];
+    };
+
+    const hits: ChannelSearchHit[] = [];
+    for (const row of payload.data ?? []) {
+      const username = row.broadcaster_login?.trim();
+      if (!username) continue;
+      hits.push({
+        platform: "TWITCH",
+        username,
+        displayName: row.display_name?.trim() || username,
+        avatarUrl: row.thumbnail_url ?? null,
+        isLive: Boolean(row.is_live),
+      });
+    }
+    return hits;
+  });
