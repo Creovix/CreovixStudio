@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
 
 import { LinkInBioGallery } from "@/components/link-in-bio/LinkInBioGallery";
 import { LinkInBioPlatformLogo } from "@/components/link-in-bio/LinkInBioPlatformLogo";
@@ -6,6 +7,7 @@ import {
   BENTO_COLS,
   BENTO_GAP_PX,
   BENTO_ROW_PX,
+  bentoSizeOf,
   packBento,
   platformAccent,
   type PublicBioLink,
@@ -118,7 +120,6 @@ export function LinkInBioBento({
           live={Boolean(livePlatforms?.[link.platform as keyof LivePlatformFlags])}
           cardBg={cardBg}
           border={border}
-          glass={glass}
           editable={editable}
           fill={fill}
           selected={selectedId === link.id}
@@ -140,7 +141,6 @@ function BentoTile({
   live,
   cardBg,
   border,
-  glass,
   editable,
   fill,
   selected,
@@ -153,7 +153,6 @@ function BentoTile({
   live: boolean;
   cardBg: string;
   border: string;
-  glass: boolean;
   editable: boolean;
   fill: boolean;
   selected: boolean;
@@ -162,29 +161,37 @@ function BentoTile({
   onDragEnd: () => void;
 }) {
   const accent = platformAccent(link.platform);
-  const logoSize = link.colSpan >= 2 && link.rowSpan >= 2 ? 56 : link.colSpan >= 2 || link.rowSpan >= 2 ? 44 : 36;
+  const size = bentoSizeOf(link.colSpan, link.rowSpan);
+  const compact = size === "1x1";
+  const logoSize = size === "2x2" ? 68 : size === "1x1" ? 42 : 52;
+  const label = PLATFORM_LABEL[link.platform];
   const inner = (
     <>
       {link.kind === "gallery" ? (
         <LinkInBioGallery images={link.galleryImages} title={link.title} className="absolute inset-0" />
       ) : (
         <>
+          <span className="sr-only">{label}</span>
           <span
-            className="absolute inset-0"
-            style={{ background: "color-mix(in oklab, var(--bio-fg) 8%, var(--bio-bg))" }}
+            className={cn(
+              "relative flex h-full",
+              compact ? "items-center justify-center p-4" : "items-start justify-start p-4 md:p-5",
+            )}
+          >
+            <LinkInBioPlatformLogo platform={link.platform} size={logoSize} onBrand />
+          </span>
+          {live ? (
+            <span className="absolute right-3.5 top-3.5 size-2 rounded-full bg-white shadow" aria-hidden />
+          ) : null}
+          <span
+            className={cn(
+              "pointer-events-none absolute bottom-3 right-3 grid place-items-center rounded-full",
+              compact ? "size-8" : "size-9",
+              link.platform === "kick" ? "bg-black/15 text-black" : "bg-white/18 text-white",
+            )}
             aria-hidden
-          />
-          <span className="absolute inset-0 opacity-45" style={{ background: accent.css }} aria-hidden />
-          <span className="relative flex h-full flex-col items-center justify-center gap-2 px-3 text-center">
-            <LinkInBioPlatformLogo platform={link.platform} size={logoSize} />
-            <span className="text-sm font-semibold leading-tight text-white" dir="auto">
-              {PLATFORM_LABEL[link.platform]}
-            </span>
-            {link.platform === "tiktok" || live ? (
-              <span className="text-[0.65rem] font-medium uppercase tracking-wide text-white/70">
-                {live ? "Live" : "Coming soon"}
-              </span>
-            ) : null}
+          >
+            <ArrowUpRight className={compact ? "size-3.5" : "size-4"} strokeWidth={2.25} />
           </span>
         </>
       )}
@@ -192,18 +199,18 @@ function BentoTile({
   );
 
   const sharedClass = cn(
-    "relative overflow-hidden rounded-2xl outline-none transition-transform",
+    "relative overflow-hidden rounded-3xl outline-none transition-transform",
     !editable && "hover:-translate-y-0.5",
     selected && "ring-2 ring-white/80",
   );
   const sharedStyle = {
     gridColumn: fill ? `span ${link.colSpan}` : `${link.gridX + 1} / span ${link.colSpan}`,
     gridRow: fill ? `span ${link.rowSpan}` : `${link.gridY + 1} / span ${link.rowSpan}`,
-    background: link.kind === "gallery" ? cardBg : undefined,
-    border,
-    backdropFilter: glass ? `blur(${6 + theme.glassIntensity / 10}px)` : undefined,
+    background: link.kind === "gallery" ? cardBg : accent.css,
+    color: link.platform === "kick" ? "#111" : "#fff",
+    border: link.kind === "gallery" ? border : "1px solid transparent",
     boxShadow: theme.glowStrength
-      ? `0 10px ${12 + theme.glowStrength / 4}px color-mix(in oklab, ${accent.color} ${Math.round(theme.glowStrength / 4)}%, transparent)`
+      ? `0 12px ${16 + theme.glowStrength / 4}px color-mix(in oklab, ${accent.color} ${Math.round(theme.glowStrength / 3)}%, transparent)`
       : undefined,
   } as const;
 
@@ -217,6 +224,7 @@ function BentoTile({
         onClick={() => onSelect?.(link.id)}
         className={cn(sharedClass, "cursor-grab text-start active:cursor-grabbing")}
         style={sharedStyle}
+        aria-label={label}
       >
         {inner}
       </button>
@@ -238,6 +246,7 @@ function BentoTile({
       rel="noopener noreferrer"
       className={sharedClass}
       style={sharedStyle}
+      aria-label={label}
     >
       {inner}
     </a>

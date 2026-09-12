@@ -478,16 +478,16 @@ export function sanitizeGalleryImages(raw: unknown): GalleryImage[] {
 }
 
 export function platformAccent(platform: LinkPlatform): { color: string; css: string } {
-  if (platform === "kick") return { color: "#53FC18", css: "linear-gradient(160deg, #53FC18 0%, #10240c 88%)" };
-  if (platform === "twitch") return { color: "#9146FF", css: "linear-gradient(160deg, #9146FF 0%, #240046 88%)" };
-  if (platform === "youtube") return { color: "#FF0000", css: "linear-gradient(160deg, #FF0000 0%, #3d0000 88%)" };
-  if (platform === "instagram") return { color: "#E1306C", css: "linear-gradient(135deg, #F58529, #DD2A7B 52%, #8134AF)" };
-  if (platform === "tiktok") return { color: "#25F4EE", css: "linear-gradient(135deg, #25F4EE, #111 46%, #FE2C55)" };
-  if (platform === "x") return { color: "#E7E9EA", css: "linear-gradient(160deg, #E7E9EA 0%, #0f1419 88%)" };
-  if (platform === "discord") return { color: "#5865F2", css: "linear-gradient(160deg, #5865F2 0%, #1e245a 88%)" };
+  if (platform === "kick") return { color: "#53FC18", css: "#53FC18" };
+  if (platform === "twitch") return { color: "#9146FF", css: "#9146FF" };
+  if (platform === "youtube") return { color: "#FF0000", css: "#FF0000" };
+  if (platform === "instagram") return { color: "#E1306C", css: "linear-gradient(135deg, #F58529 0%, #DD2A7B 48%, #8134AF 100%)" };
+  if (platform === "tiktok") return { color: "#25F4EE", css: "linear-gradient(145deg, #010101 0%, #111 58%, #25F4EE 140%)" };
+  if (platform === "x") return { color: "#E7E9EA", css: "#000000" };
+  if (platform === "discord") return { color: "#5865F2", css: "#5865F2" };
   return {
     color: "var(--bio-accent)",
-    css: "linear-gradient(160deg, color-mix(in oklab, var(--bio-accent) 72%, transparent), var(--bio-bg))",
+    css: "linear-gradient(160deg, color-mix(in oklab, var(--bio-accent) 88%, #111), #1a1a1f)",
   };
 }
 
