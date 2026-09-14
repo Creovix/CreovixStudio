@@ -19,22 +19,27 @@ function PlatformLogoMark({
   platform,
   size = 40,
   onLight = false,
+  onBrand = false,
+  surface,
 }: {
   platform: LinkPlatform;
   size?: number;
   onBrand?: boolean;
   ink?: string;
   onLight?: boolean;
+  surface?: string | undefined;
 }) {
   const name = ASSET[platform];
 
   return (
     <PlatformAsset
-      key={`${name}-${onLight ? "light" : "dark"}`}
+      key={`${name}-${onBrand ? "brand" : onLight ? "light" : "dark"}`}
       name={name}
       size={size}
       fit="contain"
       onLight={onLight}
+      onBrand={onBrand}
+      surface={surface}
       style={{ overflow: "visible" }}
     />
   );

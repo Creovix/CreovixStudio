@@ -1,6 +1,10 @@
 import type React from "react";
 
-import { PlatformAsset, type PlatformAssetName } from "@/components/icons/platformAssets";
+import {
+  PlatformAsset,
+  resolvePlatformBrand,
+  type PlatformAssetName,
+} from "@/components/icons/platformAssets";
 
 export type PlatformKey = "TWITCH" | "KICK" | "YOUTUBE" | "TIKTOK" | "X";
 
@@ -45,16 +49,16 @@ export function PlatformIcon({
   style?: React.CSSProperties;
 }) {
   const key = normalizePlatform(platform);
-  if (!key) return null;
+  const name = key ? ASSET[key] : resolvePlatformBrand(platform);
+  if (!name) return null;
 
-  const name = ASSET[key];
   return (
     <PlatformAsset
       key={`${name}-overlay`}
       name={name}
       size={size}
       fit="auto"
-      label={LABEL[key]}
+      label={key ? LABEL[key] : undefined}
       style={style}
     />
   );

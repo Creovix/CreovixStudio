@@ -89,7 +89,12 @@ export function PlatformsStep() {
                     className="grid size-11 shrink-0 place-items-center rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]"
                     style={{ background: accent.css }}
                   >
-                    <LinkInBioPlatformLogo platform={platform.id} size={22} />
+                    <LinkInBioPlatformLogo
+                      platform={platform.id}
+                      size={22}
+                      onBrand
+                      surface={accent.css}
+                    />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-medium">{platform.label}</span>

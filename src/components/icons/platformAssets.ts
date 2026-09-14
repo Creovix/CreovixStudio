@@ -44,6 +44,24 @@ import youTubeBlack from "@/assets/icons/YouTube/Black.svg";
 import youTubePrimary from "@/assets/icons/YouTube/Primary.svg";
 import youTubeWhite from "@/assets/icons/YouTube/White.svg";
 
+/** On-disk folder names. YouTube is `YouTube` (not `Youtube`). */
+export const PLATFORM_FOLDER = {
+  discord: "Discord",
+  instagram: "Instagram",
+  kick: "Kick",
+  link: "Link",
+  soundcloud: "SoundCloud",
+  spotify: "Spotify",
+  streamelements: "StreamElements",
+  streamlabs: "Streamlabs",
+  tiktok: "TikTok",
+  twitch: "Twitch",
+  website: "Website",
+  whatsapp: "WhatsApp",
+  x: "X",
+  youtube: "YouTube",
+} as const;
+
 /** Folder names on disk under `src/assets/icons`. */
 export type PlatformBrand =
   | "discord"
@@ -92,6 +110,21 @@ const ALIAS: Record<string, PlatformBrand> = {
 };
 
 const MONO: ReadonlySet<PlatformBrand> = new Set(["x", "link", "website"]);
+const LIGHT_BRAND: ReadonlySet<PlatformBrand> = new Set(["kick", "whatsapp"]);
+
+function hexLuminance(hex: string): number {
+  const n = hex.trim().replace("#", "");
+  if (n.length !== 6) return 0;
+  const toLin = (channel: number) => {
+    const srgb = channel / 255;
+    return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  };
+  return (
+    0.2126 * toLin(Number.parseInt(n.slice(0, 2), 16)) +
+    0.7152 * toLin(Number.parseInt(n.slice(2, 4), 16)) +
+    0.0722 * toLin(Number.parseInt(n.slice(4, 6), 16))
+  );
+}
 
 export function resolvePlatformBrand(name: PlatformAssetName | string): PlatformBrand | null {
   const key = name.trim().toLowerCase();
@@ -105,13 +138,27 @@ export function resolveIconVariant(
   {
     variant,
     onLight = false,
+    onBrand = false,
+    surface,
   }: {
     variant?: IconVariant | undefined;
     onLight?: boolean;
+    onBrand?: boolean;
+    surface?: string | undefined;
   } = {},
 ): IconVariant {
   const files = PLATFORM_ASSET_URLS[brand];
   if (variant && files[variant]) return variant;
+
+  if (onBrand) {
+    const lightChip =
+      typeof surface === "string" && surface.startsWith("#") && surface.length >= 7
+        ? hexLuminance(surface) > 0.45
+        : LIGHT_BRAND.has(brand);
+    if (lightChip) return files.Black ? "Black" : "White";
+    return files.White ? "White" : files.Primary ? "Primary" : "White";
+  }
+
   if (onLight && files.Black) return "Black";
   if (MONO.has(brand)) return "White";
   // Colorful note with white core — readable on dark overlays.
@@ -122,7 +169,12 @@ export function resolveIconVariant(
 
 export function platformAssetUrl(
   name: PlatformAssetName | string,
-  options: { variant?: IconVariant | undefined; onLight?: boolean } = {},
+  options: {
+    variant?: IconVariant | undefined;
+    onLight?: boolean;
+    onBrand?: boolean;
+    surface?: string | undefined;
+  } = {},
 ): string | null {
   const brand = resolvePlatformBrand(name);
   if (!brand) return null;
@@ -133,8 +185,9 @@ export function platformAssetUrl(
 export function PlatformAsset({
   name,
   size,
-  fit = "contain",
   onLight = false,
+  onBrand = false,
+  surface,
   variant,
   className,
   style,
@@ -144,6 +197,8 @@ export function PlatformAsset({
   size: number;
   fit?: "contain" | "auto";
   onLight?: boolean;
+  onBrand?: boolean;
+  surface?: string | undefined;
   variant?: IconVariant | undefined;
   className?: string | undefined;
   style?: CSSProperties | undefined;
@@ -151,7 +206,7 @@ export function PlatformAsset({
 }) {
   const brand = resolvePlatformBrand(name);
   if (!brand) return null;
-  const picked = resolveIconVariant(brand, { variant, onLight });
+  const picked = resolveIconVariant(brand, { variant, onLight, onBrand, surface });
   const src = PLATFORM_ASSET_URLS[brand][picked] ?? PLATFORM_ASSET_URLS[brand].White;
   const box: CSSProperties = {
     height: size,
@@ -164,7 +219,7 @@ export function PlatformAsset({
   };
 
   return createElement("img", {
-    key: `${brand}-${picked}`,
+    key: `${PLATFORM_FOLDER[brand]}/${picked}`,
     className,
     src,
     alt: label ?? "",
