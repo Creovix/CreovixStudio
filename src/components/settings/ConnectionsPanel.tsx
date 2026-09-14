@@ -11,8 +11,8 @@ import {
   connectStreamlabsSocket,
   startPlatformLink,
 } from "@/lib/connections.functions";
-import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 
 type OAuthProviderId = "twitch" | "kick" | "tiktok";
 
@@ -369,7 +369,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
         {liveOauth.map(renderOAuthRow)}
 
         <ConnectionRow
-          icon={<span className="h-2.5 w-2.5 rounded-full bg-[#31C48D]" />}
+          icon={<PlatformIcon platform="STREAMLABS" size={18} />}
           label="Streamlabs"
           hint={t("settings.connections.slHint")}
           account={
@@ -438,7 +438,7 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
         />
 
         <ConnectionRow
-          icon={<span className="h-2.5 w-2.5 rounded-full bg-[#0066FF]" />}
+          icon={<PlatformIcon platform="STREAMELEMENTS" size={18} />}
           label="StreamElements"
           hint={t("settings.connections.seHint")}
           account={

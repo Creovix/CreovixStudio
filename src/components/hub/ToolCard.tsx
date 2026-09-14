@@ -1,8 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Check, Copy, Lock, Trash2 } from "lucide-react";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { PLATFORM_META, type PlatformId } from "@/components/hub/platforms";
+import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useLanguage } from "@/lib/i18n";
 
 export type ToolCardProps = {
@@ -95,18 +96,12 @@ export function ToolCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
             {platforms.length > 0 ? (
-              <span className="flex shrink-0 items-center gap-1.5" aria-hidden>
-                {platforms.map((id) => {
-                  const meta = PLATFORM_META[id];
-                  return (
-                    <span
-                      key={id}
-                      title={meta.label.en}
-                      className="size-1.5 rounded-full"
-                      style={{ background: meta.color } as CSSProperties}
-                    />
-                  );
-                })}
+              <span className="flex shrink-0 items-center gap-1" aria-hidden>
+                {platforms.map((id) => (
+                  <span key={id} title={PLATFORM_META[id].label.en}>
+                    <PlatformIcon platform={id} size={12} />
+                  </span>
+                ))}
               </span>
             ) : null}
             {comingSoon ? (

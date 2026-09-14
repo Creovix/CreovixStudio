@@ -14,7 +14,6 @@ import {
 
 import { AppShell } from "@/components/layout/AppShell";
 import { TestEventMenu, type InjectedFeedEvent } from "@/components/activity/TestEventMenu";
-import { PlatformAsset } from "@/components/icons/platformAssets";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { supabase } from "@/lib/supabase/client";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
@@ -101,14 +100,6 @@ type FilterGroup = {
   match: (event: FeedEvent) => boolean;
 };
 
-function StreamlabsMark() {
-  return <PlatformAsset key="streamlabs" name="streamlabs" size={20} className="size-5 shrink-0" />;
-}
-
-function StreamElementsMark() {
-  return <PlatformAsset key="streamelements" name="streamelements" size={20} className="size-5 shrink-0" />;
-}
-
 const KNOWN_PLATFORMS = [
   "TWITCH",
   "KICK",
@@ -159,14 +150,14 @@ const FILTER_GROUPS: FilterGroup[] = [
     id: "streamlabs",
     label: "activity.filter.streamlabs",
     dot: "#31C3A2",
-    icon: <StreamlabsMark />,
+    icon: <PlatformIcon platform="STREAMLABS" size={20} />,
     match: (e) => e.platform === "STREAMLABS",
   },
   {
     id: "streamelements",
     label: "activity.filter.streamelements",
     dot: "#236BE9",
-    icon: <StreamElementsMark />,
+    icon: <PlatformIcon platform="STREAMELEMENTS" size={20} />,
     match: (e) => e.platform === "STREAMELEMENTS",
   },
   {

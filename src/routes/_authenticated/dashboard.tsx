@@ -17,6 +17,7 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
 import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
+import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
@@ -383,17 +384,13 @@ function HomePage() {
               style={active && id !== "ALL" ? { color } : undefined}
             >
               {id === "ALL" ? (
-                <span className="flex items-center gap-2" aria-hidden>
+                <span className="flex items-center gap-1" aria-hidden>
                   {ALL_PLATFORMS.map((dot) => (
-                    <span
-                      key={dot}
-                      className="size-1.5 rounded-full"
-                      style={{ background: PLATFORM_META[dot].color }}
-                    />
+                    <PlatformIcon key={dot} platform={dot} size={12} />
                   ))}
                 </span>
               ) : (
-                <span className="size-1.5 rounded-full" style={{ background: color }} aria-hidden />
+                <PlatformIcon platform={id} size={12} />
               )}
               {label}
             </button>
