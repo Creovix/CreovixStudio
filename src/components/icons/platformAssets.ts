@@ -13,6 +13,9 @@ import kickWhite from "@/assets/icons/Kick/White.svg";
 import linkBlack from "@/assets/icons/Link/Black.svg";
 import linkPrimary from "@/assets/icons/Link/Primary.svg";
 import linkWhite from "@/assets/icons/Link/White.svg";
+import snapchatBlack from "@/assets/icons/Snapchat/Black.svg";
+import snapchatPrimary from "@/assets/icons/Snapchat/Primary.svg";
+import snapchatWhite from "@/assets/icons/Snapchat/White.svg";
 import soundCloudBlack from "@/assets/icons/SoundCloud/Black.svg";
 import soundCloudPrimary from "@/assets/icons/SoundCloud/Primary.svg";
 import soundCloudWhite from "@/assets/icons/SoundCloud/White.svg";
@@ -49,6 +52,7 @@ export const PLATFORM_FOLDER = {
   instagram: "Instagram",
   kick: "Kick",
   link: "Link",
+  snapchat: "Snapchat",
   soundcloud: "SoundCloud",
   spotify: "Spotify",
   streamelements: "StreamElements",
@@ -67,6 +71,7 @@ export type PlatformBrand =
   | "instagram"
   | "kick"
   | "link"
+  | "snapchat"
   | "soundcloud"
   | "spotify"
   | "streamelements"
@@ -90,6 +95,7 @@ export const PLATFORM_ASSET_URLS: Record<PlatformBrand, VariantMap> = {
   instagram: { Primary: instagramPrimary, White: instagramWhite, Black: instagramBlack },
   kick: { Primary: kickPrimary, White: kickWhite, Black: kickBlack },
   link: { Primary: linkPrimary, White: linkWhite, Black: linkBlack },
+  snapchat: { Primary: snapchatPrimary, White: snapchatWhite, Black: snapchatBlack },
   soundcloud: { Primary: soundCloudPrimary, White: soundCloudWhite, Black: soundCloudBlack },
   spotify: { Primary: spotifyPrimary, White: spotifyWhite, Black: spotifyBlack },
   streamelements: { Primary: streamElementsPrimary, White: streamElementsWhite, Black: streamElementsBlack },

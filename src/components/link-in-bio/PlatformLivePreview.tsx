@@ -32,13 +32,14 @@ export function PlatformLivePreview({
 
   const query = useQuery({
     queryKey: ["link-in-bio-platform-live", platform, debounced],
-    enabled: Boolean(debounced) && platform !== "whatsapp",
+    enabled: Boolean(debounced) && platform !== "whatsapp" && platform !== "snapchat",
     queryFn: () => load({ data: { platform, value: debounced } }),
     staleTime: 30_000,
     retry: false,
   });
 
   if (platform === "whatsapp" || !debounced) return null;
+  if (platform === "snapchat") return null;
 
   if (query.isPending) {
     return <p className={cn("mt-3 text-[0.68rem]", compact ? "text-muted-foreground" : "text-white/35")}>Checking…</p>;

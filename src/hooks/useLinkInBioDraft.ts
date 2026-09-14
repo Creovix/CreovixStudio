@@ -47,6 +47,7 @@ const SOCIAL_PLATFORMS: SocialPlatform[] = [
   "youtube",
   "tiktok",
   "instagram",
+  "snapchat",
   "x",
   "discord",
   "whatsapp",
@@ -75,6 +76,7 @@ export function createEmptyHandles(): HandleMap {
     youtube: "",
     tiktok: "",
     instagram: "",
+    snapchat: "",
     x: "",
     discord: "",
     whatsapp: "",
@@ -162,6 +164,7 @@ function platformLabel(platform: LinkPlatform) {
   if (platform === "youtube") return "YouTube";
   if (platform === "tiktok") return "TikTok";
   if (platform === "instagram") return "Instagram";
+  if (platform === "snapchat") return "Snapchat";
   if (platform === "x") return "X";
   if (platform === "discord") return "Discord";
   if (platform === "whatsapp") return "WhatsApp Community";

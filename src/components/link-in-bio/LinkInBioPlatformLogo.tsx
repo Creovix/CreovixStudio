@@ -9,6 +9,7 @@ const ASSET: Record<LinkPlatform, PlatformAssetName> = {
   youtube: "youtube",
   tiktok: "tiktok",
   instagram: "instagram",
+  snapchat: "snapchat",
   x: "x",
   discord: "discord",
   whatsapp: "whatsapp",

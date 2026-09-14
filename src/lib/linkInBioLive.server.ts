@@ -246,7 +246,7 @@ function previewCustom(value: string): PlatformLivePreviewData {
 export async function previewPlatformLive(platformRaw: string, valueRaw: string): Promise<PlatformLivePreviewData> {
   const platform = sanitizePlatform(platformRaw);
   const value = valueRaw.trim().slice(0, 2048);
-  if (!value || platform === "whatsapp") return { kind: "empty" };
+  if (!value || platform === "whatsapp" || platform === "snapchat") return { kind: "empty" };
   if (platform === "custom") return previewCustom(value);
   if (platform === "kick" || platform === "twitch" || platform === "youtube") {
     return previewKickTwitchYoutube(platform, value);

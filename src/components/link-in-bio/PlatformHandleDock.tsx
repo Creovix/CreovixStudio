@@ -56,6 +56,7 @@ function customFavicon(value: string): string | null {
 function fieldPlaceholder(id: LinkPlatform, hint: string, fullUrl: boolean) {
   if (id === "whatsapp") return "https://chat.whatsapp.com/… or whatsapp.com/channel/…";
   if (id === "instagram") return "@you or instagram.com/p/…";
+  if (id === "snapchat") return "@you or snapchat.com/add/…";
   if (id === "tiktok") return "@you or tiktok.com/@you/video/…";
   if (id === "x") return "@you or x.com/you/status/…";
   if (id === "discord") return "discord.gg/invite";

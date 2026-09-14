@@ -27,6 +27,7 @@ const PLATFORM_NAME: Record<PublicBioLink["platform"], string> = {
   youtube: "YouTube",
   tiktok: "TikTok",
   instagram: "Instagram",
+  snapchat: "Snapchat",
   x: "X",
   discord: "Discord",
   whatsapp: "WhatsApp",

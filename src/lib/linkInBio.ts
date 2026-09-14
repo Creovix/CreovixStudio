@@ -12,6 +12,7 @@ export type LinkPlatform =
   | "youtube"
   | "tiktok"
   | "instagram"
+  | "snapchat"
   | "x"
   | "discord"
   | "whatsapp"
@@ -162,6 +163,7 @@ export const LINK_PLATFORMS: ReadonlyArray<{
   { id: "youtube", label: "YouTube", hint: "https://youtube.com/@you" },
   { id: "tiktok", label: "TikTok", hint: "@you or a video URL" },
   { id: "instagram", label: "Instagram", hint: "@you or a post / reel URL" },
+  { id: "snapchat", label: "Snapchat", hint: "@you or snapchat.com/add/…" },
   { id: "x", label: "X", hint: "@you or a post URL" },
   { id: "discord", label: "Discord", hint: "discord.gg/invite" },
   { id: "whatsapp", label: "WhatsApp Community", hint: "https://chat.whatsapp.com/… or whatsapp.com/channel/…" },
@@ -176,6 +178,7 @@ export const PLATFORM_HANDLE_PREFIX: Record<PrefixedPlatform, string> = {
   youtube: "https://www.youtube.com/@",
   tiktok: "https://www.tiktok.com/@",
   instagram: "https://www.instagram.com/",
+  snapchat: "https://www.snapchat.com/add/",
   x: "https://x.com/",
   discord: "https://discord.gg/",
 };
@@ -674,6 +677,7 @@ export function platformAccent(platform: LinkPlatform): { color: string; css: st
   if (platform === "x") return { color: "#E7E9EA", css: "#000000" };
   if (platform === "discord") return { color: "#5865F2", css: "#5865F2" };
   if (platform === "whatsapp") return { color: "#25D366", css: "#25D366" };
+  if (platform === "snapchat") return { color: "#FFFC00", css: "#FFFC00" };
   return { color: "#229ED9", css: "#229ED9" };
 }
 
@@ -1105,6 +1109,13 @@ export function handleFromUrl(platform: LinkPlatform, url: string): string {
     }
     if (platform === "discord") {
       return decodeURIComponent(parts[parts.length - 1] ?? "");
+    }
+    if (platform === "snapchat") {
+      const first = parts[0] ?? "";
+      if (first.toLowerCase() === "add" && parts[1]) {
+        return decodeURIComponent(parts[1]).replace(/^@/, "");
+      }
+      return decodeURIComponent(first).replace(/^@/, "");
     }
     return decodeURIComponent(parts[0] ?? "");
   } catch {
