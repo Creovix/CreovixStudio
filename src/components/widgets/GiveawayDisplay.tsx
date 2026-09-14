@@ -26,23 +26,6 @@ export const platformLabel = (platform: string) =>
     platform.toUpperCase()
   ] ?? platform;
 
-function namePosition(seed: string, index: number) {
-  let hash = 2166136261;
-  for (const char of `${seed}-${index}`) {
-    hash ^= char.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  const value = Math.abs(hash);
-  return {
-    left: 7 + (value % 82),
-    top: 10 + (Math.floor(value / 97) % 76),
-    driftX: 26 + (value % 72),
-    driftY: 18 + (Math.floor(value / 53) % 58),
-    duration: 7 + (value % 8),
-    delay: -(value % 11),
-  };
-}
-
 export function GiveawayDisplay({
   participants,
   winner,
@@ -124,29 +107,19 @@ export function GiveawayDisplay({
           )
         ) : (
           <div
-            className={`absolute inset-0 overflow-hidden ${phase === "shuffling" ? "is-shuffling" : ""} ${phase === "revealing" || phase === "settled" ? "is-revealing" : ""}`}
+            className={`giveaway-entries absolute inset-0 ${phase === "shuffling" ? "is-shuffling" : ""} ${phase === "revealing" || phase === "settled" ? "is-revealing" : ""}`}
             aria-label={c.liveEntries}
           >
             {participants.map((participant, index) => {
-              const position = namePosition(participant.id, index);
               const isWinner =
                 Boolean(winner) &&
                 participant.username.toLowerCase() === winner?.username.toLowerCase() &&
                 participant.platform.toUpperCase() === winner?.platform.toUpperCase();
-              const style = {
-                left: `${position.left}%`,
-                top: `${position.top}%`,
-                "--cloud-x": `${index % 2 === 0 ? position.driftX : -position.driftX}px`,
-                "--cloud-y": `${index % 3 === 0 ? -position.driftY : position.driftY}px`,
-                "--cloud-x-back": `${index % 2 === 0 ? -position.driftX * 0.45 : position.driftX * 0.45}px`,
-                "--cloud-y-back": `${index % 3 === 0 ? position.driftY * 0.55 : -position.driftY * 0.55}px`,
-                "--cloud-duration": `${position.duration}s`,
-                "--cloud-delay": `${position.delay}s`,
-              } as CSSProperties;
+              const style = { "--entry-i": Math.min(index, 16) } as CSSProperties;
               return (
                 <div
                   key={participant.id}
-                  className={`giveaway-cloud-name ${isWinner ? "is-winner" : "is-other"}`}
+                  className={`giveaway-entry ${isWinner ? "is-winner" : "is-other"}`}
                   style={style}
                 >
                   <PlatformIcon platform={participant.platform} size={14} />

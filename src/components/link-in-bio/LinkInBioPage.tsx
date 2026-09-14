@@ -22,7 +22,7 @@ export function LinkInBioPage({
   arrangeMode?: boolean;
   onSelectTile?: ((id: string) => void) | undefined;
   onMoveTile?: ((id: string, gridX: number, gridY: number) => void) | undefined;
-  onResizeTile?: ((id: string, colSpan: 1 | 2, rowSpan: 1 | 2) => void) | undefined;
+  onResizeTile?: ((id: string, colSpan: number, rowSpan: number, gridX?: number, gridY?: number) => void) | undefined;
 }) {
   const { profile, theme, links, livePlatforms, tilePreviews, stream, schedule } = data;
   const font = resolveBioFont(theme);
@@ -56,8 +56,8 @@ export function LinkInBioPage({
         className={cn(
           "@container relative mx-auto flex w-full flex-col",
           preview
-            ? "w-full max-w-full px-4 py-6"
-            : "max-w-[min(96vw,80rem)] px-5 py-12 md:px-8 md:py-16 lg:px-10",
+            ? "w-full max-w-full px-3 py-6 sm:px-4"
+            : "max-w-[min(94vw,76rem)] px-3 py-12 sm:px-4 md:px-5 md:py-16 lg:px-6",
         )}
       >
         <Header

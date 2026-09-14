@@ -273,11 +273,26 @@ export function AtmosphereStep() {
             </label>
             <input
               id="bio-font-name"
-              className={cn(wizardUi.field, "w-full px-3")}
+              className={cn(wizardUi.field, "w-full pl-5 pr-3")}
               placeholder="Satoshi"
               value={theme.fontCustomName}
               onChange={(event) => onPatch({ fontFamily: "custom", fontCustomName: event.target.value })}
+              style={
+                theme.fontCustomName
+                  ? { fontFamily: `"${theme.fontCustomName.replace(/["\\]/g, "")}", system-ui, sans-serif` }
+                  : undefined
+              }
             />
+            <p
+              className="mt-2 min-h-8 rounded-xl border border-white/8 bg-black/20 px-4 py-2 text-sm text-white/80"
+              style={{
+                fontFamily: theme.fontCustomName
+                  ? `"${theme.fontCustomName.replace(/["\\]/g, "")}", system-ui, sans-serif`
+                  : undefined,
+              }}
+            >
+              {theme.fontCustomName.trim() || "Type a family name to preview it here."}
+            </p>
           </div>
           <div>
             <label className={wizardUi.label} htmlFor="bio-font-href">
@@ -285,11 +300,28 @@ export function AtmosphereStep() {
             </label>
             <input
               id="bio-font-href"
-              className={cn(wizardUi.field, "w-full px-3")}
+              className={cn(wizardUi.field, "w-full pl-5 pr-3")}
               placeholder="https://…/font.css or a .woff2"
               value={theme.fontCustomHref}
               onChange={(event) => onPatch({ fontFamily: "custom", fontCustomHref: event.target.value })}
+              style={
+                theme.fontCustomName
+                  ? { fontFamily: `"${theme.fontCustomName.replace(/["\\]/g, "")}", system-ui, sans-serif` }
+                  : undefined
+              }
             />
+            <p
+              className="mt-2 min-h-8 rounded-xl border border-white/8 bg-black/20 px-4 py-2 text-sm text-white/80"
+              style={{
+                fontFamily: theme.fontCustomName
+                  ? `"${theme.fontCustomName.replace(/["\\]/g, "")}", system-ui, sans-serif`
+                  : undefined,
+              }}
+            >
+              {theme.fontCustomName.trim()
+                ? `The quick brown fox — ${theme.fontCustomName}`
+                : "Load a stylesheet, then type a family name to preview."}
+            </p>
           </div>
         </ModuleCard>
         <div className="grid grid-cols-3 gap-2">
@@ -300,7 +332,7 @@ export function AtmosphereStep() {
                 key={font.id}
                 type="button"
                 className={cn(
-                  "flex h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 text-start",
+                  "flex h-[5.75rem] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 text-center",
                   active
                     ? "border-violet-400/45 bg-violet-500/[0.1]"
                     : "border-[rgba(255,255,255,0.08)] bg-white/[0.03] hover:border-white/12",
@@ -308,12 +340,12 @@ export function AtmosphereStep() {
                 onClick={() => onPatch({ fontFamily: font.id })}
               >
                 <span
-                  className="w-7 shrink-0 text-center text-lg font-semibold leading-none"
+                  className="text-[1.45rem] font-semibold leading-none"
                   style={{ fontFamily: font.stack }}
                 >
                   {font.sample}
                 </span>
-                <span className="min-w-0 truncate text-sm" style={{ fontFamily: font.stack }}>
+                <span className="min-w-0 truncate text-[0.72rem] text-white/70" style={{ fontFamily: font.stack }}>
                   {font.label}
                 </span>
               </button>

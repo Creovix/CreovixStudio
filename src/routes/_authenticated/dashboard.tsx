@@ -378,24 +378,24 @@ function HomePage() {
               type="button"
               aria-pressed={active}
               onClick={() => setPlatformFilter((prev) => (prev === id && id !== "ALL" ? "ALL" : id))}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.72rem] transition-colors ${
+              className={`inline-flex items-center gap-1.5 overflow-visible rounded-full px-2.5 py-1.5 text-[0.72rem] transition-colors ${
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
               style={active && id !== "ALL" ? { color } : undefined}
             >
               {id === "ALL" ? (
-                <span className="flex items-center gap-1" aria-hidden>
+                <span className="inline-flex h-4 items-center gap-1.5 overflow-visible" aria-hidden>
                   {ALL_PLATFORMS.map((dot) => (
                     <span
                       key={dot}
-                      className="size-1.5 rounded-full"
+                      className="box-border size-2.5 shrink-0 rounded-full"
                       style={{ background: platformDotBackground(dot) }}
                     />
                   ))}
                 </span>
               ) : (
                 <span
-                  className="size-1.5 rounded-full"
+                  className="box-border size-2.5 shrink-0 rounded-full"
                   style={{ background: platformDotBackground(id) }}
                   aria-hidden
                 />

@@ -11,6 +11,10 @@ import {
   googleFaviconUrl,
   hostnameFromLink,
   packBento,
+  sanitizeColSpan,
+  sanitizeRowSpan,
+  type BentoColSpan,
+  type BentoRowSpan,
   type BentoSize,
   type BentoTilePaint,
   type PublicBioLink,
@@ -53,10 +57,15 @@ function cellFromPoint(root: DOMRect, clientX: number, clientY: number, colSpan:
   return { x, y };
 }
 
-function snapSpan(width: number, height: number, cellW: number): { colSpan: 1 | 2; rowSpan: 1 | 2 } {
+type ResizeDir = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
+type SpanPatch = { colSpan: BentoColSpan; rowSpan: BentoRowSpan; gridX: number; gridY: number };
+
+function snapSpan(width: number, height: number, cellW: number): { colSpan: BentoColSpan; rowSpan: BentoRowSpan } {
+  const col = Math.round((width + GAP) / (cellW + GAP));
+  const row = Math.round((height + GAP) / (ROW + GAP));
   return {
-    colSpan: width > cellW * 1.35 ? 2 : 1,
-    rowSpan: height > ROW * 1.35 ? 2 : 1,
+    colSpan: sanitizeColSpan(col),
+    rowSpan: sanitizeRowSpan(row),
   };
 }
 
@@ -81,13 +90,13 @@ export function LinkInBioBento({
   selectedId?: string | null;
   onSelect?: ((id: string) => void) | undefined;
   onMove?: ((id: string, gridX: number, gridY: number) => void) | undefined;
-  onResize?: ((id: string, colSpan: 1 | 2, rowSpan: 1 | 2) => void) | undefined;
+  onResize?: ((id: string, colSpan: number, rowSpan: number, gridX?: number, gridY?: number) => void) | undefined;
 }) {
   const packed = useMemo(() => packBento(links), [links]);
   const rootRef = useRef<HTMLDivElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
-  const [resizePreview, setResizePreview] = useState<{ id: string; colSpan: 1 | 2; rowSpan: 1 | 2 } | null>(
+  const [resizePreview, setResizePreview] = useState<{ id: string; colSpan: number; rowSpan: number } | null>(
     null,
   );
   const placed = editable || arrangeMode;
@@ -121,11 +130,6 @@ export function LinkInBioBento({
         gridAutoRows: `${ROW}px`,
         gap: GAP,
         minHeight: placed ? maxRow * (ROW + GAP) : undefined,
-        backgroundImage: fill
-          ? "linear-gradient(color-mix(in oklab, var(--bio-fg) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--bio-fg) 7%, transparent) 1px, transparent 1px)"
-          : undefined,
-        backgroundSize: fill ? "72px 72px" : undefined,
-        padding: fill ? 8 : undefined,
       }}
       onDragOver={(event) => {
         if (!editable || arrangeMode || !dragId) return;
@@ -154,7 +158,11 @@ export function LinkInBioBento({
         return (
           <BentoTile
             key={link.id}
-            link={preview ? { ...link, colSpan: preview.colSpan, rowSpan: preview.rowSpan } : link}
+            link={
+              preview
+                ? { ...link, colSpan: sanitizeColSpan(preview.colSpan), rowSpan: sanitizeRowSpan(preview.rowSpan) }
+                : link
+            }
             live={Boolean(livePlatforms?.[link.platform as keyof LivePlatformFlags] || tilePreviews?.[link.platform]?.live)}
             preview={tilePreviews?.[link.platform]}
             editable={editable && !arrangeMode}
@@ -231,13 +239,13 @@ function BentoTile({
   glow: number;
   paint: BentoTilePaint;
   onSelect?: ((id: string) => void) | undefined;
-  onResize?: ((id: string, colSpan: 1 | 2, rowSpan: 1 | 2) => void) | undefined;
+  onResize?: ((id: string, colSpan: number, rowSpan: number, gridX?: number, gridY?: number) => void) | undefined;
   onDragStart: () => void;
   onDragEnd: () => void;
   onArrangePointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
   onArrangePointerMove: (event: ReactPointerEvent<HTMLElement>) => void;
   onArrangePointerUp: (event: ReactPointerEvent<HTMLElement>) => void;
-  onArrangeResize: (next: { colSpan: 1 | 2; rowSpan: 1 | 2 } | null) => void;
+  onArrangeResize: (next: { colSpan: number; rowSpan: number } | null) => void;
 }) {
   const name = PLATFORM_NAME[link.platform];
   const large = link.colSpan >= 2 && link.rowSpan >= 2;
@@ -248,7 +256,12 @@ function BentoTile({
   const applySize = (next: BentoSize) => {
     const found = BENTO_SIZES.find((item) => item.id === next) ?? BENTO_SIZES[0]!;
     onSelect?.(link.id);
-    onResize?.(link.id, found.colSpan, found.rowSpan);
+    onResize?.(link.id, found.colSpan, found.rowSpan, link.gridX, link.gridY);
+  };
+
+  const applySpan = (colSpan: number, rowSpan: number, gridX = link.gridX, gridY = link.gridY) => {
+    onSelect?.(link.id);
+    onResize?.(link.id, sanitizeColSpan(colSpan), sanitizeRowSpan(rowSpan), gridX, gridY);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -261,23 +274,23 @@ function BentoTile({
     }
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      applySize(link.rowSpan >= 2 ? "2x2" : "2x1");
+      applySpan(link.colSpan + 1, link.rowSpan);
     }
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      applySize(link.rowSpan >= 2 ? "1x2" : "1x1");
+      applySpan(link.colSpan - 1, link.rowSpan);
     }
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      applySize(link.colSpan >= 2 ? "2x2" : "1x2");
+      applySpan(link.colSpan, link.rowSpan + 1);
     }
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      applySize(link.colSpan >= 2 ? "2x1" : "1x1");
+      applySpan(link.colSpan, link.rowSpan - 1);
     }
   };
 
-  const startResize = (event: ReactPointerEvent<HTMLElement>) => {
+  const startResize = (dir: ResizeDir) => (event: ReactPointerEvent<HTMLElement>) => {
     event.preventDefault();
     event.stopPropagation();
     onSelect?.(link.id);
@@ -288,17 +301,32 @@ function BentoTile({
     const grid = tile?.parentElement?.getBoundingClientRect();
     if (!origin || !grid) return;
     const cellW = (grid.width - GAP * (BENTO_COLS - 1)) / BENTO_COLS;
-    let last = { colSpan: link.colSpan, rowSpan: link.rowSpan };
+    const originCol = link.colSpan;
+    const originRow = link.rowSpan;
+    const originGX = link.gridX;
+    const originGY = link.gridY;
+    let last: SpanPatch = { colSpan: originCol, rowSpan: originRow, gridX: originGX, gridY: originGY };
     const onMove = (next: PointerEvent) => {
-      last = snapSpan(next.clientX - origin.left, next.clientY - origin.top, cellW);
-      onArrangeResize(last);
+      let width = origin.width;
+      let height = origin.height;
+      if (dir.includes("e")) width = next.clientX - origin.left;
+      if (dir.includes("w")) width = origin.right - next.clientX;
+      if (dir.includes("s")) height = next.clientY - origin.top;
+      if (dir.includes("n")) height = origin.bottom - next.clientY;
+      const snapped = snapSpan(width, height, cellW);
+      let gridX = originGX;
+      let gridY = originGY;
+      if (dir.includes("w")) gridX = Math.max(0, originGX + originCol - snapped.colSpan);
+      if (dir.includes("n")) gridY = Math.max(0, originGY + originRow - snapped.rowSpan);
+      last = { ...snapped, gridX, gridY };
+      onArrangeResize({ colSpan: last.colSpan, rowSpan: last.rowSpan });
     };
     const onUp = () => {
       handle.releasePointerCapture(event.pointerId);
       handle.removeEventListener("pointermove", onMove);
       handle.removeEventListener("pointerup", onUp);
       onArrangeResize(null);
-      onResize?.(link.id, last.colSpan, last.rowSpan);
+      onResize?.(link.id, last.colSpan, last.rowSpan, last.gridX, last.gridY);
     };
     handle.addEventListener("pointermove", onMove);
     handle.addEventListener("pointerup", onUp);
@@ -306,7 +334,7 @@ function BentoTile({
 
   const inner =
     link.kind === "gallery" ? (
-      <div className="flex h-full flex-col p-5">
+      <div className="flex h-full flex-col p-4">
         <LinkInBioGallery images={link.galleryImages} title={link.title} className="min-h-0 flex-1" />
       </div>
     ) : (
@@ -315,7 +343,7 @@ function BentoTile({
           <span className="pointer-events-none absolute inset-0" style={{ background: paint.wash }} aria-hidden />
         ) : null}
         <span className="sr-only">{name}</span>
-        <span className="absolute left-6 top-6 z-[1]" style={{ width: logoSize, height: logoSize }}>
+        <span className="absolute left-5 top-5 z-[1]" style={{ width: logoSize, height: logoSize }}>
           <LinkInBioPlatformLogo
             key={`${link.id}-mark`}
             platform={link.platform}
@@ -334,7 +362,7 @@ function BentoTile({
           <img
             src={preview.thumbnailUrl}
             alt=""
-            className="pointer-events-none absolute bottom-12 left-6 z-0 h-10 w-[3.6rem] rounded-md object-cover opacity-90"
+            className="pointer-events-none absolute bottom-12 left-5 z-0 h-10 w-[3.6rem] rounded-md object-cover opacity-90"
           />
         ) : null}
         {!arrangeMode ? (
@@ -380,10 +408,66 @@ function BentoTile({
       <button
         type="button"
         data-bento-chrome
-        data-resize
-        aria-label={`Resize ${name}`}
-        className="absolute bottom-2 right-2 z-10 size-4 cursor-se-resize rounded-sm border border-white/70 bg-white/30"
-        onPointerDown={startResize}
+        data-resize="n"
+        aria-label={`Resize ${name} from top`}
+        className="absolute inset-x-4 top-0 z-10 h-2 cursor-n-resize rounded-sm bg-white/25"
+        onPointerDown={startResize("n")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="s"
+        aria-label={`Resize ${name} from bottom`}
+        className="absolute inset-x-4 bottom-0 z-10 h-2 cursor-s-resize rounded-sm bg-white/25"
+        onPointerDown={startResize("s")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="e"
+        aria-label={`Resize ${name} from right`}
+        className="absolute inset-y-4 right-0 z-10 w-2 cursor-e-resize rounded-sm bg-white/25"
+        onPointerDown={startResize("e")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="w"
+        aria-label={`Resize ${name} from left`}
+        className="absolute inset-y-4 left-0 z-10 w-2 cursor-w-resize rounded-sm bg-white/25"
+        onPointerDown={startResize("w")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="se"
+        aria-label={`Resize ${name} from corner`}
+        className="absolute bottom-0 right-0 z-10 size-3.5 cursor-se-resize rounded-sm border border-white/70 bg-white/50"
+        onPointerDown={startResize("se")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="sw"
+        aria-label={`Resize ${name} from bottom left`}
+        className="absolute bottom-0 left-0 z-10 size-3.5 cursor-sw-resize rounded-sm border border-white/70 bg-white/50"
+        onPointerDown={startResize("sw")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="ne"
+        aria-label={`Resize ${name} from top right`}
+        className="absolute top-0 right-0 z-10 size-3.5 cursor-ne-resize rounded-sm border border-white/70 bg-white/50"
+        onPointerDown={startResize("ne")}
+      />
+      <button
+        type="button"
+        data-bento-chrome
+        data-resize="nw"
+        aria-label={`Resize ${name} from top left`}
+        className="absolute top-0 left-0 z-10 size-3.5 cursor-nw-resize rounded-sm border border-white/70 bg-white/50"
+        onPointerDown={startResize("nw")}
       />
     </>
   ) : null;
@@ -397,24 +481,14 @@ function BentoTile({
   const sharedStyle = {
     gridColumn: fill ? `span ${link.colSpan}` : `${link.gridX + 1} / span ${link.colSpan}`,
     gridRow: fill ? `span ${link.rowSpan}` : `${link.gridY + 1} / span ${link.rowSpan}`,
-    background:
-      link.kind === "gallery"
-        ? "color-mix(in oklab, #ffffff 22%, var(--bio-bg))"
-        : paint.fill,
-    border:
-      link.kind === "gallery"
-        ? "1px solid color-mix(in oklab, var(--bio-fg) 10%, transparent)"
-        : paint.border,
-    backdropFilter:
-      link.kind === "gallery" ? "blur(18px)" : paint.backdropFilter,
-    boxShadow:
-      link.kind === "gallery"
-        ? "0 10px 28px color-mix(in oklab, #000 16%, transparent)"
-        : paint.boxShadow
-          ? paint.boxShadow
-          : glow
-            ? `0 16px 28px color-mix(in oklab, ${paint.glowColor} ${Math.round(glow / 4)}%, transparent)`
-            : undefined,
+    background: paint.fill,
+    border: paint.border,
+    backdropFilter: paint.backdropFilter,
+    boxShadow: paint.boxShadow
+      ? paint.boxShadow
+      : glow
+        ? `0 16px 28px color-mix(in oklab, ${paint.glowColor} ${Math.round(glow / 4)}%, transparent)`
+        : undefined,
   } as const;
 
   if (arrangeMode) {
@@ -424,7 +498,7 @@ function BentoTile({
         role="button"
         tabIndex={0}
         aria-pressed={selected}
-        aria-label={`${name}, ${size.replace("x", " by ")}. Drag to move. Keys 1 to 4 resize.`}
+        aria-label={`${name}, ${link.colSpan} by ${link.rowSpan}. Drag to move. Drag edges to resize.`}
         onPointerDown={onArrangePointerDown}
         onPointerMove={onArrangePointerMove}
         onPointerUp={onArrangePointerUp}

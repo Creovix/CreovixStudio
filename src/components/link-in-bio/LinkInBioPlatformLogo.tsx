@@ -13,7 +13,7 @@ const ASSET: Record<LinkPlatform, PlatformAssetName> = {
   x: "x",
   discord: "discord",
   whatsapp: "whatsapp",
-  custom: "link",
+  custom: "website",
 };
 
 function PlatformLogoMark({

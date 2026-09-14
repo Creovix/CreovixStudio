@@ -14,7 +14,8 @@ import {
   sanitizePlatform,
   sanitizeProfile,
   sanitizeSlug,
-  sanitizeSpan,
+  sanitizeColSpan,
+  sanitizeRowSpan,
   sanitizeTheme,
   slugError,
   applyUsernameClaim,
@@ -141,8 +142,8 @@ function mapLink(row: LinkRow): LinkInBioLink {
     kind: sanitizeKind(row.kind ?? "link"),
     gridX: row.grid_x,
     gridY: row.grid_y,
-    colSpan: row.col_span,
-    rowSpan: row.row_span,
+    colSpan: sanitizeColSpan(row.col_span),
+    rowSpan: sanitizeRowSpan(row.row_span),
     galleryImages: sanitizeGalleryImages(row.gallery_images),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -331,8 +332,8 @@ export const upsertLinkInBioLink = createServerFn({ method: "POST" })
       kind,
       grid_x: sanitizeGridX(data.gridX),
       grid_y: sanitizeGridY(data.gridY),
-      col_span: sanitizeSpan(data.colSpan),
-      row_span: sanitizeSpan(data.rowSpan),
+      col_span: sanitizeColSpan(data.colSpan),
+      row_span: sanitizeRowSpan(data.rowSpan),
       gallery_images: galleryImages,
     };
     if (data.id) {
@@ -440,8 +441,8 @@ export const replaceLinkInBioLinks = createServerFn({ method: "POST" })
         kind,
         grid_x: sanitizeGridX(input.gridX),
         grid_y: sanitizeGridY(input.gridY),
-        col_span: sanitizeSpan(input.colSpan),
-        row_span: sanitizeSpan(input.rowSpan),
+        col_span: sanitizeColSpan(input.colSpan),
+        row_span: sanitizeRowSpan(input.rowSpan),
         gallery_images: galleryImages,
       });
     }

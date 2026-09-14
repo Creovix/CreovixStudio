@@ -44,27 +44,27 @@ export function MonthCalendar({
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => {
             const cursor = shiftMonth(year, month, -1);
             onMonthChange?.(cursor.year, cursor.month);
           }}
-          className="inline-flex size-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+          className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground disabled:opacity-30"
           aria-label={prev}
           disabled={!onMonthChange}
         >
           <ChevronLeft className="size-4 rtl:rotate-180" />
         </button>
-        <h2 className="text-[0.95rem] font-semibold tracking-tight">{monthLabel(year, month, lang)}</h2>
+        <h2 className="text-[1.05rem] font-medium tracking-tight text-foreground/90">{monthLabel(year, month, lang)}</h2>
         <button
           type="button"
           onClick={() => {
             const cursor = shiftMonth(year, month, 1);
             onMonthChange?.(cursor.year, cursor.month);
           }}
-          className="inline-flex size-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+          className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground disabled:opacity-30"
           aria-label={next}
           disabled={!onMonthChange}
         >
@@ -72,11 +72,11 @@ export function MonthCalendar({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 border-y border-zinc-800/50">
+      <div className="grid grid-cols-7 gap-1">
         {days.map((day) => (
           <div
             key={`h-${day}`}
-            className="border-e border-white/5 px-1.5 py-2 text-center text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground [&:nth-child(7n)]:border-e-0"
+            className="px-1 py-2 text-center text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground/70"
           >
             {weekdayLabel(day, lang, true)}
           </div>
@@ -89,48 +89,51 @@ export function MonthCalendar({
             <div
               key={cell.iso}
               className={cn(
-                "min-h-[11.5rem] border-e border-b border-zinc-800/50 p-0 [&:nth-child(7n)]:border-e-0 sm:min-h-[14rem]",
-                !cell.inMonth && "opacity-40",
-                onAdd && "cursor-pointer hover:bg-white/[0.03]",
+                "min-h-[11rem] rounded-2xl p-1.5 transition-colors sm:min-h-[13.5rem] sm:p-2",
+                !cell.inMonth && "opacity-35",
+                cell.isToday && "bg-white/[0.04]",
+                onAdd && "cursor-pointer hover:bg-white/[0.05]",
               )}
               onClick={() => onAdd?.(cell.iso)}
             >
               <span
                 className={cn(
-                  "block px-1.5 pt-1.5 text-[0.72rem] font-medium tabular-nums sm:px-2",
-                  cell.isToday ? "text-emerald-400" : "text-muted-foreground",
+                  "mb-1 inline-flex size-7 items-center justify-center rounded-full text-[0.78rem] tabular-nums",
+                  cell.isToday
+                    ? "bg-emerald-400/15 font-semibold text-emerald-300"
+                    : "font-medium text-muted-foreground",
                 )}
               >
                 {cell.date.getDate()}
               </span>
-              <ul>
+              <ul className="space-y-1.5">
                 {items.map((slot) => {
                   const category = slot.game.trim() || slot.title;
                   const body = (
                     <span className={cn("flex flex-col", !slot.enabled && "opacity-50")}>
                       <span
                         className={cn(
-                          "mt-1.5 block break-words border-y border-white/5 bg-white/[0.06] px-1.5 py-1.5 text-[0.78rem] font-semibold leading-snug sm:px-2 sm:text-[0.82rem]",
+                          "block break-words rounded-xl bg-white/[0.05] px-2 py-1.5 text-[0.78rem] font-medium leading-snug sm:text-[0.82rem]",
                           lang === "en" && "tracking-wide",
                         )}
                       >
                         <span dir="auto">{category}</span>
                       </span>
-                      <span className="px-1.5 pt-1.5 sm:px-2">
+                      <span className="px-1 pt-1">
                         {slot.game.trim() && slot.title.trim() && slot.title.trim() !== slot.game.trim() ? (
-                          <span className="block text-[0.75rem] leading-snug" dir="auto">{slot.title}</span>
+                          <span className="block text-[0.75rem] leading-snug text-foreground/80" dir="auto">{slot.title}</span>
                         ) : null}
-                        <span className="mt-0.5 block font-mono text-[0.68rem] text-muted-foreground">
+                        <span className="mt-0.5 block font-mono text-[0.65rem] text-muted-foreground/80">
                           {formatClock(slot.startMinutes)}
                           {slot.durationMinutes ? ` · ${slot.durationMinutes}m` : ""}
                         </span>
                       </span>
                       {slot.coverUrl ? (
-                        <span className="mt-2 block px-1.5 pb-2 sm:px-2">
+                        <span className="mt-1.5 block px-0.5 pb-0.5">
                           <img
                             src={slot.coverUrl}
                             alt=""
-                            className="aspect-[3/4] w-full rounded-lg object-cover"
+                            className="aspect-[3/4] w-full rounded-xl object-cover"
                           />
                         </span>
                       ) : null}

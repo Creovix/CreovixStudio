@@ -66,7 +66,7 @@ export function ToolCard({
 
   return (
     <div
-      className={`glass-3d relative flex h-full flex-col overflow-hidden rounded-2xl p-3 text-start ${
+      className={`glass-3d relative flex h-full flex-col overflow-visible rounded-2xl p-3 text-start ${
         removing ? "pointer-events-none scale-95 opacity-0" : "scale-100 opacity-100"
       } ${comingSoon ? "pointer-events-none" : ""}`}
     >
@@ -91,16 +91,16 @@ export function ToolCard({
         <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)]">
           <Icon className="size-4 text-primary" aria-hidden />
         </span>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="min-w-0 overflow-visible">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 overflow-visible">
             <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
             {platforms.length > 0 ? (
-              <span className="flex shrink-0 items-center gap-1" aria-hidden>
+              <span className="inline-flex h-4 shrink-0 items-center gap-1.5 overflow-visible" aria-hidden>
                 {platforms.map((id) => (
                   <span
                     key={id}
                     title={PLATFORM_META[id].label.en}
-                    className="size-1.5 shrink-0 rounded-full"
+                    className="box-border size-2.5 shrink-0 rounded-full"
                     style={{ background: platformDotBackground(id) }}
                   />
                 ))}

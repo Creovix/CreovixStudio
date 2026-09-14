@@ -30,6 +30,7 @@ import {
   GRADIENT_CHOICES,
   LAYOUT_CHOICES,
   LINK_PLATFORMS,
+  applyBentoPlacement,
   bentoSizeOf,
   normalizeLink,
   publicBioPath,
@@ -201,7 +202,7 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Bento grid</h2>
-              <p className="text-sm text-muted-foreground">Drag tiles onto cells. Pick a size in the inspector.</p>
+              <p className="text-sm text-muted-foreground">Drag tiles to move. Drag edges or corners to resize.</p>
             </div>
             <Button type="button" variant="outline" onClick={addGallery}>
               <ImagePlus className="size-3.5" />
@@ -220,11 +221,14 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
                 theme={theme}
                 livePlatforms={liveFlags}
                 tilePreviews={preview.tilePreviews}
-                editable
+                arrangeMode
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 onMove={(id, gridX, gridY) =>
-                  patchLinks(links.map((link) => (link.id === id ? { ...link, gridX, gridY } : link)))
+                  patchLinks(applyBentoPlacement(links, id, { gridX, gridY }))
+                }
+                onResize={(id, colSpan, rowSpan, gridX, gridY) =>
+                  patchLinks(applyBentoPlacement(links, id, { colSpan, rowSpan, gridX, gridY }))
                 }
               />
             )}
@@ -532,6 +536,26 @@ function CardInspector({
         ))}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
+        <div>
+          <label className={label}>Columns</label>
+          <Input
+            type="number"
+            min={1}
+            max={4}
+            value={link.colSpan}
+            onChange={(event) => onChange({ ...link, colSpan: Number(event.target.value) as LinkInBioLink["colSpan"] })}
+          />
+        </div>
+        <div>
+          <label className={label}>Rows</label>
+          <Input
+            type="number"
+            min={1}
+            max={3}
+            value={link.rowSpan}
+            onChange={(event) => onChange({ ...link, rowSpan: Number(event.target.value) as LinkInBioLink["rowSpan"] })}
+          />
+        </div>
         <div>
           <label className={label}>Column</label>
           <Input

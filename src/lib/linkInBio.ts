@@ -22,6 +22,8 @@ export type CardSize = "s" | "m" | "l";
 export type CardSizeOption = "inherit" | CardSize;
 export type BioLayout = "bento" | "list" | "grid" | "spotlight" | "banner";
 export type BentoSize = "1x1" | "2x1" | "1x2" | "2x2";
+export type BentoColSpan = 1 | 2 | 3 | 4;
+export type BentoRowSpan = 1 | 2 | 3;
 export type LinkKind = "link" | "gallery";
 export type SurfaceStyle = "flat" | "glass";
 export type BentoColorMode = "brand" | "mono" | "gradient" | "glow" | "glass" | "custom";
@@ -64,8 +66,8 @@ export type LinkInBioLink = {
   kind: LinkKind;
   gridX: number;
   gridY: number;
-  colSpan: 1 | 2;
-  rowSpan: 1 | 2;
+  colSpan: BentoColSpan;
+  rowSpan: BentoRowSpan;
   galleryImages: GalleryImage[];
   createdAt: string;
   updatedAt: string;
@@ -246,6 +248,8 @@ export const FONT_CHOICES: ReadonlyArray<{
 ];
 
 export const BENTO_COLS = 4;
+export const BENTO_MAX_COL = 4;
+export const BENTO_MAX_ROW = 3;
 export const BENTO_ROW_PX = 160;
 export const BENTO_GAP_PX = 12;
 export const GALLERY_MAX_IMAGES = 8;
@@ -254,8 +258,8 @@ export const BENTO_SIZES: ReadonlyArray<{
   id: BentoSize;
   label: string;
   hint: string;
-  colSpan: 1 | 2;
-  rowSpan: 1 | 2;
+  colSpan: BentoColSpan;
+  rowSpan: BentoRowSpan;
 }> = [
   { id: "1x1", label: "1×1", hint: "Square tile", colSpan: 1, rowSpan: 1 },
   { id: "2x1", label: "Wide", hint: "Two columns", colSpan: 2, rowSpan: 1 },
@@ -625,8 +629,20 @@ export function sanitizeKind(raw: string): LinkKind {
   return raw === "gallery" ? "gallery" : "link";
 }
 
-export function sanitizeSpan(raw: number | undefined): 1 | 2 {
-  return Number(raw) >= 2 ? 2 : 1;
+export function sanitizeColSpan(raw: number | undefined): BentoColSpan {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(BENTO_MAX_COL, n) as BentoColSpan;
+}
+
+export function sanitizeRowSpan(raw: number | undefined): BentoRowSpan {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(BENTO_MAX_ROW, n) as BentoRowSpan;
+}
+
+export function sanitizeSpan(raw: number | undefined): BentoColSpan {
+  return sanitizeColSpan(raw);
 }
 
 export function sanitizeGridX(raw: number | undefined): number {
@@ -639,14 +655,12 @@ export function sanitizeGridY(raw: number | undefined): number {
   return Math.min(40, Math.max(0, Math.round(Number(raw))));
 }
 
-export function bentoSizeOf(colSpan: number, rowSpan: number): BentoSize {
-  if (colSpan >= 2 && rowSpan >= 2) return "2x2";
-  if (colSpan >= 2) return "2x1";
-  if (rowSpan >= 2) return "1x2";
-  return "1x1";
+export function bentoSizeOf(colSpan: number, rowSpan: number): BentoSize | null {
+  const found = BENTO_SIZES.find((item) => item.colSpan === colSpan && item.rowSpan === rowSpan);
+  return found?.id ?? null;
 }
 
-export function spanFromBentoSize(size: BentoSize): { colSpan: 1 | 2; rowSpan: 1 | 2 } {
+export function spanFromBentoSize(size: BentoSize): { colSpan: BentoColSpan; rowSpan: BentoRowSpan } {
   const found = BENTO_SIZES.find((item) => item.id === size) ?? BENTO_SIZES[0]!;
   return { colSpan: found.colSpan, rowSpan: found.rowSpan };
 }
@@ -697,8 +711,8 @@ export function normalizeLink(partial: Partial<LinkInBioLink> & { id: string }, 
     kind,
     gridX: sanitizeGridX(partial.gridX),
     gridY: sanitizeGridY(partial.gridY),
-    colSpan: sanitizeSpan(partial.colSpan),
-    rowSpan: sanitizeSpan(partial.rowSpan),
+    colSpan: sanitizeColSpan(partial.colSpan),
+    rowSpan: sanitizeRowSpan(partial.rowSpan),
     galleryImages: kind === "gallery" ? sanitizeGalleryImages(partial.galleryImages) : [],
     createdAt: partial.createdAt ?? new Date().toISOString(),
     updatedAt: partial.updatedAt ?? new Date().toISOString(),
@@ -708,7 +722,7 @@ export function normalizeLink(partial: Partial<LinkInBioLink> & { id: string }, 
 export function packBento<T extends Pick<LinkInBioLink, "id" | "gridX" | "gridY" | "colSpan" | "rowSpan">>(
   items: T[],
   cols = BENTO_COLS,
-): Array<T & { gridX: number; gridY: number; colSpan: 1 | 2; rowSpan: 1 | 2 }> {
+): Array<T & { gridX: number; gridY: number; colSpan: BentoColSpan; rowSpan: BentoRowSpan }> {
   const occupied = new Set<string>();
   const key = (x: number, y: number) => `${x}:${y}`;
   const fits = (x: number, y: number, colSpan: number, rowSpan: number) => {
@@ -727,7 +741,7 @@ export function packBento<T extends Pick<LinkInBioLink, "id" | "gridX" | "gridY"
       }
     }
   };
-  const findSlot = (colSpan: 1 | 2, rowSpan: 1 | 2, preferredX: number, preferredY: number) => {
+  const findSlot = (colSpan: number, rowSpan: number, preferredX: number, preferredY: number) => {
     const preferX = Math.min(cols - colSpan, Math.max(0, preferredX));
     const preferY = Math.max(0, preferredY);
     if (fits(preferX, preferY, colSpan, rowSpan)) return { gridX: preferX, gridY: preferY };
@@ -739,8 +753,8 @@ export function packBento<T extends Pick<LinkInBioLink, "id" | "gridX" | "gridY"
     return { gridX: 0, gridY: 0 };
   };
   return items.map((item) => {
-    const colSpan = sanitizeSpan(item.colSpan);
-    const rowSpan = sanitizeSpan(item.rowSpan);
+    const colSpan = sanitizeColSpan(item.colSpan);
+    const rowSpan = sanitizeRowSpan(item.rowSpan);
     const slot = findSlot(colSpan, rowSpan, item.gridX, item.gridY);
     mark(slot.gridX, slot.gridY, colSpan, rowSpan);
     return { ...item, ...slot, colSpan, rowSpan };
@@ -750,12 +764,12 @@ export function packBento<T extends Pick<LinkInBioLink, "id" | "gridX" | "gridY"
 export function applyBentoPlacement(
   links: LinkInBioLink[],
   id: string,
-  patch: Partial<Pick<LinkInBioLink, "gridX" | "gridY" | "colSpan" | "rowSpan">>,
+  patch: Partial<{ gridX: number; gridY: number; colSpan: number; rowSpan: number }>,
 ): LinkInBioLink[] {
   const updated = links.map((link) => {
     if (link.id !== id) return link;
-    const colSpan = sanitizeSpan(patch.colSpan ?? link.colSpan);
-    const rowSpan = sanitizeSpan(patch.rowSpan ?? link.rowSpan);
+    const colSpan = sanitizeColSpan(patch.colSpan ?? link.colSpan);
+    const rowSpan = sanitizeRowSpan(patch.rowSpan ?? link.rowSpan);
     const gridX = sanitizeGridX(Math.min(BENTO_COLS - colSpan, patch.gridX ?? link.gridX));
     const gridY = sanitizeGridY(patch.gridY ?? link.gridY);
     return { ...link, colSpan, rowSpan, gridX, gridY };
@@ -1346,8 +1360,8 @@ export function replaceTestLinks(inputs: LinkInBioLinkInput[]): LinkInBioState {
           kind,
           gridX: input.gridX,
           gridY: input.gridY,
-          colSpan: input.colSpan,
-          rowSpan: input.rowSpan,
+          colSpan: sanitizeColSpan(input.colSpan),
+          rowSpan: sanitizeRowSpan(input.rowSpan),
           galleryImages: input.galleryImages,
           createdAt: now,
           updatedAt: now,
@@ -1384,8 +1398,8 @@ export function upsertTestLink(input: LinkInBioLinkInput): LinkInBioState | { er
               kind,
               gridX: input.gridX ?? link.gridX,
               gridY: input.gridY ?? link.gridY,
-              colSpan: input.colSpan ?? link.colSpan,
-              rowSpan: input.rowSpan ?? link.rowSpan,
+              colSpan: sanitizeColSpan(input.colSpan ?? link.colSpan),
+              rowSpan: sanitizeRowSpan(input.rowSpan ?? link.rowSpan),
               galleryImages: input.galleryImages ?? link.galleryImages,
               updatedAt: now,
             },
@@ -1409,8 +1423,8 @@ export function upsertTestLink(input: LinkInBioLinkInput): LinkInBioState | { er
       kind,
       gridX: input.gridX,
       gridY: input.gridY,
-      colSpan: input.colSpan,
-      rowSpan: input.rowSpan,
+      colSpan: sanitizeColSpan(input.colSpan),
+      rowSpan: sanitizeRowSpan(input.rowSpan),
       galleryImages: input.galleryImages,
       createdAt: now,
       updatedAt: now,

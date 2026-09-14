@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Radio, Search, Star, Swords, Trash2, Users } from "lucide-react";
+import { Plus, Radio, Search, Star, Swords, Trash2, Users } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { DarkSelect } from "@/components/ui/dark-select";
@@ -71,6 +71,7 @@ const FAVORITES_KEY = "creovix.live-counter.favorites";
 const DAILY_KEY = "creovix.live-counter.daily";
 const SNAPSHOT_KEY = "creovix.live-counter.snapshots";
 const RECENT_KEY = "creovix.live-counter.recent";
+const SOCIAL_KEY = "creovix.live-counter.socials";
 
 const field =
   "h-11 w-full rounded-xl border border-white/10 bg-background px-3 text-sm outline-none focus:border-primary";
@@ -592,6 +593,203 @@ function errorText(error: unknown): string | null {
   return error instanceof Error ? error.message : "Could not load this channel";
 }
 
+const SOCIAL_PLATFORMS: { id: Exclude<CounterPlatform, "ALL">; label: string }[] = [
+  { id: "KICK", label: "Kick" },
+  { id: "TWITCH", label: "Twitch" },
+  { id: "X", label: "X" },
+  { id: "TIKTOK", label: "TikTok" },
+  { id: "YOUTUBE", label: "YouTube" },
+];
+
+function SocialCounterSection() {
+  const run = useServerFn(lookupChannel);
+  const [accounts, setAccounts] = useState<Saved[]>([]);
+  const [input, setInput] = useState("");
+  const [platform, setPlatform] = useState<Exclude<CounterPlatform, "ALL">>("TWITCH");
+
+  useEffect(() => {
+    setAccounts(readJson<Saved[]>(SOCIAL_KEY, []));
+  }, []);
+
+  const persistSocial = (next: Saved[]) => {
+    setAccounts(next);
+    try {
+      window.localStorage.setItem(SOCIAL_KEY, JSON.stringify(next));
+    } catch {
+      /* storage full or unavailable */
+    }
+  };
+
+  const queries = useQueries({
+    queries: accounts.map((account) => ({
+      queryKey: ["live-counter-social", account.platform, account.username.toLowerCase()] as const,
+      enabled: Boolean(account.username),
+      refetchInterval: 15_000,
+      retry: 0,
+      queryFn: async () =>
+        (await run({
+          data: {
+            platform: account.platform as CounterPlatform,
+            username: account.username,
+          },
+        })) as ChannelSnapshot,
+    })),
+  });
+
+  const knownCounts = queries
+    .map((query) => query.data?.followers)
+    .filter((value): value is number => typeof value === "number");
+  const total = knownCounts.length > 0 ? knownCounts.reduce((sum, value) => sum + value, 0) : null;
+
+  const addAccount = () => {
+    const username = input.trim().replace(/^@/, "");
+    if (!username) return;
+    const key = `${platform}:${username.toLowerCase()}`;
+    if (accounts.some((item) => `${item.platform}:${item.username.toLowerCase()}` === key)) {
+      setInput("");
+      return;
+    }
+    persistSocial([
+      ...accounts,
+      { platform, username, displayName: username, avatarUrl: null },
+    ]);
+    setInput("");
+  };
+
+  return (
+    <section className="space-y-4 rounded-2xl border border-white/8 p-5">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">Social Counter</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Save social accounts and see the combined follower total from platforms that actually return a count.
+        </p>
+      </div>
+
+      <form
+        className="flex flex-wrap items-center gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          addAccount();
+        }}
+      >
+        <input
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          placeholder="Username or handle"
+          className={`${field} min-w-[180px] flex-1`}
+          dir="auto"
+        />
+        <DarkSelect
+          value={platform}
+          onValueChange={(next) => setPlatform(next as Exclude<CounterPlatform, "ALL">)}
+          aria-label="Social platform"
+          className="h-11 w-[11.5rem] shrink-0"
+          options={SOCIAL_PLATFORMS.map((entry) => ({
+            value: entry.id,
+            label: (
+              <span className="flex items-center gap-2">
+                <PlatformIcon platform={entry.id} size={14} />
+                {entry.label}
+              </span>
+            ),
+          }))}
+        />
+        <button
+          type="submit"
+          className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
+        >
+          <Plus className="size-4" aria-hidden />
+          Add
+        </button>
+      </form>
+
+      <div className="rounded-2xl border border-white/5 px-5 py-6 text-center">
+        {total === null ? (
+          <p className="text-sm text-muted-foreground">
+            {accounts.length === 0
+              ? "Add accounts to sum public follower totals. Counts stay empty until a platform API returns them."
+              : "No public follower totals yet for these accounts."}
+          </p>
+        ) : (
+          <>
+            <RollingCounter value={total} size="text-6xl" />
+            <p className="mt-2 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
+              <Users className="size-3.5" aria-hidden /> Combined followers
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {knownCounts.length} of {accounts.length} account{accounts.length === 1 ? "" : "s"} with a live total
+            </p>
+          </>
+        )}
+      </div>
+
+      {accounts.length > 0 ? (
+        <ul className="space-y-2">
+          {accounts.map((account, index) => {
+            const snapshot = queries[index]?.data;
+            const error = errorText(queries[index]?.error);
+            const followers = snapshot?.followers ?? null;
+            return (
+              <li
+                key={`${account.platform}:${account.username}`}
+                className="flex items-center gap-3 rounded-xl border border-white/8 bg-background/50 px-3 py-2.5"
+              >
+                {snapshot?.avatarUrl || account.avatarUrl ? (
+                  <img
+                    src={snapshot?.avatarUrl || account.avatarUrl || ""}
+                    alt=""
+                    className="size-9 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold">
+                    {(snapshot?.displayName || account.displayName).slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium" dir="auto">
+                    {snapshot?.displayName || account.displayName}
+                  </p>
+                  <p className="flex items-center gap-1.5 text-[0.7rem] text-muted-foreground">
+                    <PlatformIcon platform={account.platform} size={12} />
+                    @{account.username}
+                  </p>
+                </div>
+                <div className="text-end">
+                  {followers !== null ? (
+                    <p className="text-sm font-semibold tabular-nums">{followers.toLocaleString()}</p>
+                  ) : (
+                    <p className="max-w-[12rem] text-[0.68rem] leading-snug text-muted-foreground">
+                      {queries[index]?.isFetching
+                        ? "Looking up…"
+                        : error || snapshot?.note || "No public count"}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Remove ${account.displayName}`}
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() =>
+                    persistSocial(
+                      accounts.filter(
+                        (item) =>
+                          `${item.platform}:${item.username.toLowerCase()}` !==
+                          `${account.platform}:${account.username.toLowerCase()}`,
+                      ),
+                    )
+                  }
+                >
+                  <Trash2 className="size-3.5" aria-hidden />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
 function LiveCounterPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
@@ -765,8 +963,16 @@ function LiveCounterPage() {
       user={user}
       profile={workspace?.profile}
       title="Live Counter"
-      subtitle="Track live follower counts, save your favourite creators and run head-to-head comparisons."
+      subtitle="Track a live channel count, then add social accounts and sum the follower totals that APIs actually return."
     >
+      <div className="space-y-10">
+        <section className="space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Live Counter</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Followers for one selected channel, with saved favourites and head-to-head comparison.
+            </p>
+          </div>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-1 border-b border-white/5 pb-4">
           <button type="button" className={toggleClass(!vsMode)} onClick={() => setVsMode(false)}>
@@ -976,6 +1182,9 @@ function LiveCounterPage() {
             </div>
           </div>
         )}
+      </div>
+        </section>
+        <SocialCounterSection />
       </div>
     </AppShell>
   );

@@ -45,7 +45,7 @@ export function LinkInBioGallery({
 
   return (
     <div className={cn("flex h-full min-h-28 flex-col gap-3", className)}>
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-[22px]">
         {images.map((image, imageIndex) => (
           <img
             key={image.id}

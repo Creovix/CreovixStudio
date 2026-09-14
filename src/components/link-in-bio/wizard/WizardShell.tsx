@@ -82,9 +82,11 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                 }
                 onResizeTile={
                   arrange
-                    ? (id, colSpan, rowSpan) => {
+                    ? (id, colSpan, rowSpan, gridX, gridY) => {
                         setFocusId(id);
-                        draft.setLinks((prev) => applyBentoPlacement(prev, id, { colSpan, rowSpan }));
+                        draft.setLinks((prev) =>
+                          applyBentoPlacement(prev, id, { colSpan, rowSpan, gridX, gridY }),
+                        );
                       }
                     : undefined
                 }
@@ -105,7 +107,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
               <p className="truncate text-sm text-white/70" dir="auto">
                 {draft.profile.slug ? publicBioPath(draft.profile.slug) : "Add a username to publish"}
               </p>
-              <p className="mt-0.5 text-[0.68rem] text-white/38">Looks right? Publish, or keep drafting in the studio.</p>
+            <p className="mt-0.5 text-[0.68rem] text-white/38">Drag to move. Drag edges or corners to resize, then publish.</p>
             </div>
           ) : (
             <ol className="hidden flex-1 gap-1 sm:flex">
