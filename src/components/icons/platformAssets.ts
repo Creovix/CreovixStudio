@@ -1,52 +1,23 @@
 import type { CSSProperties } from "react";
 import { createElement } from "react";
 
-import discordBlack from "@/assets/icons/Discord/Black.svg";
 import discordPrimary from "@/assets/icons/Discord/Primary.svg";
-import discordWhite from "@/assets/icons/Discord/White.svg";
-import instagramBlack from "@/assets/icons/Instagram/Black.svg";
 import instagramPrimary from "@/assets/icons/Instagram/Primary.svg";
-import instagramWhite from "@/assets/icons/Instagram/White.svg";
-import kickBlack from "@/assets/icons/Kick/Black.svg";
 import kickPrimary from "@/assets/icons/Kick/Primary.svg";
-import kickWhite from "@/assets/icons/Kick/White.svg";
-import linkBlack from "@/assets/icons/Link/Black.svg";
 import linkPrimary from "@/assets/icons/Link/Primary.svg";
-import linkWhite from "@/assets/icons/Link/White.svg";
-import snapchatBlack from "@/assets/icons/Snapchat/Black.svg";
 import snapchatPrimary from "@/assets/icons/Snapchat/Primary.svg";
-import snapchatWhite from "@/assets/icons/Snapchat/White.svg";
-import soundCloudBlack from "@/assets/icons/SoundCloud/Black.svg";
 import soundCloudPrimary from "@/assets/icons/SoundCloud/Primary.svg";
-import soundCloudWhite from "@/assets/icons/SoundCloud/White.svg";
-import spotifyBlack from "@/assets/icons/Spotify/Black.svg";
 import spotifyPrimary from "@/assets/icons/Spotify/Primary.svg";
-import spotifyWhite from "@/assets/icons/Spotify/White.svg";
-import streamElementsBlack from "@/assets/icons/StreamElements/Black.svg";
 import streamElementsPrimary from "@/assets/icons/StreamElements/Primary.svg";
-import streamElementsWhite from "@/assets/icons/StreamElements/White.svg";
-import streamlabsBlack from "@/assets/icons/Streamlabs/Black.svg";
 import streamlabsPrimary from "@/assets/icons/Streamlabs/Primary.svg";
-import streamlabsWhite from "@/assets/icons/Streamlabs/White.svg";
-import tiktokBlack from "@/assets/icons/TikTok/Black.svg";
 import tiktokPrimary from "@/assets/icons/TikTok/Primary.svg";
-import tiktokWhite from "@/assets/icons/TikTok/White.svg";
-import twitchBlack from "@/assets/icons/Twitch/Black.svg";
 import twitchPrimary from "@/assets/icons/Twitch/Primary.svg";
-import twitchWhite from "@/assets/icons/Twitch/White.svg";
-import websiteBlack from "@/assets/icons/Website/Black.svg";
 import websitePrimary from "@/assets/icons/Website/Primary.svg";
-import websiteWhite from "@/assets/icons/Website/White.svg";
-import whatsAppBlack from "@/assets/icons/WhatsApp/Black.svg";
 import whatsAppPrimary from "@/assets/icons/WhatsApp/Primary.svg";
-import whatsAppWhite from "@/assets/icons/WhatsApp/White.svg";
-import xBlack from "@/assets/icons/X/Black.svg";
-import xWhite from "@/assets/icons/X/White.svg";
-import youTubeBlack from "@/assets/icons/YouTube/Black.svg";
+import xPrimary from "@/assets/icons/X/White.svg";
 import youTubePrimary from "@/assets/icons/YouTube/Primary.svg";
-import youTubeWhite from "@/assets/icons/YouTube/White.svg";
 
-/** On-disk folder names. YouTube is `YouTube` (not `Youtube`). */
+/** On-disk folder names. YouTube is `YouTube` (not `Youtube`). X has no Primary.svg. */
 export const PLATFORM_FOLDER = {
   discord: "Discord",
   instagram: "Instagram",
@@ -86,27 +57,26 @@ export type PlatformBrand =
 /** Code keys including aliases used by existing callers. */
 export type PlatformAssetName = PlatformBrand | "other" | "custom" | "youtube-play";
 
+/** Kept for callers; every tone resolves to the single Primary file. */
 export type IconVariant = "Primary" | "White" | "Black" | "Primary2";
 
-type VariantMap = Partial<Record<IconVariant, string>> & { White: string };
-
-export const PLATFORM_ASSET_URLS: Record<PlatformBrand, VariantMap> = {
-  discord: { Primary: discordPrimary, White: discordWhite, Black: discordBlack },
-  instagram: { Primary: instagramPrimary, White: instagramWhite, Black: instagramBlack },
-  kick: { Primary: kickPrimary, White: kickWhite, Black: kickBlack },
-  link: { Primary: linkPrimary, White: linkWhite, Black: linkBlack },
-  snapchat: { Primary: snapchatPrimary, White: snapchatWhite, Black: snapchatBlack },
-  soundcloud: { Primary: soundCloudPrimary, White: soundCloudWhite, Black: soundCloudBlack },
-  spotify: { Primary: spotifyPrimary, White: spotifyWhite, Black: spotifyBlack },
-  streamelements: { Primary: streamElementsPrimary, White: streamElementsWhite, Black: streamElementsBlack },
-  streamlabs: { Primary: streamlabsPrimary, White: streamlabsWhite, Black: streamlabsBlack },
-  tiktok: { Primary: tiktokPrimary, White: tiktokWhite, Black: tiktokBlack },
-  twitch: { Primary: twitchPrimary, White: twitchWhite, Black: twitchBlack },
-  website: { Primary: websitePrimary, White: websiteWhite, Black: websiteBlack },
-  whatsapp: { Primary: whatsAppPrimary, White: whatsAppWhite, Black: whatsAppBlack },
-  /** No Primary.svg in this folder — White is the official glyph on a dark chip. */
-  x: { White: xWhite, Black: xBlack },
-  youtube: { Primary: youTubePrimary, White: youTubeWhite, Black: youTubeBlack },
+/** One existing file per brand. X aliases White.svg as Primary. */
+export const PLATFORM_ASSET_URLS: Record<PlatformBrand, string> = {
+  discord: discordPrimary,
+  instagram: instagramPrimary,
+  kick: kickPrimary,
+  link: linkPrimary,
+  snapchat: snapchatPrimary,
+  soundcloud: soundCloudPrimary,
+  spotify: spotifyPrimary,
+  streamelements: streamElementsPrimary,
+  streamlabs: streamlabsPrimary,
+  tiktok: tiktokPrimary,
+  twitch: twitchPrimary,
+  website: websitePrimary,
+  whatsapp: whatsAppPrimary,
+  x: xPrimary,
+  youtube: youTubePrimary,
 };
 
 const ALIAS: Record<string, PlatformBrand> = {
@@ -122,27 +92,22 @@ export function resolvePlatformBrand(name: PlatformAssetName | string): Platform
   return null;
 }
 
-/** Dock/cards always use Primary.svg. X has no Primary on disk — White is the official mark. */
+/** Dock/cards always use the Primary file. Missing White/Black variants are never imported. */
 export function resolveIconVariant(
-  brand: PlatformBrand,
-  {
-    variant,
-  }: {
+  _brand: PlatformBrand,
+  _options: {
     variant?: IconVariant | undefined;
     onLight?: boolean;
     onBrand?: boolean;
     surface?: string | undefined;
   } = {},
 ): IconVariant {
-  const files = PLATFORM_ASSET_URLS[brand];
-  if (variant && files[variant] && variant !== "Primary2") return variant;
-  if (files.Primary) return "Primary";
-  return files.White ? "White" : "Black";
+  return "Primary";
 }
 
 export function platformAssetUrl(
   name: PlatformAssetName | string,
-  options: {
+  _options: {
     variant?: IconVariant | undefined;
     onLight?: boolean;
     onBrand?: boolean;
@@ -151,17 +116,12 @@ export function platformAssetUrl(
 ): string | null {
   const brand = resolvePlatformBrand(name);
   if (!brand) return null;
-  const picked = resolveIconVariant(brand, options);
-  return PLATFORM_ASSET_URLS[brand][picked] ?? PLATFORM_ASSET_URLS[brand].White;
+  return PLATFORM_ASSET_URLS[brand];
 }
 
 export function PlatformAsset({
   name,
   size,
-  onLight = false,
-  onBrand = false,
-  surface,
-  variant,
   className,
   style,
   label,
@@ -179,8 +139,7 @@ export function PlatformAsset({
 }) {
   const brand = resolvePlatformBrand(name);
   if (!brand) return null;
-  const picked = resolveIconVariant(brand, { variant, onLight, onBrand, surface });
-  const src = PLATFORM_ASSET_URLS[brand][picked] ?? PLATFORM_ASSET_URLS[brand].White;
+  const src = PLATFORM_ASSET_URLS[brand];
   const box: CSSProperties = {
     height: size,
     width: size,
@@ -192,7 +151,7 @@ export function PlatformAsset({
   };
 
   return createElement("img", {
-    key: `${PLATFORM_FOLDER[brand]}/${picked}`,
+    key: `${PLATFORM_FOLDER[brand]}/Primary`,
     className,
     src,
     alt: label ?? "",
