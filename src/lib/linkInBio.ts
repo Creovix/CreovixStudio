@@ -158,7 +158,7 @@ export const LINK_PLATFORMS: ReadonlyArray<{
   { id: "x", label: "X", hint: "https://x.com/you" },
   { id: "discord", label: "Discord", hint: "https://discord.gg/invite" },
   { id: "whatsapp", label: "WhatsApp Community", hint: "https://chat.whatsapp.com/… or whatsapp.com/channel/…" },
-  { id: "custom", label: "Other", hint: "https://…" },
+  { id: "custom", label: "Link", hint: "https://…" },
 ];
 
 export type PrefixedPlatform = Exclude<LinkPlatform, "custom" | "whatsapp">;

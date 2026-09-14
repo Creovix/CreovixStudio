@@ -27,7 +27,6 @@ import streamlabsPrimary from "@/assets/icons/Streamlabs/Primary.svg";
 import streamlabsWhite from "@/assets/icons/Streamlabs/White.svg";
 import tiktokBlack from "@/assets/icons/TikTok/Black.svg";
 import tiktokPrimary from "@/assets/icons/TikTok/Primary.svg";
-import tiktokPrimary2 from "@/assets/icons/TikTok/Primary 2.svg";
 import tiktokWhite from "@/assets/icons/TikTok/White.svg";
 import twitchBlack from "@/assets/icons/Twitch/Black.svg";
 import twitchPrimary from "@/assets/icons/Twitch/Primary.svg";
@@ -95,10 +94,11 @@ export const PLATFORM_ASSET_URLS: Record<PlatformBrand, VariantMap> = {
   spotify: { Primary: spotifyPrimary, White: spotifyWhite, Black: spotifyBlack },
   streamelements: { Primary: streamElementsPrimary, White: streamElementsWhite, Black: streamElementsBlack },
   streamlabs: { Primary: streamlabsPrimary, White: streamlabsWhite, Black: streamlabsBlack },
-  tiktok: { Primary: tiktokPrimary, Primary2: tiktokPrimary2, White: tiktokWhite, Black: tiktokBlack },
+  tiktok: { Primary: tiktokPrimary, White: tiktokWhite, Black: tiktokBlack },
   twitch: { Primary: twitchPrimary, White: twitchWhite, Black: twitchBlack },
   website: { Primary: websitePrimary, White: websiteWhite, Black: websiteBlack },
   whatsapp: { Primary: whatsAppPrimary, White: whatsAppWhite, Black: whatsAppBlack },
+  /** No Primary.svg in this folder — White is the official glyph on a dark chip. */
   x: { White: xWhite, Black: xBlack },
   youtube: { Primary: youTubePrimary, White: youTubeWhite, Black: youTubeBlack },
 };
@@ -109,23 +109,6 @@ const ALIAS: Record<string, PlatformBrand> = {
   "youtube-play": "youtube",
 };
 
-const MONO: ReadonlySet<PlatformBrand> = new Set(["x", "link", "website"]);
-const LIGHT_BRAND: ReadonlySet<PlatformBrand> = new Set(["kick", "whatsapp"]);
-
-function hexLuminance(hex: string): number {
-  const n = hex.trim().replace("#", "");
-  if (n.length !== 6) return 0;
-  const toLin = (channel: number) => {
-    const srgb = channel / 255;
-    return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
-  };
-  return (
-    0.2126 * toLin(Number.parseInt(n.slice(0, 2), 16)) +
-    0.7152 * toLin(Number.parseInt(n.slice(2, 4), 16)) +
-    0.0722 * toLin(Number.parseInt(n.slice(4, 6), 16))
-  );
-}
-
 export function resolvePlatformBrand(name: PlatformAssetName | string): PlatformBrand | null {
   const key = name.trim().toLowerCase();
   if (key in ALIAS) return ALIAS[key] ?? null;
@@ -133,13 +116,11 @@ export function resolvePlatformBrand(name: PlatformAssetName | string): Platform
   return null;
 }
 
+/** Dock/cards always use Primary.svg. X has no Primary on disk — White is the official mark. */
 export function resolveIconVariant(
   brand: PlatformBrand,
   {
     variant,
-    onLight = false,
-    onBrand = false,
-    surface,
   }: {
     variant?: IconVariant | undefined;
     onLight?: boolean;
@@ -148,23 +129,9 @@ export function resolveIconVariant(
   } = {},
 ): IconVariant {
   const files = PLATFORM_ASSET_URLS[brand];
-  if (variant && files[variant]) return variant;
-
-  if (onBrand) {
-    const lightChip =
-      typeof surface === "string" && surface.startsWith("#") && surface.length >= 7
-        ? hexLuminance(surface) > 0.45
-        : LIGHT_BRAND.has(brand);
-    if (lightChip) return files.Black ? "Black" : "White";
-    return files.White ? "White" : files.Primary ? "Primary" : "White";
-  }
-
-  if (onLight && files.Black) return "Black";
-  if (MONO.has(brand)) return "White";
-  // Colorful note with white core — readable on dark overlays.
-  if (brand === "tiktok" && files.Primary2) return "Primary2";
+  if (variant && files[variant] && variant !== "Primary2") return variant;
   if (files.Primary) return "Primary";
-  return "White";
+  return files.White ? "White" : "Black";
 }
 
 export function platformAssetUrl(

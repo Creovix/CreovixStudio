@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
 import { LinkInBioPage } from "@/components/link-in-bio/LinkInBioPage";
-import { LinkInBioPlatformLogo } from "@/components/link-in-bio/LinkInBioPlatformLogo";
+import { PlatformHandleDock } from "@/components/link-in-bio/PlatformHandleDock";
 import { Button } from "@/components/ui/button";
 import { DarkSelect } from "@/components/ui/dark-select";
 import { Input } from "@/components/ui/input";
@@ -33,19 +33,15 @@ import {
   bentoSizeOf,
   normalizeLink,
   publicBioPath,
-  sanitizeHandle,
   sanitizeSlug,
-  usesFullUrl,
   spanFromBentoSize,
   usernameCooldownActive,
   usernameUnlockLabel,
-  urlFromHandle,
   type AmbientPreset,
   type BentoSize,
   type BioLayout,
   type GradientStyle,
   type LinkInBioLink,
-  type LinkPlatform,
   type SurfaceStyle,
 } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
@@ -386,45 +382,13 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
               </TabsContent>
 
               <TabsContent value="platforms" className="mt-0 max-h-[min(72vh,42rem)] overflow-y-auto p-5">
-                <p className="mb-4 text-xs text-muted-foreground">Add a handle. URLs are built for you except Other.</p>
-                <div className="overflow-hidden rounded-xl border border-white/10">
-                  {LINK_PLATFORMS.map((platform, index) => {
-                    const value = handles[platform.id] || handleFallback(links, platform.id);
-                    return (
-                      <label
-                        key={platform.id}
-                        className={cn("flex items-start gap-3 px-3 py-3", index > 0 && "border-t border-white/10")}
-                      >
-                        <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-lg bg-white/[0.04]">
-                          <LinkInBioPlatformLogo platform={platform.id} size={18} />
-                        </span>
-                        <span className="min-w-0 flex-1 space-y-1.5">
-                          <span className="block text-[0.72rem] font-medium text-foreground/90">{platform.label}</span>
-                          <Input
-                            dir="auto"
-                            className="h-9"
-                            placeholder={usesFullUrl(platform.id) ? platform.hint : "handle"}
-                            value={value}
-                            onChange={(event) =>
-                              applyPlatforms({
-                                ...handlesFromLinks(links),
-                                ...handles,
-                                [platform.id]: usesFullUrl(platform.id)
-                                  ? event.target.value
-                                  : sanitizeHandle(event.target.value),
-                              })
-                            }
-                          />
-                          {value && !usesFullUrl(platform.id) ? (
-                            <span className="block truncate text-[0.68rem] text-muted-foreground" dir="auto">
-                              {urlFromHandle(platform.id, value)}
-                            </span>
-                          ) : null}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
+                <p className="mb-4 text-xs text-muted-foreground">Tap an icon. URLs are built for you except Link.</p>
+                <PlatformHandleDock
+                  tone="inspector"
+                  platforms={LINK_PLATFORMS}
+                  handles={{ ...handlesFromLinks(links), ...handles }}
+                  onChange={applyPlatforms}
+                />
               </TabsContent>
 
               <TabsContent value="widgets" className="mt-0 max-h-[min(72vh,42rem)] space-y-5 overflow-y-auto p-5">
@@ -509,10 +473,6 @@ function slugHint(status: Draft["slugStatus"]) {
   if (status === "taken") return "Taken.";
   if (status === "invalid") return "Invalid username.";
   return "Public path /u/…";
-}
-
-function handleFallback(links: LinkInBioLink[], platform: LinkPlatform) {
-  return handlesFromLinks(links)[platform] ?? "";
 }
 
 function CardInspector({

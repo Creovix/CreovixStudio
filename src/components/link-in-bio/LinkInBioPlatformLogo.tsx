@@ -18,9 +18,6 @@ const ASSET: Record<LinkPlatform, PlatformAssetName> = {
 function PlatformLogoMark({
   platform,
   size = 40,
-  onLight = false,
-  onBrand = false,
-  surface,
 }: {
   platform: LinkPlatform;
   size?: number;
@@ -29,19 +26,8 @@ function PlatformLogoMark({
   onLight?: boolean;
   surface?: string | undefined;
 }) {
-  const name = ASSET[platform];
-
   return (
-    <PlatformAsset
-      key={`${name}-${onBrand ? "brand" : onLight ? "light" : "dark"}`}
-      name={name}
-      size={size}
-      fit="contain"
-      onLight={onLight}
-      onBrand={onBrand}
-      surface={surface}
-      style={{ overflow: "visible" }}
-    />
+    <PlatformAsset name={ASSET[platform]} size={size} fit="contain" style={{ overflow: "visible" }} />
   );
 }
 
