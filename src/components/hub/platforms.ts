@@ -9,8 +9,16 @@ export const PLATFORM_META: Record<
   KICK: { color: "#53FC18", label: { en: "Kick" } },
   TWITCH: { color: "#9146FF", label: { en: "Twitch" } },
   YOUTUBE: { color: "#FF0000", label: { en: "YouTube" } },
-  TIKTOK: { color: "#FE2C55", label: { en: "TikTok" } },
+  TIKTOK: { color: "#25F4EE", label: { en: "TikTok" } },
 };
+
+/** Hub-only platform mark: a small color dot (TikTok is black / cyan). */
+export function platformDotBackground(id: PlatformId): string {
+  if (id === "TIKTOK") {
+    return "linear-gradient(90deg, #010101 0 50%, #25F4EE 50% 100%)";
+  }
+  return PLATFORM_META[id].color;
+}
 
 /** Real catalog platforms — used for “all sources” widgets and the All chip. */
 export const ALL_PLATFORMS: PlatformId[] = ["KICK", "TWITCH", "YOUTUBE", "TIKTOK"];

@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import {
-  EMPTY_HANDLES,
+  createEmptyHandles,
   handlesFromLinks,
   linksFromHandles,
   type HandleMap,
@@ -66,7 +66,7 @@ export function WizardProvider({
 }) {
   const navigate = useNavigate();
   const { profile, setProfile, theme, links, setLinks, persist, save, slugStatus } = draft;
-  const [handles, setHandles] = useState<HandleMap>(EMPTY_HANDLES);
+  const [handles, setHandles] = useState<HandleMap>(createEmptyHandles);
   const [hydrated, setHydrated] = useState(false);
   const [focusId, setFocusId] = useState<string | null>(null);
   const slugLocked = usernameCooldownActive(profile.usernameChangedAt);

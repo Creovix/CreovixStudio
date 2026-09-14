@@ -8,8 +8,10 @@ import {
   DEFAULT_PROFILE,
   DEFAULT_THEME,
   handleFromUrl,
+  hostnameFromLink,
   linkToInput,
   loadTestLinkInBio,
+  MAX_CUSTOM_LINKS,
   publicLinkInBioPayload,
   replaceTestLinks,
   saveTestLinkInBio,
@@ -35,60 +37,123 @@ import {
 import { loadTestSchedule } from "@/lib/schedule";
 import { isTestMode } from "@/lib/testMode";
 
-export type HandleMap = Record<LinkPlatform, string>;
+export type SocialPlatform = Exclude<LinkPlatform, "custom">;
+export type CustomLinkDraft = { id: string; url: string };
+export type HandleMap = Record<SocialPlatform, string> & { custom: CustomLinkDraft[] };
 
-export const EMPTY_HANDLES: HandleMap = {
-  kick: "",
-  twitch: "",
-  youtube: "",
-  tiktok: "",
-  instagram: "",
-  x: "",
-  discord: "",
-  whatsapp: "",
-  custom: "",
-};
+const SOCIAL_PLATFORMS: SocialPlatform[] = [
+  "kick",
+  "twitch",
+  "youtube",
+  "tiktok",
+  "instagram",
+  "x",
+  "discord",
+  "whatsapp",
+];
+
+export function newCustomDraft(url = ""): CustomLinkDraft {
+  return { id: crypto.randomUUID(), url };
+}
+
+export function normalizeCustomDrafts(slots: CustomLinkDraft[]): CustomLinkDraft[] {
+  const next = slots.slice(0, MAX_CUSTOM_LINKS);
+  while (next.length > 1 && !next[next.length - 1]?.url.trim() && !next[next.length - 2]?.url.trim()) {
+    next.pop();
+  }
+  if (next.length === 0) return [newCustomDraft()];
+  const last = next[next.length - 1];
+  const lastValid = Boolean(last && urlFromHandle("custom", last.url));
+  if (lastValid && next.length < MAX_CUSTOM_LINKS) return [...next, newCustomDraft()];
+  return next;
+}
+
+export function createEmptyHandles(): HandleMap {
+  return {
+    kick: "",
+    twitch: "",
+    youtube: "",
+    tiktok: "",
+    instagram: "",
+    x: "",
+    discord: "",
+    whatsapp: "",
+    custom: [newCustomDraft()],
+  };
+}
+
+export const EMPTY_HANDLES: HandleMap = createEmptyHandles();
 
 export function handlesFromLinks(links: LinkInBioLink[]): HandleMap {
-  const next = { ...EMPTY_HANDLES };
+  const next = createEmptyHandles();
+  next.custom = [];
   for (const link of links) {
     if (link.kind === "gallery") continue;
+    if (link.platform === "custom") {
+      next.custom.push({ id: link.id, url: link.url });
+      continue;
+    }
     next[link.platform] = handleFromUrl(link.platform, link.url);
   }
+  next.custom = normalizeCustomDrafts(next.custom);
   return next;
 }
 
 export function linksFromHandles(handles: HandleMap, previous: LinkInBioLink[]): LinkInBioLink[] {
   const now = new Date().toISOString();
-  const platformLinks = (Object.keys(handles) as LinkPlatform[]).flatMap((platform) => {
+  const socialLinks = SOCIAL_PLATFORMS.flatMap((platform) => {
     const value = handles[platform].trim();
     if (!value) return [];
     const url = urlFromHandle(platform, value);
     if (!url) return [];
     const existing = previous.find((link) => link.kind === "link" && link.platform === platform);
-    return [
-      {
-        id: existing?.id ?? crypto.randomUUID(),
-        title: existing?.title || platformLabel(platform),
-        url,
-        platform,
-        cardSize: existing?.cardSize ?? "inherit",
-        sortOrder: existing?.sortOrder ?? 0,
-        featured: existing?.featured ?? false,
-        enabled: true,
-        kind: "link" as const,
-        gridX: existing?.gridX ?? 0,
-        gridY: existing?.gridY ?? 0,
-        colSpan: existing?.colSpan ?? 1,
-        rowSpan: existing?.rowSpan ?? 1,
-        galleryImages: [],
-        createdAt: existing?.createdAt ?? now,
-        updatedAt: now,
-      } satisfies LinkInBioLink,
-    ];
+    return [toPlatformLink(platform, url, existing, now, platformLabel(platform))];
+  });
+  const previousCustom = previous.filter((link) => link.kind === "link" && link.platform === "custom");
+  const used = new Set<string>();
+  const customLinks = normalizeCustomDrafts(handles.custom).flatMap((slot) => {
+    const url = urlFromHandle("custom", slot.url);
+    if (!url) return [];
+    const existing =
+      previous.find((link) => link.id === slot.id && link.platform === "custom") ??
+      previousCustom.find((link) => !used.has(link.id) && link.url === url) ??
+      previousCustom.find((link) => !used.has(link.id));
+    if (existing) used.add(existing.id);
+    const host = hostnameFromLink(url);
+    const title =
+      existing?.title && existing.title !== "Link" ? existing.title : (host ?? "Link");
+    return [toPlatformLink("custom", url, existing, now, title, slot.id)];
   });
   const galleries = previous.filter((link) => link.kind === "gallery");
-  return [...platformLinks, ...galleries].map((link, index) => ({ ...link, sortOrder: index }));
+  return [...socialLinks, ...customLinks, ...galleries].map((link, index) => ({ ...link, sortOrder: index }));
+}
+
+function toPlatformLink(
+  platform: LinkPlatform,
+  url: string,
+  existing: LinkInBioLink | undefined,
+  now: string,
+  title: string,
+  fallbackId?: string,
+): LinkInBioLink {
+  return {
+    id: existing?.id ?? fallbackId ?? crypto.randomUUID(),
+    title,
+    url,
+    platform,
+    cardSize: existing?.cardSize ?? "inherit",
+    sortOrder: existing?.sortOrder ?? 0,
+    featured: existing?.featured ?? false,
+    enabled: true,
+    kind: "link",
+    gridX: existing?.gridX ?? 0,
+    gridY: existing?.gridY ?? 0,
+    colSpan: existing?.colSpan ?? 1,
+    rowSpan: existing?.rowSpan ?? 1,
+    galleryImages: [],
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
 }
 
 function platformLabel(platform: LinkPlatform) {

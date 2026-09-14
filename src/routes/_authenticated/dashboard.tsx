@@ -17,7 +17,6 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
 import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
-import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
@@ -25,6 +24,7 @@ import {
   ALL_PLATFORMS,
   FILTER_ORDER,
   PLATFORM_META,
+  platformDotBackground,
   type PlatformFilter,
   type PlatformId,
 } from "@/components/hub/platforms";
@@ -386,11 +386,19 @@ function HomePage() {
               {id === "ALL" ? (
                 <span className="flex items-center gap-1" aria-hidden>
                   {ALL_PLATFORMS.map((dot) => (
-                    <PlatformIcon key={dot} platform={dot} size={12} />
+                    <span
+                      key={dot}
+                      className="size-1.5 rounded-full"
+                      style={{ background: platformDotBackground(dot) }}
+                    />
                   ))}
                 </span>
               ) : (
-                <PlatformIcon platform={id} size={12} />
+                <span
+                  className="size-1.5 rounded-full"
+                  style={{ background: platformDotBackground(id) }}
+                  aria-hidden
+                />
               )}
               {label}
             </button>
