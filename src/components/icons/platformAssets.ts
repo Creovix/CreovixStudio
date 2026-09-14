@@ -5,7 +5,7 @@ import discordPrimary from "@/assets/icons/Discord/Primary.svg";
 import instagramPrimary from "@/assets/icons/Instagram/Primary.svg";
 import kickPrimary from "@/assets/icons/Kick/Primary.svg";
 import linkPrimary from "@/assets/icons/Link/Primary.svg";
-import snapchatPrimary from "@/assets/icons/Snapchat/Primary.svg";
+import snapchatPrimary from "@/assets/icons/SnapChat/Primary.svg";
 import soundCloudPrimary from "@/assets/icons/SoundCloud/Primary.svg";
 import spotifyPrimary from "@/assets/icons/Spotify/Primary.svg";
 import streamElementsPrimary from "@/assets/icons/StreamElements/Primary.svg";
@@ -17,13 +17,13 @@ import whatsAppPrimary from "@/assets/icons/WhatsApp/Primary.svg";
 import xPrimary from "@/assets/icons/X/White.svg";
 import youTubePrimary from "@/assets/icons/YouTube/Primary.svg";
 
-/** On-disk folder names. YouTube is `YouTube` (not `Youtube`). X has no Primary.svg. */
+/** Git index folder names (Linux/Vercel). SnapChat has a capital C. X has no Primary.svg. */
 export const PLATFORM_FOLDER = {
   discord: "Discord",
   instagram: "Instagram",
   kick: "Kick",
   link: "Link",
-  snapchat: "Snapchat",
+  snapchat: "SnapChat",
   soundcloud: "SoundCloud",
   spotify: "Spotify",
   streamelements: "StreamElements",
