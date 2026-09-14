@@ -390,7 +390,10 @@ export const previewLinkInBioStream = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const state = await loadState(context.supabase, context.userId);
     const { resolveLinkInBioStream } = await import("@/lib/linkInBio.server");
-    return resolveLinkInBioStream(state);
+    const extras = await resolveLinkInBioStream(state);
+    const { enrichLinkTilePreviews } = await import("@/lib/linkInBioLive.server");
+    const tilePreviews = await enrichLinkTilePreviews(state, extras.tilePreviews);
+    return { ...extras, tilePreviews };
   });
 
 export const checkLinkInBioSlug = createServerFn({ method: "POST" })

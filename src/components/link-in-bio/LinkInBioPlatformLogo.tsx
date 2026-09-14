@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 
 import { PlatformAsset, type PlatformAssetName } from "@/components/icons/platformAssets";
 import type { LinkPlatform } from "@/lib/linkInBio";
@@ -18,14 +18,30 @@ const ASSET: Record<LinkPlatform, PlatformAssetName> = {
 function PlatformLogoMark({
   platform,
   size = 40,
+  faviconUrl,
 }: {
   platform: LinkPlatform;
   size?: number;
+  faviconUrl?: string | null;
   onBrand?: boolean;
   ink?: string;
   onLight?: boolean;
   surface?: string | undefined;
 }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const showFavicon = platform === "custom" && Boolean(faviconUrl) && failed !== faviconUrl;
+  if (showFavicon && faviconUrl) {
+    return (
+      <img
+        src={faviconUrl}
+        alt=""
+        width={size}
+        height={size}
+        className="size-full object-contain"
+        onError={() => setFailed(faviconUrl)}
+      />
+    );
+  }
   return (
     <PlatformAsset name={ASSET[platform]} size={size} fit="contain" style={{ overflow: "visible" }} />
   );

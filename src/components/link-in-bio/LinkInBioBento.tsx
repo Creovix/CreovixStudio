@@ -8,11 +8,15 @@ import {
   BENTO_SIZES,
   bentoSizeOf,
   bentoTilePaint,
+  googleFaviconUrl,
+  hostnameFromLink,
   packBento,
   type BentoSize,
   type BentoTilePaint,
   type PublicBioLink,
   type LinkInBioTheme,
+  type LinkPlatform,
+  type LinkTilePreview,
   type LivePlatformFlags,
 } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
@@ -31,6 +35,12 @@ const PLATFORM_NAME: Record<PublicBioLink["platform"], string> = {
 
 const GAP = 20;
 const ROW = 188;
+
+function customFaviconUrl(link: PublicBioLink): string | null {
+  if (link.platform !== "custom") return null;
+  const host = hostnameFromLink(link.url);
+  return host ? googleFaviconUrl(host) : null;
+}
 
 function cellFromPoint(root: DOMRect, clientX: number, clientY: number, colSpan: number) {
   const cellW = (root.width - GAP * (BENTO_COLS - 1)) / BENTO_COLS;
@@ -53,6 +63,7 @@ export function LinkInBioBento({
   links,
   theme,
   livePlatforms,
+  tilePreviews,
   editable = false,
   arrangeMode = false,
   selectedId,
@@ -63,6 +74,7 @@ export function LinkInBioBento({
   links: PublicBioLink[];
   theme: LinkInBioTheme;
   livePlatforms?: LivePlatformFlags;
+  tilePreviews?: Partial<Record<LinkPlatform, LinkTilePreview>>;
   editable?: boolean;
   arrangeMode?: boolean;
   selectedId?: string | null;
@@ -142,7 +154,8 @@ export function LinkInBioBento({
           <BentoTile
             key={link.id}
             link={preview ? { ...link, colSpan: preview.colSpan, rowSpan: preview.rowSpan } : link}
-            live={Boolean(livePlatforms?.[link.platform as keyof LivePlatformFlags])}
+            live={Boolean(livePlatforms?.[link.platform as keyof LivePlatformFlags] || tilePreviews?.[link.platform]?.live)}
+            preview={tilePreviews?.[link.platform]}
             editable={editable && !arrangeMode}
             arrangeMode={arrangeMode}
             fill={fill}
@@ -191,6 +204,7 @@ export function LinkInBioBento({
 function BentoTile({
   link,
   live,
+  preview,
   editable,
   arrangeMode,
   fill,
@@ -208,6 +222,7 @@ function BentoTile({
 }: {
   link: PublicBioLink;
   live: boolean;
+  preview?: LinkTilePreview | undefined;
   editable: boolean;
   arrangeMode: boolean;
   fill: boolean;
@@ -306,13 +321,19 @@ function BentoTile({
             size={logoSize}
             ink={paint.ink}
             onLight={paint.onLight}
+            faviconUrl={customFaviconUrl(link)}
           />
         </span>
         {live ? (
-          <span
-            className="absolute right-6 top-6 z-[1] size-2 rounded-full"
-            style={{ background: paint.ink }}
-            aria-hidden
+          <span className="absolute right-5 top-5 z-[1] rounded-full bg-red-500 px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide text-white">
+            LIVE
+          </span>
+        ) : null}
+        {preview?.thumbnailUrl ? (
+          <img
+            src={preview.thumbnailUrl}
+            alt=""
+            className="pointer-events-none absolute bottom-12 left-6 z-0 h-10 w-[3.6rem] rounded-md object-cover opacity-90"
           />
         ) : null}
         {!arrangeMode ? (

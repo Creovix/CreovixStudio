@@ -1,10 +1,15 @@
 import { useState } from "react";
 
 import { LinkInBioPlatformLogo } from "@/components/link-in-bio/LinkInBioPlatformLogo";
+import { PlatformLivePreview } from "@/components/link-in-bio/PlatformLivePreview";
 import { Input } from "@/components/ui/input";
 import type { HandleMap } from "@/hooks/useLinkInBioDraft";
 import {
+  coerceHttpUrl,
+  googleFaviconUrl,
+  hostnameFromLink,
   LINK_PLATFORMS,
+  looksLikeHttpUrl,
   platformAccent,
   sanitizeHandle,
   sanitizeWhatsappCommunityUrl,
@@ -23,8 +28,23 @@ function platformHint(id: LinkPlatform, value: string, filled: boolean) {
       ? value
       : "Use chat.whatsapp.com/… or whatsapp.com/channel/…";
   }
-  if (filled && !usesFullUrl(id)) return urlFromHandle(id, value);
+  if (filled && !usesFullUrl(id) && !looksLikeHttpUrl(value)) return urlFromHandle(id, value);
   return LINK_PLATFORMS.find((item) => item.id === id)?.hint ?? "";
+}
+
+function customFavicon(value: string): string | null {
+  const host = hostnameFromLink(coerceHttpUrl(value) || value);
+  return host ? googleFaviconUrl(host) : null;
+}
+
+function fieldPlaceholder(id: LinkPlatform, hint: string, fullUrl: boolean) {
+  if (id === "whatsapp") return "https://chat.whatsapp.com/… or whatsapp.com/channel/…";
+  if (id === "instagram") return "@you or instagram.com/p/…";
+  if (id === "tiktok") return "@you or tiktok.com/@you/video/…";
+  if (id === "x") return "@you or x.com/you/status/…";
+  if (id === "discord") return "discord.gg/invite";
+  if (fullUrl) return hint;
+  return "handle";
 }
 
 export function PlatformHandleDock({
@@ -47,6 +67,7 @@ export function PlatformHandleDock({
   const whatsappInvalid = open?.id === "whatsapp" && Boolean(value) && !sanitizeWhatsappCommunityUrl(value);
   const accent = open ? platformAccent(open.id) : null;
   const inspector = tone === "inspector";
+  const linkFavicon = customFavicon(handles.custom);
 
   const toggle = (id: LinkPlatform) => {
     setOpenId((current) => (current === id ? null : id));
@@ -78,7 +99,11 @@ export function PlatformHandleDock({
                 inspector && "w-5",
               )}
             >
-              <LinkInBioPlatformLogo platform={platform.id} size={inspector ? 20 : 24} />
+              <LinkInBioPlatformLogo
+                platform={platform.id}
+                size={inspector ? 20 : 24}
+                faviconUrl={platform.id === "custom" ? linkFavicon : null}
+              />
               <span
                 className={cn(
                   "size-1.5 rounded-full",
@@ -110,7 +135,11 @@ export function PlatformHandleDock({
           }
         >
           <div className="mb-4 flex items-center gap-3">
-            <LinkInBioPlatformLogo platform={open.id} size={24} />
+            <LinkInBioPlatformLogo
+              platform={open.id}
+              size={24}
+              faviconUrl={open.id === "custom" ? customFavicon(value) : null}
+            />
             <div className="min-w-0">
               <p className="text-sm font-medium">{open.label}</p>
               <p className="truncate text-[0.68rem] text-white/40" dir="auto">
@@ -132,21 +161,18 @@ export function PlatformHandleDock({
                 : { ["--tw-ring-color" as string]: `color-mix(in oklab, ${accent.css} 55%, white)` }
             }
             dir="auto"
-            placeholder={
-              open.id === "whatsapp"
-                ? "https://chat.whatsapp.com/… or whatsapp.com/channel/…"
-                : fullUrl
-                  ? open.hint
-                  : "handle"
-            }
+            placeholder={fieldPlaceholder(open.id, open.hint, fullUrl)}
             value={value}
-            onChange={(event) =>
+            onChange={(event) => {
+              const next = event.target.value;
+              const keepRaw = fullUrl || looksLikeHttpUrl(next);
               onChange({
                 ...handles,
-                [open.id]: fullUrl ? event.target.value : sanitizeHandle(event.target.value),
-              })
-            }
+                [open.id]: keepRaw ? next : sanitizeHandle(next),
+              });
+            }}
           />
+          <PlatformLivePreview platform={open.id} value={value} compact={inspector} />
         </div>
       ) : (
         <p className={cn("text-[0.68rem] leading-relaxed", inspector ? "text-muted-foreground" : "text-white/40")}>

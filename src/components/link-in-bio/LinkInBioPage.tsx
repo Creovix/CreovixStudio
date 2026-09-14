@@ -24,7 +24,7 @@ export function LinkInBioPage({
   onMoveTile?: ((id: string, gridX: number, gridY: number) => void) | undefined;
   onResizeTile?: ((id: string, colSpan: 1 | 2, rowSpan: 1 | 2) => void) | undefined;
 }) {
-  const { profile, theme, links, livePlatforms, stream, schedule } = data;
+  const { profile, theme, links, livePlatforms, tilePreviews, stream, schedule } = data;
   const font = resolveBioFont(theme);
   const glass = theme.surfaceStyle === "glass";
   const alpha = Math.round((theme.glassIntensity / 100) * 42);
@@ -96,6 +96,7 @@ export function LinkInBioPage({
               links={links}
               theme={theme}
               livePlatforms={livePlatforms}
+              tilePreviews={tilePreviews}
               selectedId={highlightId}
               arrangeMode={arrangeMode}
               onSelect={onSelectTile}

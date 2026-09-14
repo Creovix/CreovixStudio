@@ -219,6 +219,7 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
                 links={preview.links}
                 theme={theme}
                 livePlatforms={liveFlags}
+                tilePreviews={preview.tilePreviews}
                 editable
                 selectedId={selectedId}
                 onSelect={setSelectedId}

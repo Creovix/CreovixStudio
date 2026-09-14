@@ -45,6 +45,11 @@ export type StreamStatus =
 
 export type LivePlatformFlags = { kick: boolean; twitch: boolean; youtube: boolean };
 
+export type LinkTilePreview = {
+  live: boolean;
+  thumbnailUrl: string | null;
+};
+
 export type LinkInBioLink = {
   id: string;
   title: string;
@@ -141,6 +146,7 @@ export type PublicLinkInBio = {
   kickLive: boolean;
   stream: StreamStatus | null;
   livePlatforms: LivePlatformFlags;
+  tilePreviews: Partial<Record<LinkPlatform, LinkTilePreview>>;
   schedule: { title: string; url: string } | null;
 };
 
@@ -153,10 +159,10 @@ export const LINK_PLATFORMS: ReadonlyArray<{
   { id: "kick", label: "Kick", hint: "https://kick.com/you" },
   { id: "twitch", label: "Twitch", hint: "https://twitch.tv/you" },
   { id: "youtube", label: "YouTube", hint: "https://youtube.com/@you" },
-  { id: "tiktok", label: "TikTok", hint: "https://tiktok.com/@you", comingSoon: true },
-  { id: "instagram", label: "Instagram", hint: "https://instagram.com/you" },
-  { id: "x", label: "X", hint: "https://x.com/you" },
-  { id: "discord", label: "Discord", hint: "https://discord.gg/invite" },
+  { id: "tiktok", label: "TikTok", hint: "@you or a video URL" },
+  { id: "instagram", label: "Instagram", hint: "@you or a post / reel URL" },
+  { id: "x", label: "X", hint: "@you or a post URL" },
+  { id: "discord", label: "Discord", hint: "discord.gg/invite" },
   { id: "whatsapp", label: "WhatsApp Community", hint: "https://chat.whatsapp.com/… or whatsapp.com/channel/…" },
   { id: "custom", label: "Link", hint: "https://…" },
 ];
@@ -553,6 +559,40 @@ export function isValidHttpUrl(raw: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function looksLikeHttpUrl(raw: string): boolean {
+  const value = raw.trim();
+  if (!value) return false;
+  if (/^https?:\/\//i.test(value) || /^www\./i.test(value)) return true;
+  if (/^(discord\.gg|discord\.com|chat\.whatsapp\.com)\b/i.test(value)) return true;
+  return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}[/:?#]/i.test(value);
+}
+
+export function coerceHttpUrl(raw: string): string {
+  const value = raw.trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return sanitizeLinkUrl(value);
+  if (looksLikeHttpUrl(value)) return sanitizeLinkUrl(`https://${value.replace(/^\/+/, "")}`);
+  return "";
+}
+
+export function hostnameFromLink(raw: string): string | null {
+  const trimmed = raw.trim();
+  const url =
+    coerceHttpUrl(trimmed) ||
+    (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(trimmed) ? `https://${trimmed}` : "");
+  if (!url) return null;
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+    return host || null;
+  } catch {
+    return null;
+  }
+}
+
+export function googleFaviconUrl(host: string): string {
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
 }
 
 export function sanitizeLinkUrl(raw: string): string {
@@ -964,9 +1004,89 @@ export function sanitizeWhatsappCommunityUrl(raw: string): string {
   }
 }
 
+export function instagramPostUrl(raw: string): string | null {
+  const url = coerceHttpUrl(raw);
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (!/(^|\.)instagram\.com$/i.test(parsed.hostname)) return null;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    if (parts[0] && ["p", "reel", "reels", "tv"].includes(parts[0].toLowerCase()) && parts[1]) return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function tiktokVideoUrl(raw: string): string | null {
+  const url = coerceHttpUrl(raw);
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "vm.tiktok.com" || host === "vt.tiktok.com") return parsed.pathname.length > 1 ? url : null;
+    if (!/(^|\.)tiktok\.com$/i.test(parsed.hostname)) return null;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const videoAt = parts.findIndex((part) => part.toLowerCase() === "video");
+    if (videoAt >= 0 && parts[videoAt + 1]) return url;
+    if (parts[0]?.toLowerCase() === "t" && parts[1]) return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function twitterStatusUrl(raw: string): string | null {
+  const url = coerceHttpUrl(raw);
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (!/(^|\.)(twitter|x)\.com$/i.test(parsed.hostname)) return null;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const statusAt = parts.findIndex((part) => part.toLowerCase() === "status");
+    if (statusAt >= 1 && parts[statusAt + 1]) return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function discordInviteCode(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const url = coerceHttpUrl(trimmed);
+  if (url) {
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      if (host === "discord.gg") {
+        const code = parts[0] ?? "";
+        return /^[a-zA-Z0-9-]{2,64}$/.test(code) ? code : null;
+      }
+      if (host === "discord.com" || host === "discordapp.com") {
+        const code = parts[0]?.toLowerCase() === "invite" ? (parts[1] ?? "") : (parts[0] ?? "");
+        return /^[a-zA-Z0-9-]{2,64}$/.test(code) ? code : null;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  return /^[a-zA-Z0-9-]{2,64}$/.test(trimmed) ? trimmed : null;
+}
+
 export function urlFromHandle(platform: LinkPlatform, handleOrUrl: string): string {
   if (platform === "whatsapp") return sanitizeWhatsappCommunityUrl(handleOrUrl);
-  if (platform === "custom") return sanitizeLinkUrl(handleOrUrl);
+  if (platform === "custom") {
+    const asUrl = coerceHttpUrl(handleOrUrl);
+    if (asUrl) return asUrl;
+    const hostOnly = handleOrUrl.trim();
+    if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(hostOnly)) return sanitizeLinkUrl(`https://${hostOnly}`);
+    return "";
+  }
+  const asUrl = coerceHttpUrl(handleOrUrl);
+  if (asUrl) return asUrl;
   const handle = sanitizeHandle(handleOrUrl);
   if (!handle) return "";
   return `${PLATFORM_HANDLE_PREFIX[platform]}${encodeURIComponent(handle)}`;
@@ -974,6 +1094,7 @@ export function urlFromHandle(platform: LinkPlatform, handleOrUrl: string): stri
 
 export function handleFromUrl(platform: LinkPlatform, url: string): string {
   if (usesFullUrl(platform)) return url;
+  if (instagramPostUrl(url) || tiktokVideoUrl(url) || twitterStatusUrl(url)) return url;
   try {
     const parsed = new URL(url);
     const parts = parsed.pathname.split("/").filter(Boolean);
@@ -1072,7 +1193,11 @@ const EMPTY_LIVE: LivePlatformFlags = { kick: false, twitch: false, youtube: fal
 
 export function publicLinkInBioPayload(
   state: LinkInBioState,
-  extras?: { stream?: StreamStatus | null; livePlatforms?: LivePlatformFlags },
+  extras?: {
+    stream?: StreamStatus | null;
+    livePlatforms?: LivePlatformFlags;
+    tilePreviews?: Partial<Record<LinkPlatform, LinkTilePreview>>;
+  },
 ): PublicLinkInBio {
   const livePlatforms = extras?.livePlatforms ?? EMPTY_LIVE;
   return {
@@ -1104,6 +1229,7 @@ export function publicLinkInBioPayload(
     kickLive: livePlatforms.kick,
     stream: extras?.stream ?? null,
     livePlatforms,
+    tilePreviews: extras?.tilePreviews ?? {},
     schedule:
       state.theme.scheduleEnabled && state.scheduleShareToken
         ? {

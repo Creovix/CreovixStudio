@@ -9,6 +9,8 @@ import {
   sanitizeProfile,
   sanitizeTheme,
   type LinkInBioState,
+  type LinkPlatform,
+  type LinkTilePreview,
   type LivePlatformFlags,
   type PublicLinkInBio,
   type StreamStatus,
@@ -146,6 +148,23 @@ function mapState(
   };
 }
 
+const STATUS_TTL_MS = 60_000;
+const statusCache = new Map<string, { at: number; value: unknown }>();
+
+async function cachedStatus<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = statusCache.get(key);
+  if (hit && Date.now() - hit.at < STATUS_TTL_MS) return hit.value as T;
+  const value = await fn();
+  statusCache.set(key, { at: Date.now(), value });
+  return value;
+}
+
+function kickThumbnailUrl(raw: { url?: string } | string | null | undefined): string | null {
+  if (!raw) return null;
+  if (typeof raw === "string") return raw.startsWith("http") ? raw : null;
+  return raw.url?.startsWith("http") ? raw.url : null;
+}
+
 async function jsonGet<T>(url: string, headers?: HeadersInit): Promise<T | null> {
   try {
     const response = await fetch(url, {
@@ -186,17 +205,31 @@ type LiveHit = Extract<StreamStatus, { kind: "live" }>;
 type OfflineHit = Extract<StreamStatus, { kind: "offline" }>;
 
 /** Official Helix: users + streams (+ latest archive VOD when offline). */
-async function twitchStatus(username: string, channelUrl: string): Promise<{ live: LiveHit | null; offline: OfflineHit | null }> {
+export async function twitchStatus(
+  username: string,
+  channelUrl: string,
+): Promise<{ live: LiveHit | null; offline: OfflineHit | null; thumbnailUrl: string | null }> {
+  return cachedStatus(`twitch:${username.toLowerCase()}`, () => twitchStatusUncached(username, channelUrl));
+}
+
+async function twitchStatusUncached(
+  username: string,
+  channelUrl: string,
+): Promise<{ live: LiveHit | null; offline: OfflineHit | null; thumbnailUrl: string | null }> {
   const clientId = process.env["TWITCH_CLIENT_ID"];
   const token = await twitchAppToken();
-  if (!clientId || !token) return { live: null, offline: { kind: "offline", platform: "twitch", latest: null, channelUrl } };
+  if (!clientId || !token) {
+    return { live: null, offline: { kind: "offline", platform: "twitch", latest: null, channelUrl }, thumbnailUrl: null };
+  }
   const headers = { Authorization: `Bearer ${token}`, "Client-Id": clientId };
   const users = await jsonGet<{ data?: { id: string; login: string }[] }>(
     `https://api.twitch.tv/helix/users?login=${encodeURIComponent(username)}`,
     headers,
   );
   const user = users?.data?.[0];
-  if (!user) return { live: null, offline: { kind: "offline", platform: "twitch", latest: null, channelUrl } };
+  if (!user) {
+    return { live: null, offline: { kind: "offline", platform: "twitch", latest: null, channelUrl }, thumbnailUrl: null };
+  }
   const streams = await jsonGet<{ data?: { viewer_count?: number; title?: string }[] }>(
     `https://api.twitch.tv/helix/streams?user_id=${encodeURIComponent(user.id)}`,
     headers,
@@ -212,6 +245,7 @@ async function twitchStatus(username: string, channelUrl: string): Promise<{ liv
         watchUrl: `https://www.twitch.tv/${encodeURIComponent(user.login)}`,
       },
       offline: null,
+      thumbnailUrl: `https://static-cdn.jtvnw.net/previews-ttv/live_user_${user.login}-440x248.jpg`,
     };
   }
   const videos = await jsonGet<{ data?: { title?: string; url?: string; thumbnail_url?: string }[] }>(
@@ -219,6 +253,7 @@ async function twitchStatus(username: string, channelUrl: string): Promise<{ liv
     headers,
   );
   const vod = videos?.data?.[0];
+  const thumbnailUrl = vod?.thumbnail_url?.replace("%{width}", "480").replace("%{height}", "270") ?? null;
   return {
     live: null,
     offline: {
@@ -228,21 +263,34 @@ async function twitchStatus(username: string, channelUrl: string): Promise<{ liv
         ? {
             title: vod.title ?? "Latest stream",
             url: vod.url,
-            thumbnailUrl: vod.thumbnail_url?.replace("%{width}", "480").replace("%{height}", "270") ?? null,
+            thumbnailUrl,
           }
         : null,
       channelUrl,
     },
+    thumbnailUrl,
   };
 }
 
+type PlatformHit = { live: LiveHit | null; offline: OfflineHit | null; thumbnailUrl: string | null };
+
 /** Official YouTube Data API v3 — skipped honestly when YOUTUBE_API_KEY is unset. */
-async function youtubeStatus(
+export async function youtubeStatus(
   target: { handle: string | null; channelId: string | null },
   channelUrl: string | null,
-): Promise<{ live: LiveHit | null; offline: OfflineHit | null }> {
+): Promise<PlatformHit> {
+  const cacheKey = `youtube:${(target.channelId ?? target.handle ?? "").toLowerCase()}`;
+  return cachedStatus(cacheKey, () => youtubeStatusUncached(target, channelUrl));
+}
+
+async function youtubeStatusUncached(
+  target: { handle: string | null; channelId: string | null },
+  channelUrl: string | null,
+): Promise<PlatformHit> {
   const key = process.env["YOUTUBE_API_KEY"];
-  if (!key) return { live: null, offline: { kind: "offline", platform: "youtube", latest: null, channelUrl } };
+  if (!key) {
+    return { live: null, offline: { kind: "offline", platform: "youtube", latest: null, channelUrl }, thumbnailUrl: null };
+  }
   let channelId = target.channelId;
   if (!channelId && target.handle) {
     const qs = new URLSearchParams({ part: "id", forHandle: target.handle.replace(/^@/, ""), key });
@@ -251,7 +299,9 @@ async function youtubeStatus(
     );
     channelId = channels?.items?.[0]?.id ?? null;
   }
-  if (!channelId) return { live: null, offline: { kind: "offline", platform: "youtube", latest: null, channelUrl } };
+  if (!channelId) {
+    return { live: null, offline: { kind: "offline", platform: "youtube", latest: null, channelUrl }, thumbnailUrl: null };
+  }
   const liveQs = new URLSearchParams({
     part: "snippet",
     channelId,
@@ -287,6 +337,7 @@ async function youtubeStatus(
         watchUrl: `https://www.youtube.com/watch?v=${encodeURIComponent(liveId)}`,
       },
       offline: null,
+      thumbnailUrl: `https://i.ytimg.com/vi/${encodeURIComponent(liveId)}/hqdefault.jpg`,
     };
   }
   const latestQs = new URLSearchParams({
@@ -303,6 +354,7 @@ async function youtubeStatus(
   const video = latest?.items?.[0];
   const videoId = video?.id?.videoId;
   const thumbs = video?.snippet?.thumbnails ?? {};
+  const thumbnailUrl = thumbs["high"]?.url ?? thumbs["medium"]?.url ?? thumbs["default"]?.url ?? null;
   return {
     live: null,
     offline: {
@@ -312,28 +364,45 @@ async function youtubeStatus(
         ? {
             title: video?.snippet?.title ?? "Latest video",
             url: `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`,
-            thumbnailUrl: thumbs["high"]?.url ?? thumbs["medium"]?.url ?? thumbs["default"]?.url ?? null,
+            thumbnailUrl,
           }
         : null,
       channelUrl,
     },
+    thumbnailUrl,
   };
 }
 
 /** Same Kick channel payload already used by mark-points / live counter. */
-async function kickStatus(username: string, channelUrl: string): Promise<{ live: LiveHit | null; offline: OfflineHit | null }> {
+export async function kickStatus(username: string, channelUrl: string): Promise<PlatformHit> {
+  return cachedStatus(`kick:${username.toLowerCase()}`, () => kickStatusUncached(username, channelUrl));
+}
+
+async function kickStatusUncached(username: string, channelUrl: string): Promise<PlatformHit> {
   const slug = encodeURIComponent(username.toLowerCase());
   const payload = await jsonGet<{
     slug?: string;
-    livestream?: { is_live?: boolean; viewer_count?: number; session_title?: string } | null;
+    livestream?: {
+      is_live?: boolean;
+      viewer_count?: number;
+      session_title?: string;
+      thumbnail?: { url?: string } | string | null;
+    } | null;
+    previous_livestreams?: {
+      session_title?: string;
+      thumbnail?: { url?: string } | string | null;
+    }[];
   }>(`https://kick.com/api/v2/channels/${slug}`, {
     "accept-language": "en-US,en;q=0.9",
     "user-agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
     referer: "https://kick.com/",
   });
-  if (!payload) return { live: null, offline: { kind: "offline", platform: "kick", latest: null, channelUrl } };
+  if (!payload) {
+    return { live: null, offline: { kind: "offline", platform: "kick", latest: null, channelUrl }, thumbnailUrl: null };
+  }
   if (payload.livestream?.is_live) {
+    const thumbnailUrl = kickThumbnailUrl(payload.livestream.thumbnail);
     return {
       live: {
         kind: "live",
@@ -343,45 +412,80 @@ async function kickStatus(username: string, channelUrl: string): Promise<{ live:
         watchUrl: `https://kick.com/${encodeURIComponent(payload.slug ?? username)}`,
       },
       offline: null,
+      thumbnailUrl,
     };
   }
-  return { live: null, offline: { kind: "offline", platform: "kick", latest: null, channelUrl } };
+  const previous = payload.previous_livestreams?.[0];
+  const thumbnailUrl = kickThumbnailUrl(previous?.thumbnail);
+  return {
+    live: null,
+    offline: {
+      kind: "offline",
+      platform: "kick",
+      latest: previous
+        ? {
+            title: previous.session_title ?? "Last stream",
+            url: channelUrl,
+            thumbnailUrl,
+          }
+        : null,
+      channelUrl,
+    },
+    thumbnailUrl,
+  };
+}
+
+function streamTilePreview(hit: PlatformHit): LinkTilePreview | null {
+  if (!hit.live && !hit.thumbnailUrl) return null;
+  return { live: Boolean(hit.live), thumbnailUrl: hit.thumbnailUrl };
 }
 
 export async function resolveLinkInBioStream(state: LinkInBioState): Promise<{
   stream: StreamStatus | null;
   livePlatforms: LivePlatformFlags;
+  tilePreviews: Partial<Record<LinkPlatform, LinkTilePreview>>;
 }> {
   const targets = collectStreamTargets(state);
   const livePlatforms: LivePlatformFlags = { kick: false, twitch: false, youtube: false };
+  const tilePreviews: Partial<Record<LinkPlatform, LinkTilePreview>> = {};
   if (!targets.kickUsername && !targets.twitchUsername && !targets.youtube) {
-    return { stream: null, livePlatforms };
+    return { stream: null, livePlatforms, tilePreviews };
   }
 
+  const emptyHit: PlatformHit = { live: null, offline: null, thumbnailUrl: null };
   const [twitch, youtube, kick] = await Promise.all([
     targets.twitchUsername
       ? twitchStatus(targets.twitchUsername, targets.twitchUrl ?? `https://www.twitch.tv/${targets.twitchUsername}`)
-      : Promise.resolve({ live: null, offline: null }),
-    targets.youtube
-      ? youtubeStatus(targets.youtube, targets.youtubeUrl)
-      : Promise.resolve({ live: null, offline: null }),
+      : Promise.resolve(emptyHit),
+    targets.youtube ? youtubeStatus(targets.youtube, targets.youtubeUrl) : Promise.resolve(emptyHit),
     targets.kickUsername
       ? kickStatus(targets.kickUsername, targets.kickUrl ?? `https://kick.com/${targets.kickUsername}`)
-      : Promise.resolve({ live: null, offline: null }),
+      : Promise.resolve(emptyHit),
   ]);
 
   livePlatforms.twitch = Boolean(twitch.live);
   livePlatforms.youtube = Boolean(youtube.live);
   livePlatforms.kick = Boolean(kick.live);
 
-  const live = twitch.live ?? youtube.live ?? kick.live;
-  if (live) return { stream: live, livePlatforms };
+  const twitchTile = streamTilePreview(twitch);
+  const youtubeTile = streamTilePreview(youtube);
+  const kickTile = streamTilePreview(kick);
+  if (twitchTile) tilePreviews.twitch = twitchTile;
+  if (youtubeTile) tilePreviews.youtube = youtubeTile;
+  if (kickTile) tilePreviews.kick = kickTile;
 
-  if (youtube.offline?.latest) return { stream: youtube.offline, livePlatforms };
-  if (twitch.offline?.latest) return { stream: twitch.offline, livePlatforms };
+  const live = twitch.live ?? youtube.live ?? kick.live;
+  if (live) return { stream: live, livePlatforms, tilePreviews };
+
+  if (youtube.offline?.latest) return { stream: youtube.offline, livePlatforms, tilePreviews };
+  if (twitch.offline?.latest) return { stream: twitch.offline, livePlatforms, tilePreviews };
   const offline = twitch.offline ?? kick.offline ?? youtube.offline;
-  if (offline) return { stream: offline, livePlatforms };
-  return { stream: { kind: "offline", platform: "profile", latest: null, channelUrl: null }, livePlatforms };
+  if (offline) return { stream: offline, livePlatforms, tilePreviews };
+  return {
+    stream: { kind: "offline", platform: "profile", latest: null, channelUrl: null },
+    livePlatforms,
+    tilePreviews,
+  };
 }
 
 export async function publicLinkInBioJson(slug: string): Promise<PublicLinkInBio | null> {
@@ -428,5 +532,7 @@ export async function publicLinkInBioJson(slug: string): Promise<PublicLinkInBio
     scheduleTitle: schedule?.title ?? null,
   };
   const extras = await resolveLinkInBioStream(state);
-  return publicLinkInBioPayload(state, extras);
+  const { enrichLinkTilePreviews } = await import("@/lib/linkInBioLive.server");
+  const tilePreviews = await enrichLinkTilePreviews(state, extras.tilePreviews);
+  return publicLinkInBioPayload(state, { ...extras, tilePreviews });
 }
