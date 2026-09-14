@@ -4,11 +4,14 @@ import { toast } from "sonner";
 
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
 import { LinkInBioPage } from "@/components/link-in-bio/LinkInBioPage";
+import { LinkInBioPlatformLogo } from "@/components/link-in-bio/LinkInBioPlatformLogo";
 import { Button } from "@/components/ui/button";
 import { DarkSelect } from "@/components/ui/dark-select";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   handlesFromLinks,
@@ -32,7 +35,10 @@ import {
   publicBioPath,
   sanitizeHandle,
   sanitizeSlug,
+  usesFullUrl,
   spanFromBentoSize,
+  usernameCooldownActive,
+  usernameUnlockLabel,
   urlFromHandle,
   type AmbientPreset,
   type BentoSize,
@@ -50,8 +56,11 @@ const label = "mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide t
 
 export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay: () => void }) {
   const { profile, setProfile, theme, setTheme, links, setLinks, preview, persist, save, state, slugStatus } = draft;
+  const [editing, setEditing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [handles, setHandles] = useState<HandleMap>(() => handlesFromLinks(links));
+  const slugLocked = usernameCooldownActive(profile.usernameChangedAt);
+  const unlockOn = usernameUnlockLabel(profile.usernameChangedAt);
   const saveTimer = useRef(0);
   const selected = links.find((link) => link.id === selectedId) ?? null;
   const publicUrl = profile.slug
@@ -61,7 +70,9 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
   const queueSave = (nextProfile = profile, nextTheme = theme, nextLinks = links) => {
     window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => {
-      void persist(nextProfile, nextTheme, nextLinks).catch(() => toast.error("Could not save."));
+      void persist(nextProfile, nextTheme, nextLinks).catch((error: Error) =>
+        toast.error(error.message === "slug_cooldown" ? "Usernames can only be changed once every 30 days." : "Could not save."),
+      );
     }, 360);
   };
 
@@ -126,13 +137,19 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
 
   const liveFlags = preview.livePlatforms;
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" onClick={() => void publish(!profile.published)} disabled={!profile.slug || save.isPending}>
-          {profile.published ? "Unpublish" : "Publish"}
-        </Button>
-        <Button
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {editing ? (
+        <>
+          <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+            Done
+          </Button>
+          <Button type="button" onClick={() => void publish(!profile.published)} disabled={!profile.slug || save.isPending}>
+            {profile.published ? "Unpublish" : "Publish"}
+          </Button>
+        </>
+      ) : null}
+      <Button
           type="button"
           variant="outline"
           disabled={!publicUrl}
@@ -156,9 +173,34 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
           <RotateCcw className="size-3.5" />
           Replay setup
         </Button>
-      </div>
+    </div>
+  );
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+  if (!editing) {
+    return (
+      <div className="space-y-6">
+        {actions}
+        <button
+          type="button"
+          className="block w-full overflow-hidden rounded-2xl border border-white/10 text-start outline-none transition-colors hover:border-white/20 focus-visible:ring-2 focus-visible:ring-white/30"
+          onClick={onReplay}
+        >
+          <p className="border-b border-white/10 px-4 py-2 text-[0.72rem] uppercase tracking-wide text-muted-foreground">
+            Your page · click to replay setup
+          </p>
+          <div className="pointer-events-none max-h-[52rem] overflow-auto">
+            <LinkInBioPage data={preview} preview />
+          </div>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {actions}
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
         <section className="space-y-4 rounded-2xl border border-white/10 p-4 md:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -204,131 +246,227 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
           )}
         </section>
 
-        <aside className="space-y-4">
-          <Panel title="Profile">
-            <label className={label} htmlFor="dash-slug">
-              Username
-            </label>
-            <Input
-              id="dash-slug"
-              value={profile.slug}
-              onChange={(event) => patchProfile({ slug: sanitizeSlug(event.target.value) })}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              {slugStatus === "available" ? "Available." : slugStatus === "taken" ? "Taken." : slugStatus === "invalid" ? "Invalid username." : "Public path /u/…"}
-            </p>
-            <label className={cn(label, "mt-3")} htmlFor="dash-name">
-              Display name
-            </label>
-            <Input id="dash-name" dir="auto" value={profile.displayName} onChange={(event) => patchProfile({ displayName: event.target.value })} />
-            <label className={cn(label, "mt-3")} htmlFor="dash-bio">
-              Bio
-            </label>
-            <Textarea
-              id="dash-bio"
-              dir="auto"
-              className="min-h-28 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-              value={profile.bio}
-              onChange={(event) => patchProfile({ bio: event.target.value })}
-            />
-            <div className="mt-3 grid gap-3">
-              <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void onFile(event.target.files?.[0], "avatar")} />
-              <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void onFile(event.target.files?.[0], "header")} />
-            </div>
-          </Panel>
-
-          <Panel title="Theme & layout">
-            <DarkSelect
-              value={theme.layout}
-              onValueChange={(value) => patchTheme({ layout: value as BioLayout })}
-              options={LAYOUT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
-            />
-            <div className="mt-3 grid gap-3">
-              <DarkSelect value={theme.fontFamily} onValueChange={(value) => patchTheme({ fontFamily: value })} options={FONT_CHOICES.map((item) => ({ value: item.id, label: item.label }))} />
-              <DarkSelect
-                value={theme.surfaceStyle}
-                onValueChange={(value) => patchTheme({ surfaceStyle: value as SurfaceStyle })}
-                options={[
-                  { value: "glass", label: "Glass" },
-                  { value: "flat", label: "Flat" },
-                ]}
-              />
-              <DarkSelect value={theme.ambientPreset} onValueChange={(value) => patchTheme({ ambientPreset: value as AmbientPreset })} options={AMBIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))} />
-              <DarkSelect value={theme.gradientStyle} onValueChange={(value) => patchTheme({ gradientStyle: value as GradientStyle })} options={GRADIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))} />
-            </div>
-            <div className="mt-3">
-              <label className={label}>Glass {theme.glassIntensity}</label>
-              <Slider value={[theme.glassIntensity]} max={100} onValueChange={([value]) => patchTheme({ glassIntensity: value ?? 0 })} />
-            </div>
-            <label className="mt-3 flex items-center gap-2 text-sm">
-              <Switch checked={theme.ambientEnabled} onCheckedChange={(ambientEnabled) => patchTheme({ ambientEnabled })} />
-              Interactive ambient
-            </label>
-          </Panel>
-
-          <Panel title="Platforms">
-            <div className="space-y-2">
-              {LINK_PLATFORMS.map((platform) => (
-                <label key={platform.id} className="block">
-                  <span className={label}>{platform.label}</span>
-                  <Input
-                    dir="auto"
-                    placeholder={platform.id === "custom" ? "https://your-site.com" : "handle"}
-                    value={handles[platform.id] || handleFallback(links, platform.id)}
-                    onChange={(event) =>
-                      applyPlatforms({
-                        ...handlesFromLinks(links),
-                        ...handles,
-                        [platform.id]: platform.id === "custom" ? event.target.value : sanitizeHandle(event.target.value),
-                      })
-                    }
-                  />
-                  {handles[platform.id] && platform.id !== "custom" ? (
-                    <span className="mt-1 block text-[0.7rem] text-muted-foreground" dir="auto">
-                      {urlFromHandle(platform.id, handles[platform.id])}
-                    </span>
-                  ) : null}
-                </label>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Widgets">
-            <label className="flex items-center justify-between gap-3 text-sm">
-              <span>
-                Stream schedule
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {state?.scheduleShareToken ? "Links your public schedule." : "Create a schedule first."}
-                </span>
-              </span>
-              <Switch
-                checked={theme.scheduleEnabled}
-                disabled={!state?.scheduleShareToken}
-                onCheckedChange={(scheduleEnabled) => patchTheme({ scheduleEnabled })}
-              />
-            </label>
-            <div className="mt-3">
-              <label className={label}>Image banner</label>
-              <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void onFile(event.target.files?.[0], "banner")} />
-            </div>
-            <label className="mt-3 flex items-center justify-between gap-3 text-sm">
-              <span>Countdown</span>
-              <Switch checked={theme.countdownEnabled} onCheckedChange={(countdownEnabled) => patchTheme({ countdownEnabled })} />
-            </label>
-            {theme.countdownEnabled ? (
-              <div className="mt-3 space-y-2">
-                <Input dir="auto" value={theme.countdownLabel} onChange={(event) => patchTheme({ countdownLabel: event.target.value })} />
-                <Input
-                  type="datetime-local"
-                  value={localDateValue(theme.countdownEndsAt)}
-                  onChange={(event) =>
-                    patchTheme({ countdownEndsAt: event.target.value ? new Date(event.target.value).toISOString() : null })
-                  }
-                />
+        <aside className="xl:sticky xl:top-6 xl:self-start">
+          <div className="overflow-hidden rounded-2xl border border-white/10">
+            <Tabs defaultValue="profile">
+              <div className="border-b border-white/10 p-2">
+                <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-white/[0.04] p-1">
+                  <TabsTrigger value="profile" className="rounded-lg px-2 py-1.5 text-xs">
+                    Profile
+                  </TabsTrigger>
+                  <TabsTrigger value="theme" className="rounded-lg px-2 py-1.5 text-xs">
+                    Theme
+                  </TabsTrigger>
+                  <TabsTrigger value="platforms" className="rounded-lg px-2 py-1.5 text-xs">
+                    Platforms
+                  </TabsTrigger>
+                  <TabsTrigger value="widgets" className="rounded-lg px-2 py-1.5 text-xs">
+                    Widgets
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            ) : null}
-          </Panel>
 
+              <TabsContent value="profile" className="mt-0 max-h-[min(72vh,42rem)] space-y-5 overflow-y-auto p-5">
+                <Field
+                  htmlFor="dash-slug"
+                  title="Username"
+                  hint={slugLocked ? `Locked until ${unlockOn}.` : slugHint(slugStatus)}
+                >
+                  <Input
+                    id="dash-slug"
+                    value={profile.slug}
+                    disabled={slugLocked}
+                    onChange={(event) => patchProfile({ slug: sanitizeSlug(event.target.value) })}
+                  />
+                </Field>
+                <Field htmlFor="dash-name" title="Display name">
+                  <Input
+                    id="dash-name"
+                    dir="auto"
+                    value={profile.displayName}
+                    onChange={(event) => patchProfile({ displayName: event.target.value })}
+                  />
+                </Field>
+                <Field htmlFor="dash-bio" title="Bio">
+                  <Textarea
+                    id="dash-bio"
+                    dir="auto"
+                    className="min-h-28 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                    value={profile.bio}
+                    onChange={(event) => patchProfile({ bio: event.target.value })}
+                  />
+                </Field>
+                <Separator className="bg-white/10" />
+                <Field title="Avatar">
+                  <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void onFile(event.target.files?.[0], "avatar")} />
+                </Field>
+                <Field title="Header image">
+                  <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void onFile(event.target.files?.[0], "header")} />
+                  {profile.headerUrl ? (
+                    <button
+                      type="button"
+                      className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => patchProfile({ headerUrl: "" })}
+                    >
+                      Remove banner
+                    </button>
+                  ) : null}
+                </Field>
+              </TabsContent>
+
+              <TabsContent value="theme" className="mt-0 max-h-[min(72vh,42rem)] space-y-5 overflow-y-auto p-5">
+                <Field title="Layout">
+                  <DarkSelect
+                    value={theme.layout}
+                    onValueChange={(value) => patchTheme({ layout: value as BioLayout })}
+                    options={LAYOUT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
+                  />
+                </Field>
+                <Field title="Font">
+                  <DarkSelect
+                    value={theme.fontFamily}
+                    onValueChange={(value) => patchTheme({ fontFamily: value })}
+                    options={[
+                      ...FONT_CHOICES.map((item) => ({ value: item.id, label: item.label })),
+                      { value: "custom", label: "Custom" },
+                    ]}
+                  />
+                </Field>
+                {theme.fontFamily === "custom" ? (
+                  <>
+                    <Field title="Custom font name">
+                      <Input
+                        value={theme.fontCustomName}
+                        placeholder="Satoshi"
+                        onChange={(event) => patchTheme({ fontCustomName: event.target.value })}
+                      />
+                    </Field>
+                    <Field title="Custom font URL">
+                      <Input
+                        value={theme.fontCustomHref}
+                        placeholder="https://…/font.css or .woff2"
+                        onChange={(event) => patchTheme({ fontCustomHref: event.target.value })}
+                      />
+                    </Field>
+                  </>
+                ) : null}
+                <Separator className="bg-white/10" />
+                <Field title="Surface">
+                  <DarkSelect
+                    value={theme.surfaceStyle}
+                    onValueChange={(value) => patchTheme({ surfaceStyle: value as SurfaceStyle })}
+                    options={[
+                      { value: "glass", label: "Glass" },
+                      { value: "flat", label: "Flat" },
+                    ]}
+                  />
+                </Field>
+                <Field title={`Glass ${theme.glassIntensity}`}>
+                  <Slider value={[theme.glassIntensity]} max={100} onValueChange={([value]) => patchTheme({ glassIntensity: value ?? 0 })} />
+                </Field>
+                <Separator className="bg-white/10" />
+                <Field title="Ambient">
+                  <DarkSelect
+                    value={theme.ambientPreset}
+                    onValueChange={(value) => patchTheme({ ambientPreset: value as AmbientPreset })}
+                    options={AMBIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
+                  />
+                </Field>
+                <Field title="Glow">
+                  <DarkSelect
+                    value={theme.gradientStyle}
+                    onValueChange={(value) => patchTheme({ gradientStyle: value as GradientStyle })}
+                    options={GRADIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
+                  />
+                </Field>
+                <label className="flex items-center justify-between gap-3 text-sm">
+                  <span>Interactive ambient</span>
+                  <Switch checked={theme.ambientEnabled} onCheckedChange={(ambientEnabled) => patchTheme({ ambientEnabled })} />
+                </label>
+              </TabsContent>
+
+              <TabsContent value="platforms" className="mt-0 max-h-[min(72vh,42rem)] overflow-y-auto p-5">
+                <p className="mb-4 text-xs text-muted-foreground">Add a handle. URLs are built for you except Other.</p>
+                <div className="overflow-hidden rounded-xl border border-white/10">
+                  {LINK_PLATFORMS.map((platform, index) => {
+                    const value = handles[platform.id] || handleFallback(links, platform.id);
+                    return (
+                      <label
+                        key={platform.id}
+                        className={cn("flex items-start gap-3 px-3 py-3", index > 0 && "border-t border-white/10")}
+                      >
+                        <span className="mt-1 grid size-8 shrink-0 place-items-center rounded-lg bg-white/[0.04]">
+                          <LinkInBioPlatformLogo platform={platform.id} size={18} />
+                        </span>
+                        <span className="min-w-0 flex-1 space-y-1.5">
+                          <span className="block text-[0.72rem] font-medium text-foreground/90">{platform.label}</span>
+                          <Input
+                            dir="auto"
+                            className="h-9"
+                            placeholder={usesFullUrl(platform.id) ? platform.hint : "handle"}
+                            value={value}
+                            onChange={(event) =>
+                              applyPlatforms({
+                                ...handlesFromLinks(links),
+                                ...handles,
+                                [platform.id]: usesFullUrl(platform.id)
+                                  ? event.target.value
+                                  : sanitizeHandle(event.target.value),
+                              })
+                            }
+                          />
+                          {value && !usesFullUrl(platform.id) ? (
+                            <span className="block truncate text-[0.68rem] text-muted-foreground" dir="auto">
+                              {urlFromHandle(platform.id, value)}
+                            </span>
+                          ) : null}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="widgets" className="mt-0 max-h-[min(72vh,42rem)] space-y-5 overflow-y-auto p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Stream schedule</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {state?.scheduleShareToken ? "Links your public schedule." : "Create a schedule first."}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={theme.scheduleEnabled}
+                    disabled={!state?.scheduleShareToken}
+                    onCheckedChange={(scheduleEnabled) => patchTheme({ scheduleEnabled })}
+                  />
+                </div>
+                <Separator className="bg-white/10" />
+                <Field title="Image banner">
+                  <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void onFile(event.target.files?.[0], "banner")} />
+                </Field>
+                <Separator className="bg-white/10" />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">Countdown</p>
+                    <Switch checked={theme.countdownEnabled} onCheckedChange={(countdownEnabled) => patchTheme({ countdownEnabled })} />
+                  </div>
+                  {theme.countdownEnabled ? (
+                    <div className="space-y-3">
+                      <Input dir="auto" value={theme.countdownLabel} onChange={(event) => patchTheme({ countdownLabel: event.target.value })} />
+                      <Input
+                        type="datetime-local"
+                        value={localDateValue(theme.countdownEndsAt)}
+                        onChange={(event) =>
+                          patchTheme({ countdownEndsAt: event.target.value ? new Date(event.target.value).toISOString() : null })
+                        }
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
         </aside>
       </div>
 
@@ -344,13 +482,33 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Field({
+  title,
+  htmlFor,
+  hint,
+  children,
+}: {
+  title: string;
+  htmlFor?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="rounded-2xl border border-white/10 p-4">
-      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+    <div className="space-y-2">
+      <label className={label} htmlFor={htmlFor}>
+        {title}
+      </label>
       {children}
-    </section>
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+    </div>
   );
+}
+
+function slugHint(status: Draft["slugStatus"]) {
+  if (status === "available") return "Available.";
+  if (status === "taken") return "Taken.";
+  if (status === "invalid") return "Invalid username.";
+  return "Public path /u/…";
 }
 
 function handleFallback(links: LinkInBioLink[], platform: LinkPlatform) {

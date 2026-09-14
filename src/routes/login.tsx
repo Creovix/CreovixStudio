@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { PlatformAsset } from "@/components/icons/platformAssets";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { enableTestMode, isTestMode } from "@/lib/testMode";
@@ -121,9 +122,7 @@ function LoginPage() {
             disabled={pending !== null || !isSupabaseConfigured()}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-twitch px-5 py-3.5 text-base font-semibold text-twitch-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
-              <path d="M4.3 0 1.7 5.2v15.6h5.2V24h3l3-3.2h4.3L23 15V0H4.3Zm16.1 13.9-3 3.2h-5.2l-2.6 2.6v-2.6H5.2V2.6h15.2v11.3ZM17 6.5v6.1h-2.6V6.5H17Zm-6.1 0v6.1H8.3V6.5h2.6Z" />
-            </svg>
+            <PlatformAsset key="login-twitch" name="twitch" size={20} variant="White" className="h-5 w-5" />
             {pending === "twitch" ? "Redirecting…" : "Continue with Twitch"}
           </button>
 
@@ -133,9 +132,7 @@ function LoginPage() {
             disabled={pending !== null || !isSupabaseConfigured()}
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-kick px-5 py-3.5 text-base font-semibold text-kick-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
-              <path d="M3 2h5.4v6.2h1.8V5.4H12V2h5.4v6.2h-1.8V11h-1.8v2h1.8v2.8h1.8V22H12v-3.4h-1.8v-2.8H8.4V22H3V2Z" />
-            </svg>
+            <PlatformAsset key="login-kick" name="kick" size={20} variant="Black" className="h-5 w-5" />
             {pending === "kick" ? "Redirecting…" : "Continue with Kick"}
           </button>
 
@@ -145,9 +142,7 @@ function LoginPage() {
               disabled
               className="pointer-events-none flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-black px-5 py-3.5 text-base font-semibold text-white opacity-60 blur-[2px] saturate-50"
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
-                <path d="M16.5 2h-3v13.1a2.6 2.6 0 1 1-2.2-2.6v-3a5.6 5.6 0 1 0 5.2 5.6V9.3a7 7 0 0 0 4 1.3v-3a4 4 0 0 1-4-4Z" />
-              </svg>
+              <PlatformAsset key="login-tiktok" name="tiktok" size={20} variant="White" className="h-5 w-5" />
               Continue with TikTok
             </button>
             <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">

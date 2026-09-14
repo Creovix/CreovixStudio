@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 
 import { LinkInBioDashboard } from "@/components/link-in-bio/LinkInBioDashboard";
-import { LinkInBioWizard } from "@/components/link-in-bio/LinkInBioWizard";
+import { LinkInBioWizard } from "@/components/link-in-bio/wizard";
 import { AppShell } from "@/components/layout/AppShell";
 import { useLinkInBioDraft } from "@/hooks/useLinkInBioDraft";
 
@@ -48,7 +48,7 @@ export function LinkInBioStudio({
       user={user}
       profile={workspaceProfile}
       title="Link in Bio"
-      subtitle="Edit the bento, theme, links, and widgets anytime. Replay setup if you want the guided flow again."
+      subtitle="Your public page. Click the preview or Replay setup to go through the guided flow again."
     >
       <LinkInBioDashboard draft={draft} onReplay={() => goSetup(1)} />
     </AppShell>

@@ -14,6 +14,7 @@ import {
 
 import { AppShell } from "@/components/layout/AppShell";
 import { TestEventMenu, type InjectedFeedEvent } from "@/components/activity/TestEventMenu";
+import { PlatformAsset } from "@/components/icons/platformAssets";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { supabase } from "@/lib/supabase/client";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
@@ -101,23 +102,11 @@ type FilterGroup = {
 };
 
 function StreamlabsMark() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5 shrink-0" aria-hidden>
-      <path
-        fill="#31C3A2"
-        d="M12 2.2 20.8 7v10L12 21.8 3.2 17V7L12 2.2Zm0 3.1L6.4 8.4v7.2L12 18.7l5.6-3.1V8.4L12 5.3Z"
-      />
-    </svg>
-  );
+  return <PlatformAsset key="streamlabs" name="streamlabs" size={20} className="size-5 shrink-0" />;
 }
 
 function StreamElementsMark() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5 shrink-0" aria-hidden>
-      <circle cx="12" cy="12" r="10" fill="#236BE9" />
-      <path fill="#fff" d="M8 7.5h8v2.2H10.4V11H15v2.1H10.4v1.2H16.2V17.5H8z" />
-    </svg>
-  );
+  return <PlatformAsset key="streamelements" name="streamelements" size={20} className="size-5 shrink-0" />;
 }
 
 const KNOWN_PLATFORMS = [

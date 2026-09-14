@@ -2,7 +2,8 @@ export const LINK_IN_BIO_TEST_KEY = "creovix:link-in-bio";
 export const LINK_IN_BIO_SLUG_LIST_KEY = "creovix:link-in-bio-slugs";
 export const LINK_IN_BIO_WIZARD_STEP_KEY = "creovix:link-in-bio-wizard-step";
 export const LINK_IN_BIO_PUBLIC_PREFIX = "/u";
-export const WIZARD_STEPS = 6;
+export const WIZARD_STEPS = 4;
+export const USERNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type LinkPlatform =
   | "kick"
@@ -12,6 +13,7 @@ export type LinkPlatform =
   | "instagram"
   | "x"
   | "discord"
+  | "whatsapp"
   | "custom";
 
 export type CardSize = "s" | "m" | "l";
@@ -20,6 +22,7 @@ export type BioLayout = "bento" | "list" | "grid" | "spotlight" | "banner";
 export type BentoSize = "1x1" | "2x1" | "1x2" | "2x2";
 export type LinkKind = "link" | "gallery";
 export type SurfaceStyle = "flat" | "glass";
+export type BentoColorMode = "brand" | "mono" | "gradient" | "glow" | "glass" | "custom";
 export type GradientStyle = "none" | "soft" | "aurora" | "horizon";
 export type AmbientPreset = "none" | "glow" | "orbits" | "haze" | "ripple";
 export type StreamPlatform = "twitch" | "youtube" | "kick";
@@ -91,6 +94,7 @@ export type LinkInBioProfile = {
   published: boolean;
   publishedAt: string | null;
   setupCompleted: boolean;
+  usernameChangedAt: string | null;
 };
 
 export type LinkInBioTheme = {
@@ -99,11 +103,16 @@ export type LinkInBioTheme = {
   glowStrength: number;
   gradientStyle: GradientStyle;
   fontFamily: string;
+  fontCustomName: string;
+  fontCustomHref: string;
   paletteBg: string;
   paletteFg: string;
   paletteAccent: string;
   paletteMuted: string;
   surfaceStyle: SurfaceStyle;
+  bentoColorMode: BentoColorMode;
+  bentoCustomFill: string;
+  bentoCustomAccent: string;
   layout: BioLayout;
   defaultCardSize: CardSize;
   ambientEnabled: boolean;
@@ -148,10 +157,13 @@ export const LINK_PLATFORMS: ReadonlyArray<{
   { id: "instagram", label: "Instagram", hint: "https://instagram.com/you" },
   { id: "x", label: "X", hint: "https://x.com/you" },
   { id: "discord", label: "Discord", hint: "https://discord.gg/invite" },
+  { id: "whatsapp", label: "WhatsApp Community", hint: "https://chat.whatsapp.com/… or whatsapp.com/channel/…" },
   { id: "custom", label: "Other", hint: "https://…" },
 ];
 
-export const PLATFORM_HANDLE_PREFIX: Record<Exclude<LinkPlatform, "custom">, string> = {
+export type PrefixedPlatform = Exclude<LinkPlatform, "custom" | "whatsapp">;
+
+export const PLATFORM_HANDLE_PREFIX: Record<PrefixedPlatform, string> = {
   kick: "https://kick.com/",
   twitch: "https://www.twitch.tv/",
   youtube: "https://www.youtube.com/@",
@@ -161,54 +173,65 @@ export const PLATFORM_HANDLE_PREFIX: Record<Exclude<LinkPlatform, "custom">, str
   discord: "https://discord.gg/",
 };
 
-export const FONT_CHOICES: ReadonlyArray<{ id: string; label: string; stack: string; href: string }> = [
+export function usesFullUrl(platform: LinkPlatform): platform is "custom" | "whatsapp" {
+  return platform === "custom" || platform === "whatsapp";
+}
+
+export const FONT_CHOICES: ReadonlyArray<{
+  id: string;
+  label: string;
+  kind: string;
+  sample: string;
+  stack: string;
+  href: string;
+}> = [
   {
     id: "manrope",
     label: "Manrope",
+    kind: "Grotesque",
+    sample: "Aa",
     stack: '"Manrope", system-ui, sans-serif',
     href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap",
   },
   {
-    id: "inter",
-    label: "Inter",
-    stack: '"Inter", system-ui, sans-serif',
-    href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap",
-  },
-  {
-    id: "dm-sans",
-    label: "DM Sans",
-    stack: '"DM Sans", system-ui, sans-serif',
-    href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap",
-  },
-  {
-    id: "outfit",
-    label: "Outfit",
-    stack: '"Outfit", system-ui, sans-serif',
-    href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap",
-  },
-  {
-    id: "space-grotesk",
-    label: "Space Grotesk",
-    stack: '"Space Grotesk", system-ui, sans-serif',
-    href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap",
-  },
-  {
-    id: "ibm-plex-sans",
-    label: "IBM Plex Sans",
-    stack: '"IBM Plex Sans", system-ui, sans-serif',
-    href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap",
+    id: "source-sans",
+    label: "Source Sans",
+    kind: "Humanist",
+    sample: "Hg",
+    stack: '"Source Sans 3", "Segoe UI", sans-serif',
+    href: "https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap",
   },
   {
     id: "source-serif",
     label: "Source Serif",
+    kind: "Serif",
+    sample: "Qq",
     stack: '"Source Serif 4", Georgia, serif',
     href: "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&display=swap",
   },
   {
     id: "fraunces",
     label: "Fraunces",
+    kind: "Display",
+    sample: "Qf",
     stack: '"Fraunces", Georgia, serif',
-    href: "https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap",
+  },
+  {
+    id: "ibm-plex-mono",
+    label: "IBM Plex Mono",
+    kind: "Mono",
+    sample: "01",
+    stack: '"IBM Plex Mono", ui-monospace, monospace',
+    href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap",
+  },
+  {
+    id: "syne",
+    label: "Syne",
+    kind: "Geometric",
+    sample: "SY",
+    stack: '"Syne", system-ui, sans-serif',
+    href: "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap",
   },
 ];
 
@@ -245,12 +268,57 @@ export const GRADIENT_CHOICES: ReadonlyArray<{ id: GradientStyle; label: string 
   { id: "horizon", label: "Horizon" },
 ];
 
+export const BACKGROUND_PRESETS: ReadonlyArray<{
+  id: "paper" | "dark";
+  label: string;
+  hint: string;
+  paletteBg: string;
+  paletteFg: string;
+  paletteAccent: string;
+  paletteMuted: string;
+  gradientStyle: GradientStyle;
+}> = [
+  {
+    id: "paper",
+    label: "Paper",
+    hint: "Light page, dark type",
+    paletteBg: "#f7f7f5",
+    paletteFg: "#171717",
+    paletteAccent: "#6d28d9",
+    paletteMuted: "#5c5c57",
+    gradientStyle: "soft",
+  },
+  {
+    id: "dark",
+    label: "Dark",
+    hint: "Obsidian canvas",
+    paletteBg: "#0f1117",
+    paletteFg: "#f4f4f5",
+    paletteAccent: "#7c8cff",
+    paletteMuted: "#a1a1aa",
+    gradientStyle: "soft",
+  },
+];
+
+export const BENTO_COLOR_MODES: ReadonlyArray<{
+  id: BentoColorMode;
+  label: string;
+  hint: string;
+}> = [
+  { id: "brand", label: "Full Brand Colors", hint: "Theme surface, brand hairline and wash" },
+  { id: "mono", label: "Monochrome Sleek", hint: "Neutral cards, brand on icons" },
+  { id: "gradient", label: "Gradient Fades", hint: "Soft brand wash at the edge" },
+  { id: "glow", label: "Accent Glows", hint: "Theme accent glow on the surface" },
+  { id: "glass", label: "Glass-Tinted", hint: "Frosted glass, slight tint" },
+  { id: "custom", label: "Custom Palette", hint: "Your color as border, glow, and wash" },
+];
+
 export const AMBIENT_CHOICES: ReadonlyArray<{ id: AmbientPreset; label: string; hint: string }> = [
-  { id: "glow", label: "Ambient glow", hint: "Soft orbs that follow the pointer" },
-  { id: "orbits", label: "Orbits", hint: "Slow circling glass lights" },
-  { id: "haze", label: "Glass haze", hint: "Layered panels that tilt" },
-  { id: "ripple", label: "Ripple", hint: "Rings from the pointer" },
-  { id: "none", label: "Static only", hint: "No motion layers" },
+  { id: "glow", label: "Ambient glow", hint: "Soft color orbs drift and follow the pointer." },
+  { id: "orbits", label: "Orbits", hint: "Slow circling glass lights around the page." },
+  { id: "haze", label: "Glass haze", hint: "Frosted panels that tilt as you move." },
+  { id: "ripple", label: "Ripple", hint: "Rings bloom from the pointer." },
+  { id: "none", label: "Static only", hint: "Background color only — no motion." },
 ];
 
 const RESERVED_SLUGS = new Set([
@@ -281,11 +349,16 @@ export const DEFAULT_THEME: LinkInBioTheme = {
   glowStrength: 35,
   gradientStyle: "soft",
   fontFamily: "manrope",
+  fontCustomName: "",
+  fontCustomHref: "",
   paletteBg: "#0f1117",
   paletteFg: "#f4f4f5",
   paletteAccent: "#7c8cff",
   paletteMuted: "#a1a1aa",
   surfaceStyle: "glass",
+  bentoColorMode: "brand",
+  bentoCustomFill: "#1a1c24",
+  bentoCustomAccent: "#7c8cff",
   layout: "bento",
   defaultCardSize: "m",
   ambientEnabled: true,
@@ -306,6 +379,7 @@ export const DEFAULT_PROFILE: LinkInBioProfile = {
   published: false,
   publishedAt: null,
   setupCompleted: false,
+  usernameChangedAt: null,
 };
 
 export function publicBioPath(slug: string): string {
@@ -314,11 +388,14 @@ export function publicBioPath(slug: string): string {
 
 export function clampWizardStep(raw: unknown): number {
   const value = typeof raw === "number" ? raw : Number(raw);
-  if (!Number.isInteger(value) || value < 1 || value > WIZARD_STEPS) return 1;
-  return value;
+  if (!Number.isFinite(value)) return 1;
+  return Math.min(WIZARD_STEPS, Math.max(1, Math.round(value)));
 }
 
-export function parseLinkInBioSearch(search: Record<string, unknown>): { setup?: boolean; step?: number } {
+export function parseLinkInBioSearch(search: Record<string, unknown>): {
+  setup?: boolean | undefined;
+  step?: number | undefined;
+} {
   const rawStep = search["step"];
   const hasStep = rawStep !== undefined && rawStep !== "" && rawStep !== null;
   const setupRaw = search["setup"];
@@ -352,6 +429,41 @@ export function fontById(id: string) {
   return FONT_CHOICES.find((font) => font.id === id) ?? FONT_CHOICES[0]!;
 }
 
+export function sanitizeFontCustomName(raw: string): string {
+  return raw.replace(/[<>"'\\]/g, "").trim().slice(0, 40);
+}
+
+export function sanitizeFontCustomHref(raw: string): string {
+  const value = raw.trim();
+  if (!value || value.length > 2048) return "";
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+    return value;
+  } catch {
+    return "";
+  }
+}
+
+export function resolveBioFont(theme: Pick<LinkInBioTheme, "fontFamily" | "fontCustomName" | "fontCustomHref">): {
+  id: string;
+  stack: string;
+  href: string;
+  faceName: string;
+} {
+  if (theme.fontFamily === "custom") {
+    const faceName = sanitizeFontCustomName(theme.fontCustomName) || "Custom";
+    return {
+      id: "custom",
+      stack: `"${faceName}", system-ui, sans-serif`,
+      href: sanitizeFontCustomHref(theme.fontCustomHref),
+      faceName,
+    };
+  }
+  const preset = fontById(theme.fontFamily);
+  return { id: preset.id, stack: preset.stack, href: preset.href, faceName: preset.label };
+}
+
 export function sanitizeSlug(raw: string): string {
   return raw
     .trim()
@@ -367,6 +479,41 @@ export function slugError(slug: string): string | null {
   if (RESERVED_SLUGS.has(slug)) return "slug_reserved";
   if (!/^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$/.test(slug)) return "slug_invalid";
   return null;
+}
+
+export function sanitizeTimestamp(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+export function usernameCooldownUntil(changedAt: string | null | undefined): Date | null {
+  const stamped = sanitizeTimestamp(changedAt);
+  if (!stamped) return null;
+  return new Date(new Date(stamped).getTime() + USERNAME_COOLDOWN_MS);
+}
+
+export function usernameCooldownActive(changedAt: string | null | undefined, now = Date.now()): boolean {
+  const until = usernameCooldownUntil(changedAt);
+  return Boolean(until && until.getTime() > now);
+}
+
+export function usernameUnlockLabel(changedAt: string | null | undefined): string | null {
+  const until = usernameCooldownUntil(changedAt);
+  if (!until || until.getTime() <= Date.now()) return null;
+  return until.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+export function applyUsernameClaim(
+  current: Pick<LinkInBioProfile, "slug" | "usernameChangedAt">,
+  nextSlug: string,
+  now = new Date(),
+): { usernameChangedAt: string | null } | { error: "slug_cooldown" } {
+  const previous = sanitizeSlug(current.slug);
+  const next = sanitizeSlug(nextSlug);
+  if (previous === next) return { usernameChangedAt: current.usernameChangedAt };
+  if (usernameCooldownActive(current.usernameChangedAt, now.getTime())) return { error: "slug_cooldown" };
+  return { usernameChangedAt: now.toISOString() };
 }
 
 export function sanitizeHex(raw: string, fallback: string): string {
@@ -485,6 +632,7 @@ export function platformAccent(platform: LinkPlatform): { color: string; css: st
   if (platform === "tiktok") return { color: "#25F4EE", css: "#141414" };
   if (platform === "x") return { color: "#E7E9EA", css: "#000000" };
   if (platform === "discord") return { color: "#5865F2", css: "#5865F2" };
+  if (platform === "whatsapp") return { color: "#25D366", css: "#25D366" };
   return { color: "#229ED9", css: "#229ED9" };
 }
 
@@ -554,6 +702,41 @@ export function packBento<T extends Pick<LinkInBioLink, "id" | "gridX" | "gridY"
   });
 }
 
+export function applyBentoPlacement(
+  links: LinkInBioLink[],
+  id: string,
+  patch: Partial<Pick<LinkInBioLink, "gridX" | "gridY" | "colSpan" | "rowSpan">>,
+): LinkInBioLink[] {
+  const updated = links.map((link) => {
+    if (link.id !== id) return link;
+    const colSpan = sanitizeSpan(patch.colSpan ?? link.colSpan);
+    const rowSpan = sanitizeSpan(patch.rowSpan ?? link.rowSpan);
+    const gridX = sanitizeGridX(Math.min(BENTO_COLS - colSpan, patch.gridX ?? link.gridX));
+    const gridY = sanitizeGridY(patch.gridY ?? link.gridY);
+    return { ...link, colSpan, rowSpan, gridX, gridY };
+  });
+  const focused = updated.find((link) => link.id === id);
+  const rest = updated.filter((link) => link.id !== id);
+  const packed = packBento(focused ? [focused, ...rest] : updated);
+  const now = new Date().toISOString();
+  const byId = new Map(packed.map((item) => [item.id, item]));
+  return updated
+    .map((link) => {
+      const slot = byId.get(link.id);
+      if (!slot) return link;
+      return {
+        ...link,
+        gridX: slot.gridX,
+        gridY: slot.gridY,
+        colSpan: slot.colSpan,
+        rowSpan: slot.rowSpan,
+        sortOrder: slot.gridY * BENTO_COLS + slot.gridX,
+        updatedAt: link.id === id ? now : link.updatedAt,
+      };
+    })
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
 export function sanitizeSurface(raw: string): SurfaceStyle {
   return raw === "flat" ? "flat" : "glass";
 }
@@ -563,11 +746,145 @@ export function sanitizeGradient(raw: string): GradientStyle {
 }
 
 export function sanitizeFont(raw: string): string {
+  if (raw === "custom") return "custom";
   return FONT_CHOICES.some((font) => font.id === raw) ? raw : "manrope";
 }
 
 export function sanitizeAmbientPreset(raw: string): AmbientPreset {
   return raw === "none" || raw === "orbits" || raw === "haze" || raw === "ripple" ? raw : "glow";
+}
+
+export function sanitizeBentoColorMode(raw: string | null | undefined): BentoColorMode {
+  if (raw === "mono" || raw === "gradient" || raw === "glow" || raw === "glass" || raw === "custom") return raw;
+  if (raw === "accent") return "glow";
+  return "brand";
+}
+
+export function hexLuminance(hex: string): number {
+  const n = hex.replace("#", "");
+  if (n.length !== 6) return 0;
+  const toLin = (channel: number) => {
+    const srgb = channel / 255;
+    return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  };
+  return (
+    0.2126 * toLin(Number.parseInt(n.slice(0, 2), 16)) +
+    0.7152 * toLin(Number.parseInt(n.slice(2, 4), 16)) +
+    0.0722 * toLin(Number.parseInt(n.slice(4, 6), 16))
+  );
+}
+
+export type BentoTilePaint = {
+  fill: string;
+  wash?: string;
+  ink: string;
+  onLight: boolean;
+  border?: string;
+  glowColor: string;
+  boxShadow?: string;
+  backdropFilter?: string;
+};
+
+function themeSurface(light: boolean): string {
+  return light
+    ? "color-mix(in oklab, #ffffff 92%, var(--bio-bg))"
+    : "color-mix(in oklab, #ffffff 7%, var(--bio-bg))";
+}
+
+function officialInk(platform: LinkPlatform, lightSurface: boolean): string {
+  if (platform === "x") return lightSurface ? "#000000" : "#E7E9EA";
+  if (platform === "tiktok") return lightSurface ? "#111111" : "#25F4EE";
+  if (platform === "twitch") return "#9146FF";
+  return platformAccent(platform).color;
+}
+
+export function bentoTilePaint(
+  platform: LinkPlatform,
+  theme: Pick<
+    LinkInBioTheme,
+    "bentoColorMode" | "paletteBg" | "paletteAccent" | "bentoCustomFill" | "bentoCustomAccent"
+  >,
+): BentoTilePaint {
+  const brand = platformAccent(platform);
+  const mode = sanitizeBentoColorMode(theme.bentoColorMode);
+  const pageLight = hexLuminance(theme.paletteBg) > 0.45;
+  const fill = themeSurface(pageLight);
+  const ink = officialInk(platform, pageLight);
+  const hairline = pageLight
+    ? "1px solid color-mix(in oklab, var(--bio-fg) 10%, transparent)"
+    : "1px solid color-mix(in oklab, #ffffff 10%, transparent)";
+
+  if (mode === "mono") {
+    return {
+      fill,
+      ink,
+      onLight: pageLight,
+      border: hairline,
+      glowColor: brand.color,
+    };
+  }
+
+  if (mode === "gradient") {
+    return {
+      fill,
+      wash: `linear-gradient(165deg, transparent 38%, color-mix(in oklab, ${brand.color} 16%, transparent) 100%)`,
+      ink,
+      onLight: pageLight,
+      border: hairline,
+      glowColor: brand.color,
+    };
+  }
+
+  if (mode === "glow") {
+    return {
+      fill,
+      wash: `radial-gradient(120% 90% at 50% 120%, color-mix(in oklab, ${theme.paletteAccent} 18%, transparent), transparent 62%)`,
+      ink,
+      onLight: pageLight,
+      border: `1px solid color-mix(in oklab, ${theme.paletteAccent} 42%, transparent)`,
+      glowColor: theme.paletteAccent,
+      boxShadow: `inset 0 0 28px color-mix(in oklab, ${theme.paletteAccent} 16%, transparent), 0 14px 28px color-mix(in oklab, ${theme.paletteAccent} 22%, transparent)`,
+    };
+  }
+
+  if (mode === "glass") {
+    return {
+      fill: pageLight
+        ? `color-mix(in oklab, ${theme.paletteAccent} 8%, color-mix(in oklab, #ffffff 70%, var(--bio-bg)))`
+        : `color-mix(in oklab, ${theme.paletteAccent} 10%, color-mix(in oklab, #ffffff 8%, var(--bio-bg)))`,
+      ink,
+      onLight: pageLight,
+      border: pageLight
+        ? `1px solid color-mix(in oklab, ${theme.paletteAccent} 22%, rgba(255,255,255,0.5))`
+        : `1px solid color-mix(in oklab, ${theme.paletteAccent} 28%, rgba(255,255,255,0.14))`,
+      glowColor: theme.paletteAccent,
+      backdropFilter: "blur(22px) saturate(1.3)",
+    };
+  }
+
+  if (mode === "custom") {
+    const customFill = sanitizeHex(theme.bentoCustomFill, DEFAULT_THEME.bentoCustomFill);
+    const accent = sanitizeHex(theme.bentoCustomAccent, DEFAULT_THEME.bentoCustomAccent);
+    return {
+      fill,
+      wash: `color-mix(in oklab, ${customFill} 12%, transparent)`,
+      ink,
+      onLight: pageLight,
+      border: `1.5px solid color-mix(in oklab, ${accent} 55%, transparent)`,
+      glowColor: accent,
+      boxShadow: `inset 0 0 22px color-mix(in oklab, ${accent} 14%, transparent)`,
+    };
+  }
+
+  return {
+    fill,
+    wash: `color-mix(in oklab, ${brand.color} 10%, transparent)`,
+    ink,
+    onLight: pageLight,
+    border: `1.5px solid color-mix(in oklab, ${brand.color} 58%, transparent)`,
+    glowColor: brand.color,
+    boxShadow: `inset 0 0 20px color-mix(in oklab, ${brand.color} 10%, transparent)`,
+  };
 }
 
 export function sanitizeTheme(partial: Partial<LinkInBioTheme> | null | undefined): LinkInBioTheme {
@@ -578,11 +895,19 @@ export function sanitizeTheme(partial: Partial<LinkInBioTheme> | null | undefine
     glowStrength: clampPercent(src.glowStrength ?? DEFAULT_THEME.glowStrength),
     gradientStyle: sanitizeGradient(src.gradientStyle ?? DEFAULT_THEME.gradientStyle),
     fontFamily: sanitizeFont(src.fontFamily ?? DEFAULT_THEME.fontFamily),
+    fontCustomName: sanitizeFontCustomName(src.fontCustomName ?? DEFAULT_THEME.fontCustomName),
+    fontCustomHref: sanitizeFontCustomHref(src.fontCustomHref ?? DEFAULT_THEME.fontCustomHref),
     paletteBg: sanitizeHex(src.paletteBg ?? DEFAULT_THEME.paletteBg, DEFAULT_THEME.paletteBg),
     paletteFg: sanitizeHex(src.paletteFg ?? DEFAULT_THEME.paletteFg, DEFAULT_THEME.paletteFg),
     paletteAccent: sanitizeHex(src.paletteAccent ?? DEFAULT_THEME.paletteAccent, DEFAULT_THEME.paletteAccent),
     paletteMuted: sanitizeHex(src.paletteMuted ?? DEFAULT_THEME.paletteMuted, DEFAULT_THEME.paletteMuted),
     surfaceStyle: sanitizeSurface(src.surfaceStyle ?? DEFAULT_THEME.surfaceStyle),
+    bentoColorMode: sanitizeBentoColorMode(src.bentoColorMode ?? DEFAULT_THEME.bentoColorMode),
+    bentoCustomFill: sanitizeHex(src.bentoCustomFill ?? DEFAULT_THEME.bentoCustomFill, DEFAULT_THEME.bentoCustomFill),
+    bentoCustomAccent: sanitizeHex(
+      src.bentoCustomAccent ?? DEFAULT_THEME.bentoCustomAccent,
+      DEFAULT_THEME.bentoCustomAccent,
+    ),
     layout: sanitizeLayout(src.layout ?? DEFAULT_THEME.layout),
     defaultCardSize: sanitizeCardSize(src.defaultCardSize ?? DEFAULT_THEME.defaultCardSize),
     ambientEnabled: src.ambientEnabled !== false,
@@ -614,6 +939,7 @@ export function sanitizeProfile(partial: Partial<LinkInBioProfile> | null | unde
     published: Boolean(src.published),
     publishedAt: src.publishedAt ?? null,
     setupCompleted: Boolean(src.setupCompleted),
+    usernameChangedAt: sanitizeTimestamp(src.usernameChangedAt),
   };
 }
 
@@ -621,7 +947,25 @@ export function sanitizeHandle(raw: string): string {
   return raw.trim().replace(/^@/, "").replace(/\s+/g, "").slice(0, 64);
 }
 
+export function sanitizeWhatsappCommunityUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  if (/^(\+|00)?[\d\s()-]{6,}$/.test(trimmed) || trimmed.toLowerCase().startsWith("tel:")) return "";
+  const url = sanitizeLinkUrl(trimmed);
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "chat.whatsapp.com") return parsed.pathname.replace(/\/+$/, "").length > 0 ? url : "";
+    if (host === "whatsapp.com" && /^\/(channel|invite)\//i.test(parsed.pathname)) return url;
+    return "";
+  } catch {
+    return "";
+  }
+}
+
 export function urlFromHandle(platform: LinkPlatform, handleOrUrl: string): string {
+  if (platform === "whatsapp") return sanitizeWhatsappCommunityUrl(handleOrUrl);
   if (platform === "custom") return sanitizeLinkUrl(handleOrUrl);
   const handle = sanitizeHandle(handleOrUrl);
   if (!handle) return "";
@@ -629,7 +973,7 @@ export function urlFromHandle(platform: LinkPlatform, handleOrUrl: string): stri
 }
 
 export function handleFromUrl(platform: LinkPlatform, url: string): string {
-  if (platform === "custom") return url;
+  if (usesFullUrl(platform)) return url;
   try {
     const parsed = new URL(url);
     const parts = parsed.pathname.split("/").filter(Boolean);

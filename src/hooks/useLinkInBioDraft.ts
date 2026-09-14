@@ -13,6 +13,7 @@ import {
   publicLinkInBioPayload,
   replaceTestLinks,
   saveTestLinkInBio,
+  applyUsernameClaim,
   sanitizeHandle,
   sanitizeSlug,
   slugError,
@@ -44,6 +45,7 @@ export const EMPTY_HANDLES: HandleMap = {
   instagram: "",
   x: "",
   discord: "",
+  whatsapp: "",
   custom: "",
 };
 
@@ -97,6 +99,7 @@ function platformLabel(platform: LinkPlatform) {
   if (platform === "instagram") return "Instagram";
   if (platform === "x") return "X";
   if (platform === "discord") return "Discord";
+  if (platform === "whatsapp") return "WhatsApp Community";
   return "Link";
 }
 
@@ -173,8 +176,13 @@ export function useLinkInBioDraft(userId: string) {
     nextLinks = links,
   ) => {
     if (test) {
+      const stored = loadTestLinkInBio();
+      const claim = applyUsernameClaim(stored.profile, nextProfile.slug);
+      if ("error" in claim) throw new Error(claim.error);
+      const claimed = { ...nextProfile, usernameChangedAt: claim.usernameChangedAt };
+      setProfile(claimed);
       saveTestLinkInBio({
-        profile: nextProfile,
+        profile: claimed,
         theme: nextTheme,
         links: nextLinks,
         kickUsername: stateQuery.data?.kickUsername ?? null,
@@ -207,9 +215,11 @@ export function useLinkInBioDraft(userId: string) {
       toast.error(
         error.message === "slug_taken"
           ? "That username is taken."
-          : error.message === "slug_reserved" || error.message === "slug_invalid" || error.message === "slug_required"
-            ? "Choose a valid public username."
-            : "Could not save.",
+          : error.message === "slug_cooldown"
+            ? "Usernames can only be changed once every 30 days."
+            : error.message === "slug_reserved" || error.message === "slug_invalid" || error.message === "slug_required"
+              ? "Choose a valid public username."
+              : "Could not save.",
       );
     },
   });

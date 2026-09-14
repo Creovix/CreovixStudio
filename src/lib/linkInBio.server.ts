@@ -25,6 +25,7 @@ type ProfileRow = {
   published: boolean;
   published_at: string | null;
   setup_completed?: boolean;
+  username_changed_at?: string | null;
 };
 
 type ThemeRow = {
@@ -33,6 +34,8 @@ type ThemeRow = {
   glow_strength: number;
   gradient_style: string;
   font_family: string;
+  font_custom_name?: string;
+  font_custom_href?: string;
   palette_bg: string;
   palette_fg: string;
   palette_accent: string;
@@ -47,6 +50,9 @@ type ThemeRow = {
   countdown_enabled?: boolean;
   countdown_label?: string;
   countdown_ends_at?: string | null;
+  bento_color_mode?: string;
+  bento_custom_fill?: string;
+  bento_custom_accent?: string;
 };
 
 type LinkRow = {
@@ -85,6 +91,7 @@ function mapState(
       published: profile.published,
       publishedAt: profile.published_at,
       setupCompleted: Boolean(profile.setup_completed),
+      usernameChangedAt: profile.username_changed_at ?? null,
     }),
     theme: sanitizeTheme({
       glassIntensity: theme.glass_intensity,
@@ -92,6 +99,8 @@ function mapState(
       glowStrength: theme.glow_strength,
       gradientStyle: theme.gradient_style as LinkInBioState["theme"]["gradientStyle"],
       fontFamily: theme.font_family,
+      fontCustomName: theme.font_custom_name ?? "",
+      fontCustomHref: theme.font_custom_href ?? "",
       paletteBg: theme.palette_bg,
       paletteFg: theme.palette_fg,
       paletteAccent: theme.palette_accent,
@@ -104,8 +113,11 @@ function mapState(
       scheduleEnabled: Boolean(theme.schedule_enabled),
       widgetBannerUrl: theme.widget_banner_url ?? "",
       countdownEnabled: Boolean(theme.countdown_enabled),
-      countdownLabel: theme.countdown_label,
+      countdownLabel: theme.countdown_label ?? "",
       countdownEndsAt: theme.countdown_ends_at ?? null,
+      bentoColorMode: theme.bento_color_mode as LinkInBioState["theme"]["bentoColorMode"],
+      bentoCustomFill: theme.bento_custom_fill ?? "",
+      bentoCustomAccent: theme.bento_custom_accent ?? "",
     }),
     links: links.map((row, index) =>
       normalizeLink({
@@ -386,7 +398,7 @@ export async function publicLinkInBioJson(slug: string): Promise<PublicLinkInBio
     supabaseAdmin
       .from("link_in_bio_themes")
       .select(
-        "glass_intensity, hairline_borders, glow_strength, gradient_style, font_family, palette_bg, palette_fg, palette_accent, palette_muted, surface_style, layout, default_card_size, ambient_enabled, ambient_preset, schedule_enabled, widget_banner_url, countdown_enabled, countdown_label, countdown_ends_at",
+        "glass_intensity, hairline_borders, glow_strength, gradient_style, font_family, font_custom_name, font_custom_href, palette_bg, palette_fg, palette_accent, palette_muted, surface_style, layout, default_card_size, ambient_enabled, ambient_preset, schedule_enabled, widget_banner_url, countdown_enabled, countdown_label, countdown_ends_at, bento_color_mode, bento_custom_fill, bento_custom_accent",
       )
       .eq("user_id", profile.user_id)
       .maybeSingle(),

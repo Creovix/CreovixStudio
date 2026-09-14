@@ -17,6 +17,7 @@ import {
   sanitizeSpan,
   sanitizeTheme,
   slugError,
+  applyUsernameClaim,
   type GalleryImage,
   type LinkInBioLink,
   type LinkInBioLinkInput,
@@ -35,6 +36,7 @@ type ProfileRow = {
   published: boolean;
   published_at: string | null;
   setup_completed?: boolean;
+  username_changed_at?: string | null;
 };
 
 type ThemeRow = {
@@ -43,6 +45,8 @@ type ThemeRow = {
   glow_strength: number;
   gradient_style: string;
   font_family: string;
+  font_custom_name?: string;
+  font_custom_href?: string;
   palette_bg: string;
   palette_fg: string;
   palette_accent: string;
@@ -57,6 +61,9 @@ type ThemeRow = {
   countdown_enabled?: boolean;
   countdown_label?: string;
   countdown_ends_at?: string | null;
+  bento_color_mode?: string;
+  bento_custom_fill?: string;
+  bento_custom_accent?: string;
 };
 
 type LinkRow = {
@@ -88,6 +95,7 @@ function mapProfile(row: ProfileRow): LinkInBioProfile {
     published: row.published,
     publishedAt: row.published_at,
     setupCompleted: Boolean(row.setup_completed),
+    usernameChangedAt: row.username_changed_at ?? null,
   });
 }
 
@@ -98,6 +106,8 @@ function mapTheme(row: ThemeRow): LinkInBioTheme {
     glowStrength: row.glow_strength,
     gradientStyle: row.gradient_style as LinkInBioTheme["gradientStyle"],
     fontFamily: row.font_family,
+    fontCustomName: row.font_custom_name ?? "",
+    fontCustomHref: row.font_custom_href ?? "",
     paletteBg: row.palette_bg,
     paletteFg: row.palette_fg,
     paletteAccent: row.palette_accent,
@@ -110,8 +120,11 @@ function mapTheme(row: ThemeRow): LinkInBioTheme {
     scheduleEnabled: Boolean(row.schedule_enabled),
     widgetBannerUrl: row.widget_banner_url ?? "",
     countdownEnabled: Boolean(row.countdown_enabled),
-    countdownLabel: row.countdown_label,
+    countdownLabel: row.countdown_label ?? "",
     countdownEndsAt: row.countdown_ends_at ?? null,
+    bentoColorMode: row.bento_color_mode as LinkInBioTheme["bentoColorMode"],
+    bentoCustomFill: row.bento_custom_fill ?? "",
+    bentoCustomAccent: row.bento_custom_accent ?? "",
   });
 }
 
@@ -136,9 +149,10 @@ function mapLink(row: LinkRow): LinkInBioLink {
   });
 }
 
-const PROFILE_COLS = "slug, display_name, bio, avatar_url, header_url, published, published_at, setup_completed";
+const PROFILE_COLS =
+  "slug, display_name, bio, avatar_url, header_url, published, published_at, setup_completed, username_changed_at";
 const THEME_COLS =
-  "glass_intensity, hairline_borders, glow_strength, gradient_style, font_family, palette_bg, palette_fg, palette_accent, palette_muted, surface_style, layout, default_card_size, ambient_enabled, ambient_preset, schedule_enabled, widget_banner_url, countdown_enabled, countdown_label, countdown_ends_at";
+  "glass_intensity, hairline_borders, glow_strength, gradient_style, font_family, font_custom_name, font_custom_href, palette_bg, palette_fg, palette_accent, palette_muted, surface_style, layout, default_card_size, ambient_enabled, ambient_preset, schedule_enabled, widget_banner_url, countdown_enabled, countdown_label, countdown_ends_at, bento_color_mode, bento_custom_fill, bento_custom_accent";
 const LINK_COLS =
   "id, title, url, platform, card_size, sort_order, featured, enabled, kind, grid_x, grid_y, col_span, row_span, gallery_images, created_at, updated_at";
 
@@ -225,9 +239,14 @@ export const saveLinkInBioProfile = createServerFn({ method: "POST" })
 
     const { data: current } = await context.supabase
       .from("link_in_bio_profiles")
-      .select("published, published_at")
+      .select("slug, published, published_at, username_changed_at")
       .eq("user_id", context.userId)
       .maybeSingle();
+    const claim = applyUsernameClaim(
+      { slug: current?.slug ?? "", usernameChangedAt: current?.username_changed_at ?? null },
+      slug,
+    );
+    if ("error" in claim) return { ok: false as const, error: claim.error };
     const published = Boolean(data.published);
     const publishedAt = published
       ? (current?.published_at ?? new Date().toISOString())
@@ -244,6 +263,7 @@ export const saveLinkInBioProfile = createServerFn({ method: "POST" })
         published,
         published_at: publishedAt,
         setup_completed: Boolean(data.setupCompleted) || published,
+        username_changed_at: claim.usernameChangedAt,
       })
       .eq("user_id", context.userId);
     if (writeError) return { ok: false as const, error: "save_failed" };
@@ -264,6 +284,8 @@ export const saveLinkInBioTheme = createServerFn({ method: "POST" })
         glow_strength: theme.glowStrength,
         gradient_style: theme.gradientStyle,
         font_family: theme.fontFamily,
+        font_custom_name: theme.fontCustomName,
+        font_custom_href: theme.fontCustomHref,
         palette_bg: theme.paletteBg,
         palette_fg: theme.paletteFg,
         palette_accent: theme.paletteAccent,
@@ -278,6 +300,9 @@ export const saveLinkInBioTheme = createServerFn({ method: "POST" })
         countdown_enabled: theme.countdownEnabled,
         countdown_label: theme.countdownLabel,
         countdown_ends_at: theme.countdownEndsAt,
+        bento_color_mode: theme.bentoColorMode,
+        bento_custom_fill: theme.bentoCustomFill,
+        bento_custom_accent: theme.bentoCustomAccent,
       })
       .eq("user_id", context.userId);
     if (error) return { ok: false as const, error: "save_failed" };

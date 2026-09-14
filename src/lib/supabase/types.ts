@@ -649,6 +649,7 @@ export type Database = {
           slug: string
           updated_at: string
           user_id: string
+          username_changed_at: string | null
         }
         Insert: {
           avatar_url?: string
@@ -662,6 +663,7 @@ export type Database = {
           slug: string
           updated_at?: string
           user_id: string
+          username_changed_at?: string | null
         }
         Update: {
           avatar_url?: string
@@ -675,6 +677,7 @@ export type Database = {
           slug?: string
           updated_at?: string
           user_id?: string
+          username_changed_at?: string | null
         }
         Relationships: []
       }
@@ -682,12 +685,17 @@ export type Database = {
         Row: {
           ambient_enabled: boolean
           ambient_preset: string
+          bento_color_mode: string
+          bento_custom_accent: string
+          bento_custom_fill: string
           countdown_enabled: boolean
           countdown_ends_at: string | null
           countdown_label: string
           created_at: string
           default_card_size: string
           font_family: string
+          font_custom_href: string
+          font_custom_name: string
           glass_intensity: number
           glow_strength: number
           gradient_style: string
@@ -706,12 +714,17 @@ export type Database = {
         Insert: {
           ambient_enabled?: boolean
           ambient_preset?: string
+          bento_color_mode?: string
+          bento_custom_accent?: string
+          bento_custom_fill?: string
           countdown_enabled?: boolean
           countdown_ends_at?: string | null
           countdown_label?: string
           created_at?: string
           default_card_size?: string
           font_family?: string
+          font_custom_href?: string
+          font_custom_name?: string
           glass_intensity?: number
           glow_strength?: number
           gradient_style?: string
@@ -730,12 +743,17 @@ export type Database = {
         Update: {
           ambient_enabled?: boolean
           ambient_preset?: string
+          bento_color_mode?: string
+          bento_custom_accent?: string
+          bento_custom_fill?: string
           countdown_enabled?: boolean
           countdown_ends_at?: string | null
           countdown_label?: string
           created_at?: string
           default_card_size?: string
           font_family?: string
+          font_custom_href?: string
+          font_custom_name?: string
           glass_intensity?: number
           glow_strength?: number
           gradient_style?: string

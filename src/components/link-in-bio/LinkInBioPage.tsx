@@ -4,18 +4,28 @@ import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
 import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
 import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
-import { fontById, type PublicLinkInBio } from "@/lib/linkInBio";
+import { resolveBioFont, type PublicLinkInBio } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
 
 export function LinkInBioPage({
   data,
   preview = false,
+  highlightId = null,
+  arrangeMode = false,
+  onSelectTile,
+  onMoveTile,
+  onResizeTile,
 }: {
   data: PublicLinkInBio;
   preview?: boolean;
+  highlightId?: string | null;
+  arrangeMode?: boolean;
+  onSelectTile?: ((id: string) => void) | undefined;
+  onMoveTile?: ((id: string, gridX: number, gridY: number) => void) | undefined;
+  onResizeTile?: ((id: string, colSpan: 1 | 2, rowSpan: 1 | 2) => void) | undefined;
 }) {
   const { profile, theme, links, livePlatforms, stream, schedule } = data;
-  const font = fontById(theme.fontFamily);
+  const font = resolveBioFont(theme);
   const glass = theme.surfaceStyle === "glass";
   const alpha = Math.round((theme.glassIntensity / 100) * 42);
   const cardBg = glass
@@ -26,10 +36,13 @@ export function LinkInBioPage({
     : "1px solid transparent";
   return (
     <div
-      className={cn("relative min-h-full overflow-x-hidden", preview ? "h-full min-h-[32rem]" : "min-h-screen")}
+      className={cn("relative overflow-x-hidden", preview ? "w-full" : "min-h-screen")}
       style={{
         fontFamily: font.stack,
-        background: theme.paletteBg,
+        background:
+          theme.gradientStyle === "none"
+            ? theme.paletteBg
+            : `linear-gradient(165deg, ${theme.paletteBg} 0%, color-mix(in oklab, ${theme.paletteBg} 58%, ${theme.paletteAccent}) 100%)`,
         color: theme.paletteFg,
         ["--bio-bg" as string]: theme.paletteBg,
         ["--bio-fg" as string]: theme.paletteFg,
@@ -37,17 +50,21 @@ export function LinkInBioPage({
         ["--bio-muted" as string]: theme.paletteMuted,
       }}
     >
-      <link rel="stylesheet" href={font.href} />
+      <BioFontLoader font={font} />
       <LinkInBioAmbient theme={theme} />
       <div
         className={cn(
           "@container relative mx-auto flex w-full flex-col",
           preview
-            ? "max-w-none px-4 py-8"
+            ? "w-full max-w-full px-4 py-6"
             : "max-w-[min(96vw,80rem)] px-5 py-12 md:px-8 md:py-16 lg:px-10",
         )}
       >
-        <Header profile={profile} compact={theme.layout === "grid"} bannerLayout={theme.layout === "banner"} border={border} glass={glass} accent={theme.paletteAccent} />
+        <Header
+          profile={profile}
+          compact={theme.layout === "grid"}
+          border={border}
+        />
         <LinkInBioStreamCard stream={stream} glass={glass} border={border} />
         {theme.widgetBannerUrl ? (
           <img src={theme.widgetBannerUrl} alt="" className="mt-6 w-full rounded-2xl object-cover" style={{ border, maxHeight: 180 }} />
@@ -75,7 +92,16 @@ export function LinkInBioPage({
           </p>
         ) : (
           <div className="mt-10">
-            <LinkInBioBento links={links} theme={theme} livePlatforms={livePlatforms} />
+            <LinkInBioBento
+              links={links}
+              theme={theme}
+              livePlatforms={livePlatforms}
+              selectedId={highlightId}
+              arrangeMode={arrangeMode}
+              onSelect={onSelectTile}
+              onMove={onMoveTile}
+              onResize={onResizeTile}
+            />
           </div>
         )}
       </div>
@@ -86,56 +112,42 @@ export function LinkInBioPage({
 function Header({
   profile,
   compact,
-  bannerLayout,
   border,
-  glass,
-  accent,
 }: {
   profile: PublicLinkInBio["profile"];
   compact?: boolean;
-  bannerLayout: boolean;
   border: string;
-  glass: boolean;
-  accent: string;
 }) {
-  const initials = (profile.displayName || profile.slug || "?").slice(0, 2).toUpperCase();
-  const showBanner = Boolean(profile.headerUrl || bannerLayout);
+  const headerUrl = profile.headerUrl.trim();
+  const avatarUrl = profile.avatarUrl.trim();
+  const showBanner = Boolean(headerUrl);
+  const showAvatar = Boolean(avatarUrl);
+  const overlap = showBanner && showAvatar;
+
   return (
     <header className={cn("flex flex-col items-center overflow-visible text-center", compact && "mb-2")}>
-      <div className={cn("relative w-full overflow-visible", showBanner ? "mb-14" : "mb-2")}>
+      <div className={cn("relative flex w-full flex-col items-center overflow-visible", overlap && "mb-14")}>
         {showBanner ? (
-          <div
-            className={cn("w-full overflow-hidden rounded-3xl", bannerLayout ? "min-h-48 lg:min-h-56" : "min-h-36 lg:min-h-48")}
-            style={{
-              background: profile.headerUrl
-                ? `center / cover no-repeat url(${profile.headerUrl})`
-                : `linear-gradient(160deg, color-mix(in oklab, ${accent} 40%, var(--bio-bg)), var(--bio-bg))`,
-              border,
-              backdropFilter: glass ? "blur(10px)" : undefined,
-            }}
-          >
-            <div className="h-36 w-full lg:h-48" />
-          </div>
+          <img
+            key={headerUrl}
+            src={headerUrl}
+            alt=""
+            className="aspect-[21/9] w-full rounded-3xl object-cover"
+            style={{ border }}
+          />
         ) : null}
-        <span
-          className={cn(
-            "grid size-24 place-items-center overflow-hidden rounded-full",
-            showBanner
-              ? "absolute bottom-0 left-1/2 z-20 -translate-x-1/2 translate-y-1/2"
-              : "relative mx-auto",
-          )}
-          style={{
-            border: "3px solid color-mix(in oklab, var(--bio-bg) 82%, var(--bio-fg))",
-            boxShadow: "0 0 0 1px color-mix(in oklab, var(--bio-fg) 16%, transparent)",
-            background: "color-mix(in oklab, var(--bio-fg) 8%, var(--bio-bg))",
-          }}
-        >
-          {profile.avatarUrl ? (
-            <img src={profile.avatarUrl} alt="" className="size-full object-cover object-center" />
-          ) : (
-            <span className="text-lg font-semibold">{initials}</span>
-          )}
-        </span>
+        {showAvatar ? (
+          <span
+            className={cn(
+              "relative block size-24 overflow-hidden rounded-full shadow-[0_10px_28px_-10px_rgba(0,0,0,0.45)]",
+              overlap
+                ? "absolute bottom-0 left-1/2 z-20 -translate-x-1/2 translate-y-1/2"
+                : "mx-auto",
+            )}
+          >
+            <img src={avatarUrl} alt="" className="absolute inset-0 size-full object-cover object-center" />
+          </span>
+        ) : null}
       </div>
       <LinkInBioText as="h1" className="mx-auto mt-4 w-full min-w-0 max-w-2xl text-2xl font-semibold tracking-tight md:text-3xl">
         {profile.displayName || profile.slug || "Your page"}
@@ -229,4 +241,23 @@ function CountdownColon() {
       :
     </span>
   );
+}
+
+function BioFontLoader({ font }: { font: ReturnType<typeof resolveBioFont> }) {
+  if (!font.href) return null;
+  if (/\.(woff2?|ttf|otf)(\?|#|$)/i.test(font.href)) {
+    const name = font.faceName.replace(/["\\]/g, "");
+    const href = font.href.replace(/["\\]/g, "");
+    const format = href.includes(".woff2")
+      ? "woff2"
+      : href.includes(".woff")
+        ? "woff"
+        : href.includes(".otf")
+          ? "opentype"
+          : "truetype";
+    return (
+      <style>{`@font-face{font-family:"${name}";src:url("${href}") format("${format}");font-display:swap;}`}</style>
+    );
+  }
+  return <link rel="stylesheet" href={font.href} />;
 }
