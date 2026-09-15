@@ -6,11 +6,11 @@ const SOLID: Record<Exclude<PlatformId, "TIKTOK">, string> = {
   YOUTUBE: "#FF0000",
 };
 
-const DOT = "inline-block h-1 w-1 min-h-1 min-w-1 shrink-0 rounded-full";
+const DOT = "inline-block h-2 w-2 min-h-2 min-w-2 shrink-0 rounded-full";
 
 export function HubPlatformDot({ id, title }: { id: PlatformId; title?: string | undefined }) {
   if (id === "TIKTOK") {
-    return <span className="inline-block h-1 w-1 shrink-0 rounded-full bg-cyan-400" title={title} aria-hidden />;
+    return <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-cyan-400" title={title} aria-hidden />;
   }
   return <span className={DOT} title={title} aria-hidden style={{ background: SOLID[id] }} />;
 }
