@@ -92,11 +92,14 @@ export function ToolCard({
         <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)]">
           <Icon className="size-4 text-primary" aria-hidden />
         </span>
-        <div className="min-w-0 overflow-visible">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 overflow-visible">
-            <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
+        <div className="min-w-0 overflow-visible leading-none">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 overflow-visible">
+            <p className="truncate text-[0.9rem] font-medium leading-snug tracking-tight">{name}</p>
             {platforms.length > 0 ? (
-              <span className="inline-flex items-center gap-1 overflow-visible py-0.5" aria-hidden>
+              <span
+                className="inline-flex shrink-0 grow-0 items-center gap-1 overflow-visible"
+                aria-hidden
+              >
                 {platforms.map((id) => (
                   <PlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
                 ))}

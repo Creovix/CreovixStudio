@@ -511,6 +511,40 @@ body {
   }
 }
 
+/* Hub platform color marks: exact 8px circles. Overflow hidden only on TikTok. */
+.hub-platform-dot {
+  display: inline-flex;
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  overflow: visible;
+  vertical-align: middle;
+  pointer-events: none;
+}
+.hub-platform-dot--tiktok {
+  position: relative;
+  overflow: hidden;
+}
+.hub-platform-dot--tiktok > span {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+}
+.hub-platform-dot--tiktok > span:first-child {
+  left: 0;
+  background: #010101;
+}
+.hub-platform-dot--tiktok > span:last-child {
+  right: 0;
+  background: #25f4ee;
+}
+
 
 @utility hover-lift {
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), border-color 320ms ease,
