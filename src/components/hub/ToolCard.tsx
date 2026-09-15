@@ -93,10 +93,10 @@ export function ToolCard({
           <Icon className="size-4 text-primary" aria-hidden />
         </span>
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-1 overflow-visible">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 overflow-visible">
             <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
             {platforms.length > 0 ? (
-              <span className="inline-flex items-center gap-1 overflow-visible" aria-hidden>
+              <span className="inline-flex items-center gap-1.5 overflow-visible" aria-hidden>
                 {platforms.map((id) => (
                   <HubPlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
                 ))}
