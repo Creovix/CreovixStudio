@@ -11,6 +11,7 @@ import spotifyPrimary from "@/assets/icons/Spotify/Primary.svg";
 import streamElementsPrimary from "@/assets/icons/StreamElements/Primary.svg";
 import streamlabsPrimary from "@/assets/icons/Streamlabs/Primary.svg";
 import tiktokPrimary from "@/assets/icons/TikTok/Primary.svg";
+import tiktokPrimary2 from "@/assets/icons/TikTok/Primary 2.svg";
 import tiktokWhite from "@/assets/icons/TikTok/White.svg";
 import twitchPrimary from "@/assets/icons/Twitch/Primary.svg";
 import websitePrimary from "@/assets/icons/Website/Primary.svg";
@@ -95,7 +96,7 @@ export function resolvePlatformBrand(name: PlatformAssetName | string): Platform
   return null;
 }
 
-/** Dock/cards: brand Primary on Light; White (or X Black) when the card is dark. */
+/** Dock/cards: brand Primary on Light; White / X Black / TikTok Primary 2 on dark. */
 export function resolveIconVariant(
   brand: PlatformBrand,
   options: {
@@ -107,7 +108,8 @@ export function resolveIconVariant(
 ): IconVariant {
   if (options.variant) return options.variant;
   if (brand === "x") return options.onLight ? "Black" : "White";
-  if (brand === "website" || brand === "tiktok") return options.onLight ? "Primary" : "White";
+  if (brand === "website") return options.onLight ? "Primary" : "White";
+  if (brand === "tiktok") return options.onLight ? "Primary" : "Primary2";
   return "Primary";
 }
 
@@ -125,7 +127,11 @@ export function platformAssetUrl(
   const tone = resolveIconVariant(brand, options);
   if (brand === "x") return tone === "Black" ? xBlack : xWhite;
   if (brand === "website") return tone === "White" ? websiteWhite : websitePrimary;
-  if (brand === "tiktok") return tone === "White" ? tiktokWhite : tiktokPrimary;
+  if (brand === "tiktok") {
+    if (tone === "White") return tiktokWhite;
+    if (tone === "Primary2") return tiktokPrimary2;
+    return tiktokPrimary;
+  }
   return PLATFORM_ASSET_URLS[brand];
 }
 
