@@ -379,7 +379,7 @@ function HomePage() {
               type="button"
               aria-pressed={active}
               onClick={() => setPlatformFilter((prev) => (prev === id && id !== "ALL" ? "ALL" : id))}
-              className={`inline-flex items-center gap-1.5 overflow-visible rounded-full px-3 py-1.5 text-[0.72rem] leading-none transition-colors ${
+              className={`inline-flex items-center gap-1 overflow-visible rounded-full px-3 py-1.5 text-[0.72rem] leading-none transition-colors ${
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
               style={{
