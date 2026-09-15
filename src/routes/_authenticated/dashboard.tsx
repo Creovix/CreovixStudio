@@ -20,11 +20,11 @@ import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
+import { PlatformDot } from "@/components/hub/PlatformDot";
 import {
   ALL_PLATFORMS,
   FILTER_ORDER,
   PLATFORM_META,
-  platformDotBackground,
   type PlatformFilter,
   type PlatformId,
 } from "@/components/hub/platforms";
@@ -366,7 +366,7 @@ function HomePage() {
       <div
         role="toolbar"
         aria-label={t("home.platformFilter")}
-        className="mb-5 flex flex-wrap items-center gap-1"
+        className="mb-5 flex flex-wrap items-center gap-1 overflow-visible"
       >
         {FILTER_ORDER.map((id) => {
           const active = platformFilter === id;
@@ -384,21 +384,13 @@ function HomePage() {
               style={active && id !== "ALL" ? { color } : undefined}
             >
               {id === "ALL" ? (
-                <span className="inline-flex h-4 items-center gap-1.5 overflow-visible" aria-hidden>
+                <span className="inline-flex items-center gap-1 overflow-visible" aria-hidden>
                   {ALL_PLATFORMS.map((dot) => (
-                    <span
-                      key={dot}
-                      className="box-border size-2.5 shrink-0 rounded-full"
-                      style={{ background: platformDotBackground(dot) }}
-                    />
+                    <PlatformDot key={dot} id={dot} />
                   ))}
                 </span>
               ) : (
-                <span
-                  className="box-border size-2.5 shrink-0 rounded-full"
-                  style={{ background: platformDotBackground(id) }}
-                  aria-hidden
-                />
+                <PlatformDot id={id} />
               )}
               {label}
             </button>

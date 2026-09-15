@@ -2,7 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Check, Copy, Lock, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
-import { PLATFORM_META, platformDotBackground, type PlatformId } from "@/components/hub/platforms";
+import { PLATFORM_META, type PlatformId } from "@/components/hub/platforms";
+import { PlatformDot } from "@/components/hub/PlatformDot";
 import { useLanguage } from "@/lib/i18n";
 
 export type ToolCardProps = {
@@ -95,14 +96,9 @@ export function ToolCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 overflow-visible">
             <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
             {platforms.length > 0 ? (
-              <span className="inline-flex h-4 shrink-0 items-center gap-1.5 overflow-visible" aria-hidden>
+              <span className="inline-flex items-center gap-1 overflow-visible py-0.5" aria-hidden>
                 {platforms.map((id) => (
-                  <span
-                    key={id}
-                    title={PLATFORM_META[id].label.en}
-                    className="box-border size-2.5 shrink-0 rounded-full"
-                    style={{ background: platformDotBackground(id) }}
-                  />
+                  <PlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
                 ))}
               </span>
             ) : null}

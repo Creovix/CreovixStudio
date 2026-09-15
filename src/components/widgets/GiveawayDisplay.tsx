@@ -26,6 +26,23 @@ export const platformLabel = (platform: string) =>
     platform.toUpperCase()
   ] ?? platform;
 
+function entrySpot(seed: string, index: number) {
+  let hash = 2166136261;
+  for (const char of `${seed}-${index}`) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  const value = Math.abs(hash);
+  return {
+    left: 12 + (value % 76),
+    top: 14 + (Math.floor(value / 97) % 70),
+    driftX: 10 + (value % 18),
+    driftY: 8 + (Math.floor(value / 53) % 14),
+    duration: 7.5 + (value % 5),
+    delay: (value % 9) * 0.12,
+  };
+}
+
 export function GiveawayDisplay({
   participants,
   winner,
@@ -111,19 +128,30 @@ export function GiveawayDisplay({
             aria-label={c.liveEntries}
           >
             {participants.map((participant, index) => {
+              const spot = entrySpot(participant.id, index);
               const isWinner =
                 Boolean(winner) &&
                 participant.username.toLowerCase() === winner?.username.toLowerCase() &&
                 participant.platform.toUpperCase() === winner?.platform.toUpperCase();
-              const style = { "--entry-i": Math.min(index, 16) } as CSSProperties;
+              const style = {
+                left: `${spot.left}%`,
+                top: `${spot.top}%`,
+                "--drift-x": `${index % 2 === 0 ? spot.driftX : -spot.driftX}px`,
+                "--drift-y": `${index % 3 === 0 ? -spot.driftY : spot.driftY}px`,
+                "--float-duration": `${spot.duration}s`,
+                "--entry-i": Math.min(index, 12),
+                "--float-delay": `${spot.delay}s`,
+              } as CSSProperties;
               return (
                 <div
                   key={participant.id}
-                  className={`giveaway-entry ${isWinner ? "is-winner" : "is-other"}`}
+                  className={`giveaway-entry-slot ${isWinner ? "is-winner" : "is-other"}`}
                   style={style}
                 >
-                  <PlatformIcon platform={participant.platform} size={14} />
-                  <span dir="auto">{participant.username}</span>
+                  <div className="giveaway-entry">
+                    <PlatformIcon platform={participant.platform} size={14} />
+                    <span dir="auto">{participant.username}</span>
+                  </div>
                 </div>
               );
             })}

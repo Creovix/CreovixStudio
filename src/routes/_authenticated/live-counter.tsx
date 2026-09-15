@@ -6,6 +6,7 @@ import { Plus, Radio, Search, Star, Swords, Trash2, Users } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { DarkSelect } from "@/components/ui/dark-select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
@@ -19,13 +20,13 @@ import {
 export const Route = createFileRoute("/_authenticated/live-counter")({
   head: () => ({
     meta: [
-      { title: "Live Counter — Creovix Studio" },
+      { title: "Counter — Creovix Studio" },
       {
         name: "description",
         content:
-          "Track live follower counts for any Kick or Twitch channel, save your favourite creators and compare two channels head to head.",
+          "Track live follower counts for any Kick or Twitch channel, save social accounts, and sum public follower totals.",
       },
-      { property: "og:title", content: "Live Counter — Creovix Studio" },
+      { property: "og:title", content: "Counter — Creovix Studio" },
       {
         property: "og:description",
         content: "Real-time follower counters with saved channels and VS comparison mode.",
@@ -657,14 +658,7 @@ function SocialCounterSection() {
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border border-white/8 p-5">
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">Social Counter</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Save social accounts and see the combined follower total from platforms that actually return a count.
-        </p>
-      </div>
-
+    <div className="space-y-4">
       <form
         className="flex flex-wrap items-center gap-2"
         onSubmit={(event) => {
@@ -786,7 +780,7 @@ function SocialCounterSection() {
           })}
         </ul>
       ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -794,6 +788,7 @@ function LiveCounterPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
 
+  const [pane, setPane] = useState<"live" | "social">("live");
   const [vsMode, setVsMode] = useState(false);
   const [saved, setSaved] = useState<Saved[]>([]);
   const [recent, setRecent] = useState<Saved[]>([]);
@@ -962,17 +957,35 @@ function LiveCounterPage() {
     <AppShell
       user={user}
       profile={workspace?.profile}
-      title="Live Counter"
-      subtitle="Track a live channel count, then add social accounts and sum the follower totals that APIs actually return."
+      title="Counter"
+      subtitle="Live channel counts and a combined social total — from APIs that actually return followers."
     >
-      <div className="space-y-10">
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Live Counter</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Followers for one selected channel, with saved favourites and head-to-head comparison.
-            </p>
+      <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+        <Tabs
+          value={pane}
+          onValueChange={(next) => setPane(next === "social" ? "social" : "live")}
+        >
+          <div className="border-b border-white/10 px-4 py-3 sm:px-5">
+            <TabsList className="grid h-11 w-full grid-cols-2 rounded-full bg-black/40 p-1">
+              <TabsTrigger
+                value="live"
+                className="rounded-full text-[0.82rem] data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-violet-700 data-[state=active]:text-white data-[state=active]:shadow-[0_8px_20px_-12px_rgba(124,58,237,0.9)]"
+              >
+                Live Counter
+              </TabsTrigger>
+              <TabsTrigger
+                value="social"
+                className="rounded-full text-[0.82rem] data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-violet-700 data-[state=active]:text-white data-[state=active]:shadow-[0_8px_20px_-12px_rgba(124,58,237,0.9)]"
+              >
+                Social Counter
+              </TabsTrigger>
+            </TabsList>
           </div>
+
+          <TabsContent
+            value="live"
+            className="mt-0 space-y-6 p-5 duration-300 animate-in fade-in-0 slide-in-from-bottom-1 md:p-6"
+          >
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-1 border-b border-white/5 pb-4">
           <button type="button" className={toggleClass(!vsMode)} onClick={() => setVsMode(false)}>
@@ -1183,8 +1196,15 @@ function LiveCounterPage() {
           </div>
         )}
       </div>
-        </section>
-        <SocialCounterSection />
+          </TabsContent>
+
+          <TabsContent
+            value="social"
+            className="mt-0 p-5 duration-300 animate-in fade-in-0 slide-in-from-bottom-1 md:p-6"
+          >
+            <SocialCounterSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppShell>
   );

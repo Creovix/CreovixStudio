@@ -555,8 +555,13 @@ body {
 }
 
 @keyframes giveaway-entry-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes giveaway-entry-float {
+  0%, 100% { transform: translate3d(-50%, -50%, 0); }
+  50% { transform: translate3d(calc(-50% + var(--drift-x)), calc(-50% + var(--drift-y)), 0); }
 }
 
 @keyframes giveaway-winner-in {
@@ -575,13 +580,16 @@ body {
 }
 
 .giveaway-entries {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem 1.1rem 2.5rem;
-  overflow: auto;
+  overflow: hidden;
+}
+
+.giveaway-entry-slot {
+  position: absolute;
+  z-index: 1;
+  max-width: min(42%, 220px);
+  transform: translate(-50%, -50%);
+  animation: giveaway-entry-float var(--float-duration, 8s) ease-in-out var(--float-delay, 0s) infinite;
+  will-change: transform;
 }
 
 .giveaway-entry {
@@ -589,24 +597,26 @@ body {
   max-width: 100%;
   align-items: center;
   gap: 0.45rem;
-  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
-  border-radius: 0.9rem;
-  background: color-mix(in oklab, var(--background) 42%, transparent);
-  padding: 0.42rem 0.72rem;
-  color: color-mix(in oklab, var(--foreground) 88%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--background) 38%, transparent);
+  padding: 0.48rem 0.78rem;
+  color: color-mix(in oklab, var(--foreground) 90%, transparent);
   font-size: 0.78rem;
-  line-height: 1.1;
-  box-shadow: 0 10px 24px color-mix(in oklab, #000 22%, transparent);
-  backdrop-filter: blur(14px);
-  animation: giveaway-entry-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--entry-i, 0) * 38ms);
+  line-height: 1.15;
+  box-shadow:
+    0 12px 28px color-mix(in oklab, #000 28%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #fff 12%, transparent);
+  backdrop-filter: blur(16px);
+  animation: giveaway-entry-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--entry-i, 0) * 42ms);
   transition: opacity 700ms ease, filter 700ms ease, transform 700ms ease;
 }
 
 .giveaway-entry span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.is-shuffling .giveaway-entry { animation-duration: 280ms; }
-.is-revealing .giveaway-entry.is-other { opacity: 0; filter: blur(8px); transform: scale(0.92); }
-.is-revealing .giveaway-entry.is-winner { opacity: 0; transform: scale(0.92); }
+.is-shuffling .giveaway-entry-slot { animation-duration: 1.15s; }
+.is-revealing .giveaway-entry-slot.is-other { opacity: 0; filter: blur(8px); }
+.is-revealing .giveaway-entry-slot.is-winner { opacity: 0; }
 .giveaway-winner-reveal { animation: giveaway-winner-in 780ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 .spatial-float { animation: spatial-float 9s ease-in-out infinite; }
@@ -617,7 +627,8 @@ body {
   .spatial-float, .spatial-spin, .soft-rise,
   .overlay-live-dot, .overlay-glass-glow, .overlay-cyber-scan, .overlay-spotlight-in,
   .hub-emote-drop { animation: none; opacity: 0.88; transform: translateY(2.2rem); }
-  .giveaway-entry, .giveaway-winner-reveal { animation: none; opacity: 1; transform: none; filter: none; }
+  .giveaway-entry-slot, .giveaway-entry, .giveaway-winner-reveal { animation: none; opacity: 1; transform: none; filter: none; }
+  .giveaway-entry-slot { transform: translate(-50%, -50%); }
   .hub-chat-line,
   .hub-timer-chip,
   .hub-media-art,
