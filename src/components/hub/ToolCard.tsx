@@ -98,7 +98,9 @@ export function ToolCard({
             {platforms.length > 0 ? (
               <span className="inline-flex items-center gap-1 overflow-visible" aria-hidden>
                 {platforms.map((id) => (
-                  <HubPlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
+                  <span key={id} className="grid size-2.5 shrink-0 place-items-center overflow-visible">
+                    <HubPlatformDot id={id} title={PLATFORM_META[id].label.en} />
+                  </span>
                 ))}
               </span>
             ) : null}
