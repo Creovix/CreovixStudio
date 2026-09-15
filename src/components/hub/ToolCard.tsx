@@ -67,11 +67,11 @@ export function ToolCard({
 
   return (
     <div
-      className={`glass-3d relative flex h-full flex-col overflow-visible rounded-2xl p-3 text-start ${
+      className={`glass-3d relative flex h-full min-h-[18.5rem] flex-col overflow-visible rounded-2xl p-5 text-start ${
         removing ? "pointer-events-none scale-95 opacity-0" : "scale-100 opacity-100"
       } ${comingSoon ? "pointer-events-none" : ""}`}
     >
-      <div className="relative h-[120px] overflow-hidden rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.02)]">
+      <div className="relative h-[132px] overflow-hidden rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.02)]">
         <div className={`h-full overflow-hidden ${previewLocked ? "blur-[3px] saturate-50" : ""}`}>
           {preview}
         </div>

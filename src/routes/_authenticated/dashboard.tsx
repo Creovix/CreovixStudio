@@ -406,7 +406,7 @@ function HomePage() {
         <p className="py-12 text-sm text-muted-foreground">{t("home.empty")}</p>
       ) : (
         <>
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr))]">
             {shownTools.map((tool) => {
               const existing = existingFor(tool);
               const Preview = tool.preview;
