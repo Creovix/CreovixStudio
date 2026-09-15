@@ -75,7 +75,7 @@ function ModQueuePage() {
 
   if (!token) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#0B0D12] p-6 text-white">
+      <main className="grid min-h-screen place-items-center bg-[#0a0a0a] p-6 text-white">
         <div className={`${glass} w-full max-w-md space-y-3 p-6 text-center`}>
           <h1 className="text-lg font-bold">Moderator queue</h1>
           <p className="text-sm text-muted-foreground">Paste the moderator link the streamer shared with you.</p>
@@ -94,7 +94,7 @@ function ModQueuePage() {
   const playing = (data?.requests ?? []).find((r) => r.status === "PLAYING") ?? null;
 
   return (
-    <main className="min-h-screen bg-[#0B0D12] p-4 text-white sm:p-8">
+    <main className="min-h-screen bg-[#0a0a0a] p-4 text-white sm:p-8">
       <div className="mx-auto max-w-3xl space-y-5">
         <header className={`${glass} flex flex-wrap items-center justify-between gap-4 p-5`}>
           <div className="flex items-center gap-2">

@@ -418,7 +418,7 @@ export function AdminCodesPanel() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-[#0B0D12] p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-[#0a0a0a] p-6 shadow-2xl">
             <h3 className="text-lg font-semibold text-red-400">
               {confirm.mode === "revoke"
                 ? "Revoke subscription?"

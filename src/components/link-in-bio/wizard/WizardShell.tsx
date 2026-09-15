@@ -15,9 +15,8 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
   const arrange = step === 4;
 
   return (
-    <div className="relative flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0a0b10] text-zinc-100">
+    <div className="relative flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0a0a0a] text-neutral-100">
       <style>{MOTION_CSS}</style>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_48%_at_50%_-12%,rgba(124,58,237,0.16),transparent_58%),linear-gradient(180deg,#0a0b10_0%,#08090e_100%)]" />
 
       <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-5 py-3 md:px-8">
         <p className="text-[0.72rem] uppercase tracking-[0.2em] text-white/38">Creovix · Link in Bio</p>
@@ -96,7 +95,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
         </aside>
       </div>
 
-      <footer className="relative z-20 shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0a0b10]/90 px-5 py-3 backdrop-blur-xl md:px-8">
+      <footer className="relative z-20 shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]/90 px-5 py-3 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex w-full max-w-[110rem] items-center justify-between gap-4">
           <Button type="button" variant="ghost" disabled={step === 1} onClick={goBack}>
             <ChevronLeft className="size-4" />

@@ -32,6 +32,7 @@ import {
   LINK_PLATFORMS,
   applyBentoPlacement,
   bentoSizeOf,
+  isLightBioTheme,
   normalizeLink,
   publicBioPath,
   sanitizeSlug,
@@ -60,6 +61,7 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
   const unlockOn = usernameUnlockLabel(profile.usernameChangedAt);
   const saveTimer = useRef(0);
   const selected = links.find((link) => link.id === selectedId) ?? null;
+  const lightPage = isLightBioTheme(theme.paletteBg);
   const publicUrl = profile.slug
     ? `${typeof window !== "undefined" ? window.location.origin : ""}${publicBioPath(profile.slug)}`
     : "";
@@ -366,24 +368,30 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
                   <Slider value={[theme.glassIntensity]} max={100} onValueChange={([value]) => patchTheme({ glassIntensity: value ?? 0 })} />
                 </Field>
                 <Separator className="bg-white/10" />
-                <Field title="Ambient">
-                  <DarkSelect
-                    value={theme.ambientPreset}
-                    onValueChange={(value) => patchTheme({ ambientPreset: value as AmbientPreset })}
-                    options={AMBIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
-                  />
-                </Field>
-                <Field title="Glow">
-                  <DarkSelect
-                    value={theme.gradientStyle}
-                    onValueChange={(value) => patchTheme({ gradientStyle: value as GradientStyle })}
-                    options={GRADIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
-                  />
-                </Field>
-                <label className="flex items-center justify-between gap-3 text-sm">
-                  <span>Interactive ambient</span>
-                  <Switch checked={theme.ambientEnabled} onCheckedChange={(ambientEnabled) => patchTheme({ ambientEnabled })} />
-                </label>
+                {lightPage ? (
+                  <>
+                    <Field title="Ambient">
+                      <DarkSelect
+                        value={theme.ambientPreset}
+                        onValueChange={(value) => patchTheme({ ambientPreset: value as AmbientPreset })}
+                        options={AMBIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
+                      />
+                    </Field>
+                    <Field title="Glow">
+                      <DarkSelect
+                        value={theme.gradientStyle}
+                        onValueChange={(value) => patchTheme({ gradientStyle: value as GradientStyle })}
+                        options={GRADIENT_CHOICES.map((item) => ({ value: item.id, label: item.label }))}
+                      />
+                    </Field>
+                    <label className="flex items-center justify-between gap-3 text-sm">
+                      <span>Interactive ambient</span>
+                      <Switch checked={theme.ambientEnabled} onCheckedChange={(ambientEnabled) => patchTheme({ ambientEnabled })} />
+                    </label>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Dark Theme stays a quiet charcoal — no glow or pointer effects.</p>
+                )}
               </TabsContent>
 
               <TabsContent value="platforms" className="mt-0 max-h-[min(72vh,42rem)] overflow-y-auto p-5">

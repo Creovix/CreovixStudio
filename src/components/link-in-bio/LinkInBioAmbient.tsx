@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-import type { AmbientPreset, LinkInBioTheme } from "@/lib/linkInBio";
+import { isLightBioTheme, type AmbientPreset, type LinkInBioTheme } from "@/lib/linkInBio";
 
 function gradientCss(style: LinkInBioTheme["gradientStyle"], accent: string, muted: string): string {
   if (style === "none") return "transparent";
@@ -14,6 +14,8 @@ function gradientCss(style: LinkInBioTheme["gradientStyle"], accent: string, mut
 }
 
 export function LinkInBioAmbient({ theme }: { theme: LinkInBioTheme }) {
+  if (!isLightBioTheme(theme.paletteBg)) return null;
+
   const glow = theme.glowStrength / 100;
   return (
     <>
@@ -109,7 +111,7 @@ function MotionLayers({ theme }: { theme: LinkInBioTheme }) {
   }, [reduced]);
 
   if (reduced || !motionOn) return null;
-  const preset = theme.ambientPreset;
+  const preset = theme.ambientPreset as AmbientPreset;
   const accent = theme.paletteAccent;
   const muted = theme.paletteMuted;
   const glass = theme.surfaceStyle === "glass";

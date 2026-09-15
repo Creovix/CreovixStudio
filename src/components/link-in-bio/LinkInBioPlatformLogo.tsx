@@ -20,6 +20,7 @@ function PlatformLogoMark({
   platform,
   size = 40,
   faviconUrl,
+  onLight = false,
 }: {
   platform: LinkPlatform;
   size?: number;
@@ -44,7 +45,13 @@ function PlatformLogoMark({
     );
   }
   return (
-    <PlatformAsset name={ASSET[platform]} size={size} fit="contain" style={{ overflow: "visible" }} />
+    <PlatformAsset
+      name={ASSET[platform]}
+      size={size}
+      fit="contain"
+      onLight={onLight}
+      style={{ overflow: "visible" }}
+    />
   );
 }
 

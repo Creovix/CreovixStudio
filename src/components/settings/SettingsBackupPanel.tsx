@@ -156,7 +156,7 @@ export function SettingsBackupPanel() {
           aria-modal="true"
           aria-labelledby="settings-backup-title"
         >
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0B0D12] p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0a0a0a] p-6 shadow-2xl">
             <h3 id="settings-backup-title" className="text-lg font-semibold">
               {t("settings.backup.confirmTitle")}
             </h3>

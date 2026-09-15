@@ -54,7 +54,7 @@ function ClipPage() {
   }, [id]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#0B0D12] p-6 text-foreground">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#0a0a0a] p-6 text-foreground">
       <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-2xl">
         <div className="aspect-video w-full bg-black">
           {clip ? (

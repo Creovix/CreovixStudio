@@ -121,7 +121,7 @@ export function MetricAnalyticsModal({
       <div
         className="animate-scale-in w-full max-w-4xl rounded-3xl border p-5 sm:p-7"
         style={{
-          background: "rgba(15,17,23,0.92)",
+          background: "rgba(10,10,10,0.92)",
           borderColor: "rgba(255,255,255,0.1)",
           boxShadow: "0 30px 80px rgba(0,0,0,0.6)",
         }}

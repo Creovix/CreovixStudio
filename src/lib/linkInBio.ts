@@ -294,7 +294,7 @@ export const BACKGROUND_PRESETS: ReadonlyArray<{
 }> = [
   {
     id: "paper",
-    label: "Paper",
+    label: "Light Theme",
     hint: "Light page, dark type",
     paletteBg: "#f7f7f5",
     paletteFg: "#171717",
@@ -304,13 +304,13 @@ export const BACKGROUND_PRESETS: ReadonlyArray<{
   },
   {
     id: "dark",
-    label: "Dark",
-    hint: "Obsidian canvas",
-    paletteBg: "#0f1117",
-    paletteFg: "#f4f4f5",
-    paletteAccent: "#7c8cff",
-    paletteMuted: "#a1a1aa",
-    gradientStyle: "soft",
+    label: "Dark Theme",
+    hint: "Quiet charcoal — no glow",
+    paletteBg: "#0a0a0a",
+    paletteFg: "#f5f5f5",
+    paletteAccent: "#e5e5e5",
+    paletteMuted: "#a3a3a3",
+    gradientStyle: "none",
   },
 ];
 
@@ -328,7 +328,7 @@ export const BENTO_COLOR_MODES: ReadonlyArray<{
 ];
 
 export const AMBIENT_CHOICES: ReadonlyArray<{ id: AmbientPreset; label: string; hint: string }> = [
-  { id: "glow", label: "Ambient glow", hint: "Soft color orbs drift and follow the pointer." },
+  { id: "glow", label: "Ambient glow", hint: "Soft color orbs (Light Theme only)." },
   { id: "orbits", label: "Orbits", hint: "Slow circling glass lights around the page." },
   { id: "haze", label: "Glass haze", hint: "Frosted panels that tilt as you move." },
   { id: "ripple", label: "Ripple", hint: "Rings bloom from the pointer." },
@@ -361,22 +361,22 @@ export const DEFAULT_THEME: LinkInBioTheme = {
   glassIntensity: 45,
   hairlineBorders: true,
   glowStrength: 35,
-  gradientStyle: "soft",
+  gradientStyle: "none",
   fontFamily: "manrope",
   fontCustomName: "",
   fontCustomHref: "",
-  paletteBg: "#0f1117",
-  paletteFg: "#f4f4f5",
-  paletteAccent: "#7c8cff",
-  paletteMuted: "#a1a1aa",
+  paletteBg: "#0a0a0a",
+  paletteFg: "#f5f5f5",
+  paletteAccent: "#e5e5e5",
+  paletteMuted: "#a3a3a3",
   surfaceStyle: "glass",
   bentoColorMode: "brand",
-  bentoCustomFill: "#1a1c24",
-  bentoCustomAccent: "#7c8cff",
+  bentoCustomFill: "#171717",
+  bentoCustomAccent: "#e5e5e5",
   layout: "bento",
   defaultCardSize: "m",
-  ambientEnabled: true,
-  ambientPreset: "glow",
+  ambientEnabled: false,
+  ambientPreset: "none",
   scheduleEnabled: false,
   widgetBannerUrl: "",
   countdownEnabled: false,
@@ -819,6 +819,17 @@ export function sanitizeBentoColorMode(raw: string | null | undefined): BentoCol
   return "brand";
 }
 
+/** True when the page background is the Light Theme paper family (high luminance). */
+export function isLightBioTheme(bg: string): boolean {
+  return hexLuminance(bg) > 0.45;
+}
+
+const LEGACY_NAVY_BG = new Set(["#0f1117", "#0b0d12", "#0a0b10", "#08090e", "#0d0e12"]);
+
+function migrateLegacyDarkBg(hex: string): string {
+  return LEGACY_NAVY_BG.has(hex.toLowerCase()) ? "#0a0a0a" : hex;
+}
+
 export function hexLuminance(hex: string): number {
   const n = hex.replace("#", "");
   if (n.length !== 6) return 0;
@@ -948,29 +959,45 @@ export function bentoTilePaint(
 
 export function sanitizeTheme(partial: Partial<LinkInBioTheme> | null | undefined): LinkInBioTheme {
   const src = partial ?? {};
+  const paletteBg = migrateLegacyDarkBg(
+    sanitizeHex(src.paletteBg ?? DEFAULT_THEME.paletteBg, DEFAULT_THEME.paletteBg),
+  );
+  const darkPage = !isLightBioTheme(paletteBg);
+  let paletteFg = sanitizeHex(src.paletteFg ?? DEFAULT_THEME.paletteFg, DEFAULT_THEME.paletteFg);
+  let paletteAccent = sanitizeHex(src.paletteAccent ?? DEFAULT_THEME.paletteAccent, DEFAULT_THEME.paletteAccent);
+  let paletteMuted = sanitizeHex(src.paletteMuted ?? DEFAULT_THEME.paletteMuted, DEFAULT_THEME.paletteMuted);
+  let bentoCustomFill = sanitizeHex(src.bentoCustomFill ?? DEFAULT_THEME.bentoCustomFill, DEFAULT_THEME.bentoCustomFill);
+  let bentoCustomAccent = sanitizeHex(
+    src.bentoCustomAccent ?? DEFAULT_THEME.bentoCustomAccent,
+    DEFAULT_THEME.bentoCustomAccent,
+  );
+  if (darkPage) {
+    if (paletteFg.toLowerCase() === "#f4f4f5") paletteFg = "#f5f5f5";
+    if (paletteAccent.toLowerCase() === "#7c8cff") paletteAccent = "#e5e5e5";
+    if (paletteMuted.toLowerCase() === "#a1a1aa") paletteMuted = "#a3a3a3";
+    if (bentoCustomFill.toLowerCase() === "#1a1c24") bentoCustomFill = "#171717";
+    if (bentoCustomAccent.toLowerCase() === "#7c8cff") bentoCustomAccent = "#e5e5e5";
+  }
   return {
     glassIntensity: clampPercent(src.glassIntensity ?? DEFAULT_THEME.glassIntensity),
     hairlineBorders: Boolean(src.hairlineBorders ?? DEFAULT_THEME.hairlineBorders),
     glowStrength: clampPercent(src.glowStrength ?? DEFAULT_THEME.glowStrength),
-    gradientStyle: sanitizeGradient(src.gradientStyle ?? DEFAULT_THEME.gradientStyle),
+    gradientStyle: darkPage ? "none" : sanitizeGradient(src.gradientStyle ?? DEFAULT_THEME.gradientStyle),
     fontFamily: sanitizeFont(src.fontFamily ?? DEFAULT_THEME.fontFamily),
     fontCustomName: sanitizeFontCustomName(src.fontCustomName ?? DEFAULT_THEME.fontCustomName),
     fontCustomHref: sanitizeFontCustomHref(src.fontCustomHref ?? DEFAULT_THEME.fontCustomHref),
-    paletteBg: sanitizeHex(src.paletteBg ?? DEFAULT_THEME.paletteBg, DEFAULT_THEME.paletteBg),
-    paletteFg: sanitizeHex(src.paletteFg ?? DEFAULT_THEME.paletteFg, DEFAULT_THEME.paletteFg),
-    paletteAccent: sanitizeHex(src.paletteAccent ?? DEFAULT_THEME.paletteAccent, DEFAULT_THEME.paletteAccent),
-    paletteMuted: sanitizeHex(src.paletteMuted ?? DEFAULT_THEME.paletteMuted, DEFAULT_THEME.paletteMuted),
+    paletteBg,
+    paletteFg,
+    paletteAccent,
+    paletteMuted,
     surfaceStyle: sanitizeSurface(src.surfaceStyle ?? DEFAULT_THEME.surfaceStyle),
     bentoColorMode: sanitizeBentoColorMode(src.bentoColorMode ?? DEFAULT_THEME.bentoColorMode),
-    bentoCustomFill: sanitizeHex(src.bentoCustomFill ?? DEFAULT_THEME.bentoCustomFill, DEFAULT_THEME.bentoCustomFill),
-    bentoCustomAccent: sanitizeHex(
-      src.bentoCustomAccent ?? DEFAULT_THEME.bentoCustomAccent,
-      DEFAULT_THEME.bentoCustomAccent,
-    ),
+    bentoCustomFill,
+    bentoCustomAccent,
     layout: sanitizeLayout(src.layout ?? DEFAULT_THEME.layout),
     defaultCardSize: sanitizeCardSize(src.defaultCardSize ?? DEFAULT_THEME.defaultCardSize),
-    ambientEnabled: src.ambientEnabled !== false,
-    ambientPreset: sanitizeAmbientPreset(src.ambientPreset ?? DEFAULT_THEME.ambientPreset),
+    ambientEnabled: darkPage ? false : src.ambientEnabled !== false,
+    ambientPreset: darkPage ? "none" : sanitizeAmbientPreset(src.ambientPreset ?? DEFAULT_THEME.ambientPreset),
     scheduleEnabled: Boolean(src.scheduleEnabled),
     widgetBannerUrl: sanitizeAvatarUrl(src.widgetBannerUrl ?? ""),
     countdownEnabled: Boolean(src.countdownEnabled),

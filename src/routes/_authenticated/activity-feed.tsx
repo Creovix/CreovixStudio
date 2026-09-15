@@ -459,7 +459,7 @@ function ActivityFeedPage() {
               role="menu"
               className="absolute start-0 top-full z-40 mt-2 min-w-64 rounded-xl border p-1.5"
               style={{
-                background: "rgba(15, 17, 23, 0.95)",
+                background: "rgba(10, 10, 10, 0.95)",
                 backdropFilter: "blur(12px)",
                 borderColor: "rgba(255,255,255,0.1)",
                 boxShadow: "0 16px 40px rgba(0,0,0,0.55)",
@@ -592,7 +592,7 @@ function ActivityFeedPage() {
           <div
             className="fixed bottom-6 start-1/2 z-40 -translate-x-1/2 rounded-full border px-4 py-2 text-xs font-medium"
             style={{
-              background: "rgba(15,17,23,0.9)",
+              background: "rgba(10,10,10,0.9)",
               backdropFilter: "blur(12px)",
               borderColor: "rgba(255,255,255,0.12)",
             }}
@@ -608,7 +608,7 @@ function ActivityFeedPage() {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="fixed bottom-6 end-6 z-40 flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-[oklch(1_0_0/0.1)]"
             style={{
-              background: "rgba(15,17,23,0.9)",
+              background: "rgba(10,10,10,0.9)",
               backdropFilter: "blur(12px)",
               borderColor: "rgba(255,255,255,0.12)",
               boxShadow: "0 12px 30px rgba(0,0,0,0.5)",

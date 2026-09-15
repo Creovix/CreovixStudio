@@ -9,19 +9,19 @@ import { BENTO_COLOR_MODES, BACKGROUND_PRESETS, FONT_CHOICES, type BentoColorMod
 import { extractLogoPalette } from "@/lib/logoPalette";
 import { cn } from "@/lib/utils";
 
-function isPaperTheme(theme: LinkInBioTheme) {
+function isLightTheme(theme: LinkInBioTheme) {
   return theme.paletteBg === BACKGROUND_PRESETS[0]!.paletteBg;
 }
 
 function BentoModeSwatch({
   mode,
   accent,
-  paper,
+  light,
   customFill,
 }: {
   mode: BentoColorMode;
   accent: string;
-  paper: boolean;
+  light: boolean;
   customFill: string;
 }) {
   if (mode === "brand") {
@@ -38,7 +38,7 @@ function BentoModeSwatch({
     return (
       <span
         className="block h-7 rounded-lg border border-white/10"
-        style={{ background: paper ? "#ecece8" : "#1a1c22" }}
+        style={{ background: light ? "#ecece8" : "#171717" }}
       />
     );
   }
@@ -46,7 +46,7 @@ function BentoModeSwatch({
     return (
       <span
         className="block h-7 rounded-lg"
-        style={{ background: `linear-gradient(160deg, #E62117 0%, ${paper ? "#f7f7f5" : "#050508"} 100%)` }}
+        style={{ background: `linear-gradient(160deg, #E62117 0%, ${light ? "#f7f7f5" : "#0a0a0a"} 100%)` }}
       />
     );
   }
@@ -55,7 +55,7 @@ function BentoModeSwatch({
       <span
         className="block h-7 rounded-lg"
         style={{
-          background: `color-mix(in oklab, ${accent} 55%, ${paper ? "#f7f7f5" : "#0f1117"})`,
+          background: `color-mix(in oklab, ${accent} 55%, ${light ? "#f7f7f5" : "#0a0a0a"})`,
           boxShadow: `inset 0 0 10px ${accent}`,
         }}
       />
@@ -98,12 +98,12 @@ export function AtmosphereStep() {
       setSyncError("Could not read that logo (remote images need CORS). Re-upload the file and try again.");
       return;
     }
-    const paper = isPaperTheme(theme);
+    const light = isLightTheme(theme);
     onPatch({
-      paletteBg: paper ? "#f7f7f5" : palette.background,
-      paletteFg: paper ? "#171717" : palette.foreground,
+      paletteBg: light ? "#f7f7f5" : palette.background,
+      paletteFg: light ? "#171717" : palette.foreground,
       paletteAccent: palette.accent,
-      paletteMuted: paper ? "#5c5c57" : palette.muted,
+      paletteMuted: light ? "#5c5c57" : palette.muted,
       gradientStyle: "soft",
       glowStrength: Math.max(theme.glowStrength, 48),
       ambientEnabled: true,
@@ -153,6 +153,9 @@ export function AtmosphereStep() {
                     paletteAccent: preset.paletteAccent,
                     paletteMuted: preset.paletteMuted,
                     gradientStyle: preset.gradientStyle,
+                    ...(preset.id === "dark"
+                      ? { ambientEnabled: false, ambientPreset: "none" as const }
+                      : {}),
                   });
                 }}
               >
@@ -162,7 +165,7 @@ export function AtmosphereStep() {
                     background:
                       preset.id === "paper"
                         ? preset.paletteBg
-                        : `linear-gradient(165deg, ${preset.paletteBg}, color-mix(in oklab, ${preset.paletteBg} 70%, ${preset.paletteAccent}))`,
+                        : `linear-gradient(165deg, ${preset.paletteBg}, #171717)`,
                   }}
                 />
                 <span className="mt-3 block text-sm font-medium">{preset.label}</span>
@@ -191,7 +194,7 @@ export function AtmosphereStep() {
                   <BentoModeSwatch
                     mode={mode.id}
                     accent={mode.id === "custom" ? theme.bentoCustomAccent : theme.paletteAccent}
-                    paper={isPaperTheme(theme)}
+                    light={isLightTheme(theme)}
                     customFill={theme.bentoCustomFill}
                   />
                   <span className="mt-2 block text-[0.72rem] font-medium leading-tight">{mode.label}</span>
@@ -207,7 +210,7 @@ export function AtmosphereStep() {
                   <input
                     type="color"
                     className="h-9 w-11 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5"
-                    value={/^#[0-9A-Fa-f]{6}$/.test(theme.bentoCustomFill) ? theme.bentoCustomFill : "#1a1c24"}
+                    value={/^#[0-9A-Fa-f]{6}$/.test(theme.bentoCustomFill) ? theme.bentoCustomFill : "#171717"}
                     onChange={(event) => onPatch({ bentoCustomFill: event.target.value })}
                   />
                   <input
@@ -223,7 +226,7 @@ export function AtmosphereStep() {
                   <input
                     type="color"
                     className="h-9 w-11 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5"
-                    value={/^#[0-9A-Fa-f]{6}$/.test(theme.bentoCustomAccent) ? theme.bentoCustomAccent : "#7c8cff"}
+                    value={/^#[0-9A-Fa-f]{6}$/.test(theme.bentoCustomAccent) ? theme.bentoCustomAccent : "#e5e5e5"}
                     onChange={(event) => onPatch({ bentoCustomAccent: event.target.value })}
                   />
                   <input

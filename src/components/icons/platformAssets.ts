@@ -11,10 +11,13 @@ import spotifyPrimary from "@/assets/icons/Spotify/Primary.svg";
 import streamElementsPrimary from "@/assets/icons/StreamElements/Primary.svg";
 import streamlabsPrimary from "@/assets/icons/Streamlabs/Primary.svg";
 import tiktokPrimary from "@/assets/icons/TikTok/Primary.svg";
+import tiktokWhite from "@/assets/icons/TikTok/White.svg";
 import twitchPrimary from "@/assets/icons/Twitch/Primary.svg";
 import websitePrimary from "@/assets/icons/Website/Primary.svg";
+import websiteWhite from "@/assets/icons/Website/White.svg";
 import whatsAppPrimary from "@/assets/icons/WhatsApp/Primary.svg";
-import xPrimary from "@/assets/icons/X/White.svg";
+import xBlack from "@/assets/icons/X/Black.svg";
+import xWhite from "@/assets/icons/X/White.svg";
 import youTubePrimary from "@/assets/icons/YouTube/Primary.svg";
 
 /** Git index folder names (Linux/Vercel). SnapChat has a capital C. X has no Primary.svg. */
@@ -75,7 +78,7 @@ export const PLATFORM_ASSET_URLS: Record<PlatformBrand, string> = {
   twitch: twitchPrimary,
   website: websitePrimary,
   whatsapp: whatsAppPrimary,
-  x: xPrimary,
+  x: xWhite,
   youtube: youTubePrimary,
 };
 
@@ -92,22 +95,25 @@ export function resolvePlatformBrand(name: PlatformAssetName | string): Platform
   return null;
 }
 
-/** Dock/cards always use the Primary file. Missing White/Black variants are never imported. */
+/** Dock/cards: brand Primary on Light; White (or X Black) when the card is dark. */
 export function resolveIconVariant(
-  _brand: PlatformBrand,
-  _options: {
+  brand: PlatformBrand,
+  options: {
     variant?: IconVariant | undefined;
     onLight?: boolean;
     onBrand?: boolean;
     surface?: string | undefined;
   } = {},
 ): IconVariant {
+  if (options.variant) return options.variant;
+  if (brand === "x") return options.onLight ? "Black" : "White";
+  if (brand === "website" || brand === "tiktok") return options.onLight ? "Primary" : "White";
   return "Primary";
 }
 
 export function platformAssetUrl(
   name: PlatformAssetName | string,
-  _options: {
+  options: {
     variant?: IconVariant | undefined;
     onLight?: boolean;
     onBrand?: boolean;
@@ -116,6 +122,10 @@ export function platformAssetUrl(
 ): string | null {
   const brand = resolvePlatformBrand(name);
   if (!brand) return null;
+  const tone = resolveIconVariant(brand, options);
+  if (brand === "x") return tone === "Black" ? xBlack : xWhite;
+  if (brand === "website") return tone === "White" ? websiteWhite : websitePrimary;
+  if (brand === "tiktok") return tone === "White" ? tiktokWhite : tiktokPrimary;
   return PLATFORM_ASSET_URLS[brand];
 }
 
@@ -125,6 +135,8 @@ export function PlatformAsset({
   className,
   style,
   label,
+  onLight,
+  variant,
 }: {
   name: PlatformAssetName | string;
   size: number;
@@ -139,7 +151,9 @@ export function PlatformAsset({
 }) {
   const brand = resolvePlatformBrand(name);
   if (!brand) return null;
-  const src = PLATFORM_ASSET_URLS[brand];
+  const src = platformAssetUrl(name, { onLight, variant });
+  if (!src) return null;
+  const tone = resolveIconVariant(brand, { onLight, variant });
   const box: CSSProperties = {
     height: size,
     width: size,
@@ -151,7 +165,7 @@ export function PlatformAsset({
   };
 
   return createElement("img", {
-    key: `${PLATFORM_FOLDER[brand]}/Primary`,
+    key: `${PLATFORM_FOLDER[brand]}/${tone}`,
     className,
     src,
     alt: label ?? "",

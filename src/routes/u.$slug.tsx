@@ -56,14 +56,14 @@ function PublicLinkInBioRoute() {
 
   if (missing) {
     return (
-      <div className="grid min-h-screen place-items-center bg-[#0f1117] text-zinc-300">
+      <div className="grid min-h-screen place-items-center bg-[#0a0a0a] text-neutral-300">
         <p className="text-sm">This page is not published.</p>
       </div>
     );
   }
   if (!data) {
     return (
-      <div className="grid min-h-screen place-items-center bg-[#0f1117] text-zinc-500">
+      <div className="grid min-h-screen place-items-center bg-[#0a0a0a] text-neutral-500">
         <p className="text-sm">Loading…</p>
       </div>
     );

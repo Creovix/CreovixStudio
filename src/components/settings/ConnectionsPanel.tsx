@@ -137,7 +137,7 @@ function ConnectionRow({
         <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">
           <span
             className="flex items-center gap-1.5 rounded-full border border-[oklch(1_0_0/0.14)] px-3 py-1.5 text-[0.66rem] font-semibold text-foreground"
-            style={{ background: "rgba(15, 17, 23, 0.85)" }}
+            style={{ background: "rgba(10, 10, 10, 0.85)" }}
           >
             <Lock className="size-3.5 text-primary" aria-hidden />
             {comingSoonLabel}

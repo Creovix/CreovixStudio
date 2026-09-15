@@ -4,7 +4,7 @@ import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
 import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
 import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
-import { resolveBioFont, type PublicLinkInBio } from "@/lib/linkInBio";
+import { isLightBioTheme, resolveBioFont, type PublicLinkInBio } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
 
 export function LinkInBioPage({
@@ -26,6 +26,7 @@ export function LinkInBioPage({
 }) {
   const { profile, theme, links, livePlatforms, tilePreviews, stream, schedule } = data;
   const font = resolveBioFont(theme);
+  const lightPage = isLightBioTheme(theme.paletteBg);
   const glass = theme.surfaceStyle === "glass";
   const alpha = Math.round((theme.glassIntensity / 100) * 42);
   const cardBg = glass
@@ -40,7 +41,7 @@ export function LinkInBioPage({
       style={{
         fontFamily: font.stack,
         background:
-          theme.gradientStyle === "none"
+          !lightPage || theme.gradientStyle === "none"
             ? theme.paletteBg
             : `linear-gradient(165deg, ${theme.paletteBg} 0%, color-mix(in oklab, ${theme.paletteBg} 58%, ${theme.paletteAccent}) 100%)`,
         color: theme.paletteFg,

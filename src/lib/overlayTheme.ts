@@ -36,7 +36,7 @@ export const DEFAULT_OVERLAY_THEME: OverlayTheme = {
   fontFamily: "'Space Grotesk', system-ui, sans-serif",
   fontSize: 72,
   textColor: "#FFFFFF",
-  backgroundColor: "#0D0E12",
+  backgroundColor: "#0a0a0a",
   backgroundOpacity: 70,
   accentColor: "#7C3AED",
   animation: "pulse",
