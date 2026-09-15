@@ -20,7 +20,7 @@ import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
-import { PlatformDot } from "@/components/hub/PlatformDot";
+import { HubPlatformDot } from "@/components/hub/HubPlatformDot";
 import {
   ALL_PLATFORMS,
   FILTER_ORDER,
@@ -378,26 +378,19 @@ function HomePage() {
               type="button"
               aria-pressed={active}
               onClick={() => setPlatformFilter((prev) => (prev === id && id !== "ALL" ? "ALL" : id))}
-              className={`inline-flex items-center gap-1.5 overflow-visible rounded-full px-3 py-2 text-[0.72rem] leading-none transition-colors ${
+              className={`inline-flex items-center gap-1.5 overflow-visible rounded-full px-2.5 py-1 text-[0.72rem] leading-none transition-colors ${
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
-              style={{
-                overflow: "visible",
-                ...(active && id !== "ALL" ? { color } : {}),
-              }}
+              style={active && id !== "ALL" ? { color } : undefined}
             >
               {id === "ALL" ? (
-                <span
-                  className="inline-flex shrink-0 grow-0 items-center gap-1 overflow-visible"
-                  style={{ overflow: "visible" }}
-                  aria-hidden
-                >
+                <span className="inline-flex items-center gap-1 overflow-visible" aria-hidden>
                   {ALL_PLATFORMS.map((dot) => (
-                    <PlatformDot key={dot} id={dot} />
+                    <HubPlatformDot key={dot} id={dot} />
                   ))}
                 </span>
               ) : (
-                <PlatformDot id={id} />
+                <HubPlatformDot id={id} />
               )}
               {label}
             </button>

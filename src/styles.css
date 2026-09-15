@@ -511,24 +511,6 @@ body {
   }
 }
 
-/* Hub platform color marks: exact 8px circles. TikTok two-tone is a gradient on this span. */
-.hub-platform-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  min-width: 8px;
-  min-height: 8px;
-  flex-shrink: 0;
-  flex-grow: 0;
-  box-sizing: border-box;
-  border-radius: 50%;
-  overflow: visible;
-  vertical-align: middle;
-  pointer-events: none;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-}
-
 
 @utility hover-lift {
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), border-color 320ms ease,

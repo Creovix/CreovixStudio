@@ -3,7 +3,7 @@ import { ArrowRight, Check, Copy, Lock, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { PLATFORM_META, type PlatformId } from "@/components/hub/platforms";
-import { PlatformDot } from "@/components/hub/PlatformDot";
+import { HubPlatformDot } from "@/components/hub/HubPlatformDot";
 import { useLanguage } from "@/lib/i18n";
 
 export type ToolCardProps = {
@@ -92,16 +92,13 @@ export function ToolCard({
         <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl border border-[oklch(1_0_0/0.08)] bg-[oklch(1_0_0/0.04)]">
           <Icon className="size-4 text-primary" aria-hidden />
         </span>
-        <div className="min-w-0 overflow-visible leading-none">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 overflow-visible">
-            <p className="truncate text-[0.9rem] font-medium leading-snug tracking-tight">{name}</p>
+            <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
             {platforms.length > 0 ? (
-              <span
-                className="inline-flex shrink-0 grow-0 items-center gap-1 overflow-visible"
-                aria-hidden
-              >
+              <span className="inline-flex items-center gap-1 overflow-visible" aria-hidden>
                 {platforms.map((id) => (
-                  <PlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
+                  <HubPlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
                 ))}
               </span>
             ) : null}
