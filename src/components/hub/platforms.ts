@@ -12,10 +12,10 @@ export const PLATFORM_META: Record<
   TIKTOK: { color: "#25F4EE", label: { en: "TikTok" } },
 };
 
-/** Hub-only platform mark: a small color dot (TikTok is black / cyan). Prefer `PlatformDot`. */
+/** Hub-only platform mark: a small color dot (TikTok is black / cyan on one circle). */
 export function platformDotBackground(id: PlatformId): string {
   if (id === "TIKTOK") {
-    return "linear-gradient(90deg, #010101 0 50%, #25F4EE 50% 100%)";
+    return "linear-gradient(90deg, #000 50%, #25F4EE 50%)";
   }
   return PLATFORM_META[id].color;
 }

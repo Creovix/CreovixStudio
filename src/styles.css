@@ -511,9 +511,9 @@ body {
   }
 }
 
-/* Hub platform color marks: exact 8px circles. Overflow hidden only on TikTok. */
+/* Hub platform color marks: exact 8px circles. TikTok two-tone is a gradient on this span. */
 .hub-platform-dot {
-  display: inline-flex;
+  display: inline-block;
   width: 8px;
   height: 8px;
   min-width: 8px;
@@ -525,24 +525,8 @@ body {
   overflow: visible;
   vertical-align: middle;
   pointer-events: none;
-}
-.hub-platform-dot--tiktok {
-  position: relative;
-  overflow: hidden;
-}
-.hub-platform-dot--tiktok > span {
-  position: absolute;
-  top: 0;
-  width: 50%;
-  height: 100%;
-}
-.hub-platform-dot--tiktok > span:first-child {
-  left: 0;
-  background: #010101;
-}
-.hub-platform-dot--tiktok > span:last-child {
-  right: 0;
-  background: #25f4ee;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
 
