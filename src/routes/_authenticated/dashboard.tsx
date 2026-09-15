@@ -388,24 +388,13 @@ function HomePage() {
               }}
             >
               {id === "ALL" ? (
-                <span
-                  className="inline-flex items-center gap-1 overflow-visible"
-                  style={{ overflow: "visible" }}
-                  aria-hidden
-                >
+                <span className="inline-flex items-center gap-1 overflow-visible" aria-hidden>
                   {ALL_PLATFORMS.map((dot) => (
-                    <span
-                      key={dot}
-                      className="grid size-2.5 shrink-0 place-items-center overflow-visible"
-                    >
-                      <HubPlatformDot id={dot} />
-                    </span>
+                    <HubPlatformDot key={dot} id={dot} />
                   ))}
                 </span>
               ) : (
-                <span className="grid size-2.5 shrink-0 place-items-center overflow-visible">
-                  <HubPlatformDot id={id} />
-                </span>
+                <HubPlatformDot id={id} />
               )}
               {label}
             </button>
