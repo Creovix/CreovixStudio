@@ -296,11 +296,11 @@ export const BACKGROUND_PRESETS: ReadonlyArray<{
     id: "paper",
     label: "Light Theme",
     hint: "Light page, dark type",
-    paletteBg: "#f7f7f5",
+    paletteBg: "#f8f9fa",
     paletteFg: "#171717",
-    paletteAccent: "#6d28d9",
-    paletteMuted: "#5c5c57",
-    gradientStyle: "soft",
+    paletteAccent: "#525252",
+    paletteMuted: "#6b6b6b",
+    gradientStyle: "none",
   },
   {
     id: "dark",
@@ -319,11 +319,11 @@ export const BENTO_COLOR_MODES: ReadonlyArray<{
   label: string;
   hint: string;
 }> = [
-  { id: "brand", label: "Full Brand Colors", hint: "Theme surface, brand hairline and wash" },
-  { id: "mono", label: "Monochrome Sleek", hint: "Neutral cards, brand on icons" },
-  { id: "gradient", label: "Gradient Fades", hint: "Soft brand wash at the edge" },
-  { id: "glow", label: "Accent Glows", hint: "Theme accent glow on the surface" },
-  { id: "glass", label: "Glass-Tinted", hint: "Frosted glass, slight tint" },
+  { id: "brand", label: "Brand Colors", hint: "Theme surface, brand hairline and wash" },
+  { id: "mono", label: "Monochrome Sleek", hint: "Neutral cards, Black/White marks" },
+  { id: "gradient", label: "Gradient", hint: "Soft brand wash at the edge" },
+  { id: "glow", label: "Glow", hint: "Theme accent glow on the surface" },
+  { id: "glass", label: "Glass-Tinted", hint: "Frosted glass, translucent cards" },
   { id: "custom", label: "Custom Palette", hint: "Your color as border, glow, and wash" },
 ];
 
@@ -825,9 +825,15 @@ export function isLightBioTheme(bg: string): boolean {
 }
 
 const LEGACY_NAVY_BG = new Set(["#0f1117", "#0b0d12", "#0a0b10", "#08090e", "#0d0e12"]);
+const LEGACY_PAPER_BG = new Set(["#f7f7f5", "#f8f8f6", "#f6f6f4"]);
+const LEGACY_PAPER_ACCENT = new Set(["#6d28d9", "#7c3aed", "#8b5cf6"]);
 
 function migrateLegacyDarkBg(hex: string): string {
   return LEGACY_NAVY_BG.has(hex.toLowerCase()) ? "#0a0a0a" : hex;
+}
+
+function migrateLegacyPaperBg(hex: string): string {
+  return LEGACY_PAPER_BG.has(hex.toLowerCase()) ? "#f8f9fa" : hex;
 }
 
 export function hexLuminance(hex: string): number {
@@ -849,6 +855,11 @@ export type BentoTilePaint = {
   wash?: string;
   ink: string;
   onLight: boolean;
+  /** Glow mode — White marks on dark, Black on light. */
+  whiteIcons: boolean;
+  /** Monochrome Sleek — grayscale White/Black marks, no glow. */
+  monoIcons: boolean;
+  glass: boolean;
   border?: string;
   glowColor: string;
   boxShadow?: string;
@@ -880,26 +891,31 @@ export function bentoTilePaint(
   const pageLight = hexLuminance(theme.paletteBg) > 0.45;
   const fill = themeSurface(pageLight);
   const ink = officialInk(platform, pageLight);
+  const whiteIcons = mode === "glow";
+  const monoIcons = mode === "mono";
+  const glass = mode === "glass";
   const hairline = pageLight
-    ? "1px solid color-mix(in oklab, var(--bio-fg) 10%, transparent)"
-    : "1px solid color-mix(in oklab, #ffffff 10%, transparent)";
+    ? "1px solid color-mix(in oklab, #000000 12%, transparent)"
+    : "1px solid color-mix(in oklab, #ffffff 12%, transparent)";
+  const base = { onLight: pageLight, whiteIcons, monoIcons, glass } as const;
 
   if (mode === "mono") {
     return {
-      fill,
-      ink,
-      onLight: pageLight,
-      border: hairline,
-      glowColor: brand.color,
+      ...base,
+      fill: pageLight ? "#eceef1" : "#161616",
+      ink: pageLight ? "#111111" : "#f5f5f5",
+      border: pageLight ? "1px solid #cfd4da" : "1px solid rgba(255,255,255,0.14)",
+      glowColor: pageLight ? "#6b7280" : "#d4d4d4",
+      boxShadow: pageLight ? "0 10px 22px rgba(15,23,32,0.06)" : "0 14px 30px rgba(0,0,0,0.5)",
     };
   }
 
   if (mode === "gradient") {
     return {
+      ...base,
       fill,
       wash: `linear-gradient(165deg, transparent 38%, color-mix(in oklab, ${brand.color} 16%, transparent) 100%)`,
       ink,
-      onLight: pageLight,
       border: hairline,
       glowColor: brand.color,
     };
@@ -907,10 +923,10 @@ export function bentoTilePaint(
 
   if (mode === "glow") {
     return {
+      ...base,
       fill,
       wash: `radial-gradient(120% 90% at 50% 120%, color-mix(in oklab, ${theme.paletteAccent} 18%, transparent), transparent 62%)`,
       ink,
-      onLight: pageLight,
       border: `1px solid color-mix(in oklab, ${theme.paletteAccent} 42%, transparent)`,
       glowColor: theme.paletteAccent,
       boxShadow: `inset 0 0 28px color-mix(in oklab, ${theme.paletteAccent} 16%, transparent), 0 14px 28px color-mix(in oklab, ${theme.paletteAccent} 22%, transparent)`,
@@ -919,16 +935,18 @@ export function bentoTilePaint(
 
   if (mode === "glass") {
     return {
-      fill: pageLight
-        ? `color-mix(in oklab, ${theme.paletteAccent} 8%, color-mix(in oklab, #ffffff 70%, var(--bio-bg)))`
-        : `color-mix(in oklab, ${theme.paletteAccent} 10%, color-mix(in oklab, #ffffff 8%, var(--bio-bg)))`,
+      ...base,
+      fill: pageLight ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.08)",
+      wash: pageLight
+        ? "linear-gradient(165deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.08) 46%, transparent 100%)"
+        : "linear-gradient(165deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.03) 48%, transparent 100%)",
       ink,
-      onLight: pageLight,
-      border: pageLight
-        ? `1px solid color-mix(in oklab, ${theme.paletteAccent} 22%, rgba(255,255,255,0.5))`
-        : `1px solid color-mix(in oklab, ${theme.paletteAccent} 28%, rgba(255,255,255,0.14))`,
-      glowColor: theme.paletteAccent,
-      backdropFilter: "blur(22px) saturate(1.3)",
+      border: pageLight ? "1px solid rgba(255,255,255,0.78)" : "1px solid rgba(255,255,255,0.2)",
+      glowColor: pageLight ? "#ffffff" : "#fafafa",
+      boxShadow: pageLight
+        ? "0 12px 40px rgba(15,23,32,0.08), inset 0 1px 0 rgba(255,255,255,0.92)"
+        : "0 18px 48px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.18)",
+      backdropFilter: "blur(24px) saturate(1.7)",
     };
   }
 
@@ -936,10 +954,10 @@ export function bentoTilePaint(
     const customFill = sanitizeHex(theme.bentoCustomFill, DEFAULT_THEME.bentoCustomFill);
     const accent = sanitizeHex(theme.bentoCustomAccent, DEFAULT_THEME.bentoCustomAccent);
     return {
+      ...base,
       fill,
       wash: `color-mix(in oklab, ${customFill} 12%, transparent)`,
       ink,
-      onLight: pageLight,
       border: `1.5px solid color-mix(in oklab, ${accent} 55%, transparent)`,
       glowColor: accent,
       boxShadow: `inset 0 0 22px color-mix(in oklab, ${accent} 14%, transparent)`,
@@ -947,10 +965,10 @@ export function bentoTilePaint(
   }
 
   return {
+    ...base,
     fill,
     wash: `color-mix(in oklab, ${brand.color} 10%, transparent)`,
     ink,
-    onLight: pageLight,
     border: `1.5px solid color-mix(in oklab, ${brand.color} 58%, transparent)`,
     glowColor: brand.color,
     boxShadow: `inset 0 0 20px color-mix(in oklab, ${brand.color} 10%, transparent)`,
@@ -959,10 +977,14 @@ export function bentoTilePaint(
 
 export function sanitizeTheme(partial: Partial<LinkInBioTheme> | null | undefined): LinkInBioTheme {
   const src = partial ?? {};
-  const paletteBg = migrateLegacyDarkBg(
-    sanitizeHex(src.paletteBg ?? DEFAULT_THEME.paletteBg, DEFAULT_THEME.paletteBg),
+  let paletteBg = migrateLegacyPaperBg(
+    migrateLegacyDarkBg(
+      sanitizeHex(src.paletteBg ?? DEFAULT_THEME.paletteBg, DEFAULT_THEME.paletteBg),
+    ),
   );
+  if (hexLuminance(paletteBg) > 0.45) paletteBg = "#f8f9fa";
   const darkPage = !isLightBioTheme(paletteBg);
+  const paperPage = paletteBg.toLowerCase() === "#f8f9fa";
   let paletteFg = sanitizeHex(src.paletteFg ?? DEFAULT_THEME.paletteFg, DEFAULT_THEME.paletteFg);
   let paletteAccent = sanitizeHex(src.paletteAccent ?? DEFAULT_THEME.paletteAccent, DEFAULT_THEME.paletteAccent);
   let paletteMuted = sanitizeHex(src.paletteMuted ?? DEFAULT_THEME.paletteMuted, DEFAULT_THEME.paletteMuted);
@@ -978,11 +1000,15 @@ export function sanitizeTheme(partial: Partial<LinkInBioTheme> | null | undefine
     if (bentoCustomFill.toLowerCase() === "#1a1c24") bentoCustomFill = "#171717";
     if (bentoCustomAccent.toLowerCase() === "#7c8cff") bentoCustomAccent = "#e5e5e5";
   }
+  if (paperPage) {
+    if (LEGACY_PAPER_ACCENT.has(paletteAccent.toLowerCase())) paletteAccent = "#525252";
+    if (paletteMuted.toLowerCase() === "#5c5c57") paletteMuted = "#6b6b6b";
+  }
   return {
     glassIntensity: clampPercent(src.glassIntensity ?? DEFAULT_THEME.glassIntensity),
     hairlineBorders: Boolean(src.hairlineBorders ?? DEFAULT_THEME.hairlineBorders),
     glowStrength: clampPercent(src.glowStrength ?? DEFAULT_THEME.glowStrength),
-    gradientStyle: darkPage ? "none" : sanitizeGradient(src.gradientStyle ?? DEFAULT_THEME.gradientStyle),
+    gradientStyle: "none",
     fontFamily: sanitizeFont(src.fontFamily ?? DEFAULT_THEME.fontFamily),
     fontCustomName: sanitizeFontCustomName(src.fontCustomName ?? DEFAULT_THEME.fontCustomName),
     fontCustomHref: sanitizeFontCustomHref(src.fontCustomHref ?? DEFAULT_THEME.fontCustomHref),
@@ -996,7 +1022,7 @@ export function sanitizeTheme(partial: Partial<LinkInBioTheme> | null | undefine
     bentoCustomAccent,
     layout: sanitizeLayout(src.layout ?? DEFAULT_THEME.layout),
     defaultCardSize: sanitizeCardSize(src.defaultCardSize ?? DEFAULT_THEME.defaultCardSize),
-    ambientEnabled: darkPage ? false : src.ambientEnabled !== false,
+    ambientEnabled: darkPage ? false : Boolean(src.ambientEnabled),
     ambientPreset: darkPage ? "none" : sanitizeAmbientPreset(src.ambientPreset ?? DEFAULT_THEME.ambientPreset),
     scheduleEnabled: Boolean(src.scheduleEnabled),
     widgetBannerUrl: sanitizeAvatarUrl(src.widgetBannerUrl ?? ""),

@@ -74,6 +74,7 @@ const EVENT_LABEL: Record<string, TranslationKey> = {
   BITS: "activity.type.BITS",
   DONATION: "activity.type.DONATION",
   RAID: "activity.type.RAID",
+  LIKE: "activity.type.LIKE",
 };
 
 /**
@@ -83,7 +84,7 @@ const EVENT_LABEL: Record<string, TranslationKey> = {
 const ALLOWED_BY_PLATFORM: Record<string, string[]> = {
   TWITCH: ["FOLLOW", "SUBSCRIPTION", "GIFT_SUB", "BITS", "RAID"],
   KICK: ["FOLLOW", "SUBSCRIPTION", "GIFT_SUB", "RAID"],
-  TIKTOK: ["FOLLOW", "DONATION"],
+  TIKTOK: ["FOLLOW", "DONATION", "LIKE"],
   YOUTUBE: ["FOLLOW", "SUBSCRIPTION", "DONATION"],
   X: ["FOLLOW"],
   STREAMELEMENTS: ["DONATION"],

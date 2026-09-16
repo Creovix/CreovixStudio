@@ -5,8 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Plus, Radio, Search, Star, Swords, Trash2, Users } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { StudioPageTabs } from "@/components/layout/StudioPageTabs";
 import { DarkSelect } from "@/components/ui/dark-select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
@@ -83,6 +83,10 @@ function isTrackable(platform: string): platform is ChannelSuggestion["platform"
 
 function suggestionKey(item: { platform: string; username: string }) {
   return `${item.platform}:${item.username.trim().toLowerCase()}`;
+}
+
+function normalizeUsername(value: string) {
+  return value.trim().replace(/^@/, "");
 }
 
 function matchesQuery(item: ChannelSuggestion, query: string) {
@@ -251,12 +255,42 @@ function useDailyGrowth(snapshot: ChannelSnapshot | undefined): number | null {
   return growth;
 }
 
-function SearchBar({
+function PlatformSelect({
+  value,
+  onPlatform,
+  ariaLabel,
+  className,
+}: {
+  value: CounterPlatform;
+  onPlatform: (next: CounterPlatform) => void;
+  ariaLabel: string;
+  className?: string;
+}) {
+  return (
+    <DarkSelect
+      value={value}
+      onValueChange={(next) => onPlatform(next as CounterPlatform)}
+      aria-label={ariaLabel}
+      className={className ?? "h-11 w-[12.5rem] shrink-0"}
+      options={PLATFORMS.map((entry) => ({
+        value: entry.id,
+        label: (
+          <span className="flex items-center gap-2">
+            {entry.id !== "ALL" ? <PlatformIcon platform={entry.id} size={14} /> : null}
+            {entry.label}
+          </span>
+        ),
+      }))}
+    />
+  );
+}
+
+function ChannelSearchField({
   value,
   platform,
   onValue,
   onPlatform,
-  onSubmit,
+  onPick,
   label,
   localSuggestions,
 }: {
@@ -264,7 +298,7 @@ function SearchBar({
   platform: CounterPlatform;
   onValue: (next: string) => void;
   onPlatform: (next: CounterPlatform) => void;
-  onSubmit: (username: string, platform: CounterPlatform) => void;
+  onPick?: (username: string, platform: CounterPlatform) => void;
   label: string;
   localSuggestions: ChannelSuggestion[];
 }) {
@@ -336,7 +370,7 @@ function SearchBar({
   const pick = (item: ChannelSuggestion) => {
     onValue(item.username);
     onPlatform(item.platform);
-    onSubmit(item.username, item.platform);
+    onPick?.(item.username, item.platform);
     setOpen(false);
   };
 
@@ -357,137 +391,239 @@ function SearchBar({
   );
 
   return (
+    <div className="relative min-w-0 flex-1">
+      <Search
+        className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted-foreground"
+        aria-hidden
+      />
+      <input
+        value={value}
+        onChange={(event) => {
+          onValue(event.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          blurTimer.current = window.setTimeout(() => setOpen(false), 140);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setOpen(true);
+            moveActive(1);
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            setOpen(true);
+            moveActive(-1);
+          } else if (event.key === "Escape") {
+            setOpen(false);
+          } else if (event.key === "Enter" && showList && suggestions[active]) {
+            event.preventDefault();
+            pick(suggestions[active]);
+          }
+        }}
+        placeholder={label}
+        className={`${field} ps-9`}
+        dir="auto"
+        aria-label={label}
+        aria-autocomplete="list"
+        aria-expanded={showList}
+        aria-controls={listId}
+        aria-activedescendant={
+          showList && suggestions[active] ? `${listId}-${active}` : undefined
+        }
+        role="combobox"
+        autoComplete="off"
+      />
+      {showList ? (
+        <ul
+          id={listId}
+          role="listbox"
+          className="absolute start-0 end-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-[#12151e]/95 py-1 text-sm shadow-2xl shadow-black/60 backdrop-blur-2xl"
+        >
+          {suggestions.length === 0 ? (
+            <li className="px-3 py-3 text-center text-xs text-muted-foreground">
+              {canSearchTwitch && twitchQuery.isFetching
+                ? "Searching Twitch…"
+                : emptyHint}
+            </li>
+          ) : (
+            suggestions.map((item, index) => (
+              <li key={suggestionKey(item)} role="presentation">
+                <button
+                  type="button"
+                  id={`${listId}-${index}`}
+                  role="option"
+                  aria-selected={index === active}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-start transition-colors ${
+                    index === active
+                      ? "bg-violet-600/20 text-violet-100"
+                      : "text-slate-100 hover:bg-violet-600/15"
+                  }`}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => pick(item)}
+                >
+                  {item.avatarUrl ? (
+                    <img
+                      src={item.avatarUrl}
+                      alt=""
+                      className="size-7 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-[0.65rem] font-bold">
+                      {item.displayName.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium" dir="auto">{item.displayName}</span>
+                    <span className="block truncate text-[0.7rem] text-muted-foreground" dir="auto">
+                      @{item.username}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+                    <PlatformIcon platform={item.platform} size={12} />
+                    {SOURCE_LABEL[item.source]}
+                    {item.isLive ? " · Live" : ""}
+                  </span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function SearchBar({
+  value,
+  platform,
+  onValue,
+  onPlatform,
+  onSubmit,
+  label,
+  localSuggestions,
+}: {
+  value: string;
+  platform: CounterPlatform;
+  onValue: (next: string) => void;
+  onPlatform: (next: CounterPlatform) => void;
+  onSubmit: (username: string, platform: CounterPlatform) => void;
+  label: string;
+  localSuggestions: ChannelSuggestion[];
+}) {
+  return (
     <form
       className="flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        if (showList && suggestions[active]) {
-          pick(suggestions[active]);
-          return;
-        }
         onSubmit(value, platform);
       }}
     >
-      <div className="relative min-w-[180px] flex-1">
-        <Search
-          className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted-foreground"
-          aria-hidden
-        />
-        <input
-          value={value}
-          onChange={(event) => {
-            onValue(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => {
-            blurTimer.current = window.setTimeout(() => setOpen(false), 140);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setOpen(true);
-              moveActive(1);
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setOpen(true);
-              moveActive(-1);
-            } else if (event.key === "Escape") {
-              setOpen(false);
-            }
-          }}
-          placeholder={label}
-          className={`${field} ps-9`}
-          dir="auto"
-          aria-label={label}
-          aria-autocomplete="list"
-          aria-expanded={showList}
-          aria-controls={listId}
-          aria-activedescendant={
-            showList && suggestions[active] ? `${listId}-${active}` : undefined
-          }
-          role="combobox"
-          autoComplete="off"
-        />
-        {showList ? (
-          <ul
-            id={listId}
-            role="listbox"
-            className="absolute start-0 end-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-[#12151e]/95 py-1 text-sm shadow-2xl shadow-black/60 backdrop-blur-2xl"
-          >
-            {suggestions.length === 0 ? (
-              <li className="px-3 py-3 text-center text-xs text-muted-foreground">
-                {canSearchTwitch && twitchQuery.isFetching
-                  ? "Searching Twitch…"
-                  : emptyHint}
-              </li>
-            ) : (
-              suggestions.map((item, index) => (
-                <li key={suggestionKey(item)} role="presentation">
-                  <button
-                    type="button"
-                    id={`${listId}-${index}`}
-                    role="option"
-                    aria-selected={index === active}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-start transition-colors ${
-                      index === active
-                        ? "bg-violet-600/20 text-violet-100"
-                        : "text-slate-100 hover:bg-violet-600/15"
-                    }`}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onMouseEnter={() => setActive(index)}
-                    onClick={() => pick(item)}
-                  >
-                    {item.avatarUrl ? (
-                      <img
-                        src={item.avatarUrl}
-                        alt=""
-                        className="size-7 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-[0.65rem] font-bold">
-                        {item.displayName.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium" dir="auto">{item.displayName}</span>
-                      <span className="block truncate text-[0.7rem] text-muted-foreground" dir="auto">
-                        @{item.username}
-                      </span>
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1.5 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
-                      <PlatformIcon platform={item.platform} size={12} />
-                      {SOURCE_LABEL[item.source]}
-                      {item.isLive ? " · Live" : ""}
-                    </span>
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
-        ) : null}
-      </div>
-      <DarkSelect
-        value={platform}
-        onValueChange={(next) => onPlatform(next as CounterPlatform)}
-        aria-label="Platform"
-        className="h-11 w-[12.5rem] shrink-0"
-        options={PLATFORMS.map((entry) => ({
-          value: entry.id,
-          label: (
-            <span className="flex items-center gap-2">
-              {entry.id !== "ALL" ? <PlatformIcon platform={entry.id} size={14} /> : null}
-              {entry.label}
-            </span>
-          ),
-        }))}
+      <ChannelSearchField
+        value={value}
+        platform={platform}
+        onValue={onValue}
+        onPlatform={onPlatform}
+        onPick={onSubmit}
+        label={label}
+        localSuggestions={localSuggestions}
       />
+      <PlatformSelect value={platform} onPlatform={onPlatform} ariaLabel="Platform" />
       <button
         type="submit"
         className="h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
         Track Live
       </button>
+    </form>
+  );
+}
+
+function VsComparisonBar({
+  inputA,
+  platformA,
+  inputB,
+  platformB,
+  onInputA,
+  onPlatformA,
+  onInputB,
+  onPlatformB,
+  onTrack,
+  localSuggestions,
+}: {
+  inputA: string;
+  platformA: CounterPlatform;
+  inputB: string;
+  platformB: CounterPlatform;
+  onInputA: (next: string) => void;
+  onPlatformA: (next: CounterPlatform) => void;
+  onInputB: (next: string) => void;
+  onPlatformB: (next: CounterPlatform) => void;
+  onTrack: (a: Target, b: Target) => void;
+  localSuggestions: ChannelSuggestion[];
+}) {
+  const ready = Boolean(normalizeUsername(inputA) && normalizeUsername(inputB));
+  const selectClass = "h-11 w-[9.75rem] shrink-0";
+
+  return (
+    <form
+      className="rounded-2xl border border-white/10 bg-background/50 p-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const a = normalizeUsername(inputA);
+        const b = normalizeUsername(inputB);
+        if (!a || !b) return;
+        onTrack({ platform: platformA, username: a }, { platform: platformB, username: b });
+      }}
+    >
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <ChannelSearchField
+            value={inputA}
+            platform={platformA}
+            onValue={onInputA}
+            onPlatform={onPlatformA}
+            label="Creator A"
+            localSuggestions={localSuggestions}
+          />
+          <PlatformSelect
+            value={platformA}
+            onPlatform={onPlatformA}
+            ariaLabel="Creator A platform"
+            className={selectClass}
+          />
+        </div>
+        <div className="flex justify-center">
+          <span className="rounded-full border border-white/10 bg-muted px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.2em] text-muted-foreground">
+            VS
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <ChannelSearchField
+            value={inputB}
+            platform={platformB}
+            onValue={onInputB}
+            onPlatform={onPlatformB}
+            label="Creator B"
+            localSuggestions={localSuggestions}
+          />
+          <PlatformSelect
+            value={platformB}
+            onPlatform={onPlatformB}
+            ariaLabel="Creator B platform"
+            className={selectClass}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={!ready}
+          className="h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-40"
+        >
+          Track Live
+        </button>
+      </div>
     </form>
   );
 }
@@ -526,6 +662,13 @@ function ChannelCard({
   }
 
   if (!snapshot) {
+    if (compact) {
+      return (
+        <div className="grid min-h-[7.5rem] place-items-center rounded-2xl border border-white/5 text-sm text-muted-foreground">
+          {loading ? "Loading…" : null}
+        </div>
+      );
+    }
     return (
       <div className="p-10 text-center text-sm text-muted-foreground">
         {loading ? "Loading channel…" : "Search a channel to start tracking."}
@@ -960,32 +1103,15 @@ function LiveCounterPage() {
       title="Counter"
       subtitle="Live channel counts and a combined social total — from APIs that actually return followers."
     >
-      <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl">
-        <Tabs
-          value={pane}
-          onValueChange={(next) => setPane(next === "social" ? "social" : "live")}
-        >
-          <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-            <TabsList className="grid h-11 w-full grid-cols-2 rounded-full bg-black/40 p-1">
-              <TabsTrigger
-                value="live"
-                className="rounded-full text-[0.82rem] data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-violet-700 data-[state=active]:text-white data-[state=active]:shadow-[0_8px_20px_-12px_rgba(124,58,237,0.9)]"
-              >
-                Live Counter
-              </TabsTrigger>
-              <TabsTrigger
-                value="social"
-                className="rounded-full text-[0.82rem] data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-violet-700 data-[state=active]:text-white data-[state=active]:shadow-[0_8px_20px_-12px_rgba(124,58,237,0.9)]"
-              >
-                Social Counter
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent
-            value="live"
-            className="mt-0 space-y-6 p-5 duration-300 animate-in fade-in-0 slide-in-from-bottom-1 md:p-6"
-          >
+      <StudioPageTabs
+        value={pane}
+        onChange={setPane}
+        items={[
+          { id: "live", label: "Live" },
+          { id: "social", label: "Social" },
+        ]}
+      />
+      {pane === "live" ? (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-1 border-b border-white/5 pb-4">
           <button type="button" className={toggleClass(!vsMode)} onClick={() => setVsMode(false)}>
@@ -1096,116 +1222,94 @@ function LiveCounterPage() {
           </>
         ) : (
           <div className="space-y-4">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                  Creator A
-                </p>
-                <SearchBar
-                  value={inputA}
-                  platform={platformA}
-                  onValue={setInputA}
-                  onPlatform={setPlatformA}
-                  onSubmit={(username, nextPlatform) => {
-                    setInputA(username);
-                    setPlatformA(nextPlatform);
-                    setTargetA({ platform: nextPlatform, username });
-                  }}
-                  label="Creator A username"
-                  localSuggestions={localSuggestions}
-                />
-                <ChannelCard
-                  snapshot={sideA.data}
-                  loading={sideA.isFetching}
-                  error={errorText(sideA.error)}
-                  compact
-                />
-              </div>
-              <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                  Creator B
-                </p>
-                <SearchBar
-                  value={inputB}
-                  platform={platformB}
-                  onValue={setInputB}
-                  onPlatform={setPlatformB}
-                  onSubmit={(username, nextPlatform) => {
-                    setInputB(username);
-                    setPlatformB(nextPlatform);
-                    setTargetB({ platform: nextPlatform, username });
-                  }}
-                  label="Creator B username"
-                  localSuggestions={localSuggestions}
-                />
-                <ChannelCard
-                  snapshot={sideB.data}
-                  loading={sideB.isFetching}
-                  error={errorText(sideB.error)}
-                  compact
-                />
-              </div>
-            </div>
+            <VsComparisonBar
+              inputA={inputA}
+              platformA={platformA}
+              inputB={inputB}
+              platformB={platformB}
+              onInputA={setInputA}
+              onPlatformA={setPlatformA}
+              onInputB={setInputB}
+              onPlatformB={setPlatformB}
+              onTrack={(a, b) => {
+                setInputA(a.username);
+                setPlatformA(a.platform);
+                setTargetA(a);
+                setInputB(b.username);
+                setPlatformB(b.platform);
+                setTargetB(b);
+              }}
+              localSuggestions={localSuggestions}
+            />
 
-            <div className="border-t border-white/5 p-6 text-center">
-              {gap === null ? (
-                <p className="text-sm text-muted-foreground">
-                  Track two channels with public follower counts to see the live gap.
-                </p>
-              ) : gap === 0 ? (
-                <p className="text-lg font-semibold">Dead heat — both channels are level.</p>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground">Live difference</p>
-                  <div className="flex justify-center">
-                    <RollingCounter value={Math.abs(gap)} size="text-5xl" />
+            {targetA && targetB ? (
+              <>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ChannelCard
+                    snapshot={sideA.data}
+                    loading={sideA.isFetching}
+                    error={errorText(sideA.error)}
+                    compact
+                  />
+                  <ChannelCard
+                    snapshot={sideB.data}
+                    loading={sideB.isFetching}
+                    error={errorText(sideB.error)}
+                    compact
+                  />
+                </div>
+
+                {gap !== null ? (
+                  <div className="border-t border-white/5 p-6 text-center">
+                    {gap === 0 ? (
+                      <p className="text-lg font-semibold">Dead heat — both channels are level.</p>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground">Live difference</p>
+                        <div className="flex justify-center">
+                          <RollingCounter value={Math.abs(gap)} size="text-5xl" />
+                        </div>
+                        <p className="mt-2 text-sm font-semibold">
+                          {(gap > 0 ? sideA.data?.displayName : sideB.data?.displayName) ?? "Channel"}{" "}
+                          leads by {Math.abs(gap).toLocaleString()} Followers
+                        </p>
+                        {(() => {
+                          const a = sideA.data?.followers ?? 0;
+                          const b = sideB.data?.followers ?? 0;
+                          const total = a + b;
+                          const share = total > 0 ? (a / total) * 100 : 50;
+                          return (
+                            <div className="mx-auto mt-4 max-w-2xl">
+                              <div className="flex h-3 overflow-hidden rounded-full bg-[oklch(1_0_0/0.08)]">
+                                <div
+                                  className="h-full bg-primary transition-[width] duration-700"
+                                  style={{ width: `${share}%` }}
+                                />
+                                <div className="h-full flex-1 bg-amber-400/70" />
+                              </div>
+                              <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {sideA.data?.displayName} · {a.toLocaleString()}
+                                </span>
+                                <span>
+                                  {sideB.data?.displayName} · {b.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </>
+                    )}
                   </div>
-                  <p className="mt-2 text-sm font-semibold">
-                    {(gap > 0 ? sideA.data?.displayName : sideB.data?.displayName) ?? "Channel"}{" "}
-                    leads by {Math.abs(gap).toLocaleString()} Followers
-                  </p>
-                  {(() => {
-                    const a = sideA.data?.followers ?? 0;
-                    const b = sideB.data?.followers ?? 0;
-                    const total = a + b;
-                    const share = total > 0 ? (a / total) * 100 : 50;
-                    return (
-                      <div className="mx-auto mt-4 max-w-2xl">
-                        <div className="flex h-3 overflow-hidden rounded-full bg-[oklch(1_0_0/0.08)]">
-                          <div
-                            className="h-full bg-primary transition-[width] duration-700"
-                            style={{ width: `${share}%` }}
-                          />
-                          <div className="h-full flex-1 bg-amber-400/70" />
-                        </div>
-                        <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                          <span>
-                            {sideA.data?.displayName} · {a.toLocaleString()}
-                          </span>
-                          <span>
-                            {sideB.data?.displayName} · {b.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </>
-              )}
-
-            </div>
+                ) : null}
+              </>
+            ) : null}
           </div>
         )}
       </div>
-          </TabsContent>
-
-          <TabsContent
-            value="social"
-            className="mt-0 p-5 duration-300 animate-in fade-in-0 slide-in-from-bottom-1 md:p-6"
-          >
-            <SocialCounterSection />
-          </TabsContent>
-        </Tabs>
-      </div>
+      ) : (
+        <SocialCounterSection />
+      )}
     </AppShell>
   );
 }

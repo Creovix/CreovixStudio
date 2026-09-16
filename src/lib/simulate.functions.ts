@@ -94,10 +94,11 @@ export const sendTestChatMessage = createServerFn({ method: "POST" })
 
 export type TestEventInput = {
   platform: "TWITCH" | "KICK" | "TIKTOK" | "YOUTUBE" | "X" | "STREAMLABS" | "STREAMELEMENTS" | "MANUAL";
-  eventType: "FOLLOW" | "SUBSCRIPTION" | "GIFT_SUB" | "BITS" | "DONATION" | "RAID";
+  eventType: "FOLLOW" | "SUBSCRIPTION" | "GIFT_SUB" | "BITS" | "DONATION" | "RAID" | "LIKE";
   amount?: number | null;
   actorName?: string | null;
   message?: string | null;
+  quantity?: number | null;
 };
 
 /**
@@ -146,6 +147,7 @@ export const fireTestEvent = createServerFn({ method: "POST" })
           : null;
 
     const message = data.message?.trim().slice(0, 400) || null;
+    const quantity = Math.max(1, Math.round(data.quantity ?? 1));
 
     const result = await ingestEvent(supabaseAdmin, target, {
       platform: data.platform,
@@ -155,7 +157,7 @@ export const fireTestEvent = createServerFn({ method: "POST" })
       actorPlatformId: null,
       amount,
       currency: data.eventType === "DONATION" ? "USD" : null,
-      quantity: 1,
+      quantity,
       rawPayload: { test_harness: true, platform: data.platform, ...(message ? { message } : {}) },
     });
 

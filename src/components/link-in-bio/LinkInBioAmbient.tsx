@@ -2,33 +2,10 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { isLightBioTheme, type AmbientPreset, type LinkInBioTheme } from "@/lib/linkInBio";
 
-function gradientCss(style: LinkInBioTheme["gradientStyle"], accent: string, muted: string): string {
-  if (style === "none") return "transparent";
-  if (style === "aurora") {
-    return `radial-gradient(120% 80% at 10% 0%, color-mix(in oklab, ${accent} 38%, transparent), transparent 55%), radial-gradient(90% 70% at 90% 10%, color-mix(in oklab, ${muted} 28%, transparent), transparent 50%)`;
-  }
-  if (style === "horizon") {
-    return `linear-gradient(180deg, color-mix(in oklab, ${accent} 32%, transparent), transparent 42%)`;
-  }
-  return `radial-gradient(80% 50% at 50% -10%, color-mix(in oklab, ${accent} 26%, transparent), transparent 60%)`;
-}
-
 export function LinkInBioAmbient({ theme }: { theme: LinkInBioTheme }) {
   if (!isLightBioTheme(theme.paletteBg)) return null;
-
-  const glow = theme.glowStrength / 100;
-  return (
-    <>
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: gradientCss(theme.gradientStyle, theme.paletteAccent, theme.paletteMuted),
-          opacity: Math.max(0.18, glow),
-        }}
-      />
-      {theme.ambientEnabled && theme.ambientPreset !== "none" ? <MotionLayers theme={theme} /> : null}
-    </>
-  );
+  if (!theme.ambientEnabled || theme.ambientPreset === "none") return null;
+  return <MotionLayers theme={theme} />;
 }
 
 function MotionLayers({ theme }: { theme: LinkInBioTheme }) {
@@ -112,8 +89,8 @@ function MotionLayers({ theme }: { theme: LinkInBioTheme }) {
 
   if (reduced || !motionOn) return null;
   const preset = theme.ambientPreset as AmbientPreset;
-  const accent = theme.paletteAccent;
-  const muted = theme.paletteMuted;
+  const accent = "#737373";
+  const muted = "#a3a3a3";
   const glass = theme.surfaceStyle === "glass";
 
   return (

@@ -169,7 +169,6 @@ export function LinkInBioBento({
             arrangeMode={arrangeMode}
             fill={fill}
             selected={selectedId === link.id}
-            glow={theme.glowStrength}
             paint={bentoTilePaint(link.platform, theme)}
             onSelect={onSelect}
             onResize={onResize}
@@ -218,7 +217,6 @@ function BentoTile({
   arrangeMode,
   fill,
   selected,
-  glow,
   paint,
   onSelect,
   onResize,
@@ -236,7 +234,6 @@ function BentoTile({
   arrangeMode: boolean;
   fill: boolean;
   selected: boolean;
-  glow: number;
   paint: BentoTilePaint;
   onSelect?: ((id: string) => void) | undefined;
   onResize?: ((id: string, colSpan: number, rowSpan: number, gridX?: number, gridY?: number) => void) | undefined;
@@ -332,24 +329,66 @@ function BentoTile({
     handle.addEventListener("pointerup", onUp);
   };
 
+  const frost = paint.glass ? (
+    <span
+      className="pointer-events-none absolute inset-0 rounded-[28px]"
+      style={{
+        background: paint.fill,
+        backdropFilter: paint.backdropFilter,
+        WebkitBackdropFilter: paint.backdropFilter,
+      }}
+      aria-hidden
+    />
+  ) : null;
+
   const inner =
     link.kind === "gallery" ? (
-      <div className="flex h-full flex-col p-4">
+      <div className="relative z-[1] flex h-full flex-col p-4">
         <LinkInBioGallery images={link.galleryImages} title={link.title} className="min-h-0 flex-1" />
       </div>
     ) : (
       <>
         {paint.wash ? (
-          <span className="pointer-events-none absolute inset-0" style={{ background: paint.wash }} aria-hidden />
+          <span className="pointer-events-none absolute inset-0 z-[1]" style={{ background: paint.wash }} aria-hidden />
         ) : null}
         <span className="sr-only">{name}</span>
-        <span className="absolute left-5 top-5 z-[1]" style={{ width: logoSize, height: logoSize }}>
+        <span
+          className="absolute left-5 top-5 z-[1] grid place-items-center"
+          style={{
+            width: paint.glass ? logoSize + 14 : logoSize,
+            height: paint.glass ? logoSize + 14 : logoSize,
+            ...(paint.glass
+              ? {
+                  borderRadius: 16,
+                  background: paint.onLight ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.08)",
+                  border: paint.onLight ? "1px solid rgba(255,255,255,0.86)" : "1px solid rgba(255,255,255,0.22)",
+                  boxShadow: paint.onLight
+                    ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 22px rgba(15,23,32,0.07)"
+                    : "inset 0 1px 0 rgba(255,255,255,0.22), 0 8px 22px rgba(0,0,0,0.4)",
+                  backdropFilter: "blur(18px) saturate(1.65)",
+                  WebkitBackdropFilter: "blur(18px) saturate(1.65)",
+                }
+              : {}),
+          }}
+        >
           <LinkInBioPlatformLogo
-            key={`${link.id}-mark`}
+            key={`${link.id}-mark-${
+              paint.whiteIcons
+                ? paint.onLight
+                  ? "glow-light"
+                  : "glow-dark"
+                : paint.monoIcons
+                  ? paint.onLight
+                    ? "mono-light"
+                    : "mono-dark"
+                  : "brand"
+            }`}
             platform={link.platform}
-            size={logoSize}
+            size={paint.glass ? logoSize - 4 : logoSize}
             ink={paint.ink}
             onLight={paint.onLight}
+            whiteIcons={paint.whiteIcons}
+            monoIcons={paint.monoIcons}
             faviconUrl={customFaviconUrl(link)}
           />
         </span>
@@ -369,8 +408,31 @@ function BentoTile({
           <span
             className="pointer-events-none absolute bottom-5 right-5 z-[1] grid size-8 place-items-center rounded-full border"
             style={{
-              borderColor: "color-mix(in oklab, var(--bio-fg) 42%, transparent)",
-              color: "color-mix(in oklab, var(--bio-fg) 72%, transparent)",
+              borderColor: paint.monoIcons
+                ? paint.onLight
+                  ? "#cfd4da"
+                  : "rgba(255,255,255,0.22)"
+                : paint.onLight
+                  ? "color-mix(in oklab, #000000 22%, transparent)"
+                  : "color-mix(in oklab, #ffffff 42%, transparent)",
+              color: paint.monoIcons
+                ? paint.onLight
+                  ? "#111111"
+                  : "#f5f5f5"
+                : paint.onLight
+                  ? "color-mix(in oklab, #000000 72%, transparent)"
+                  : "color-mix(in oklab, #ffffff 78%, transparent)",
+              background: paint.glass
+                ? paint.onLight
+                  ? "rgba(255,255,255,0.32)"
+                  : "rgba(255,255,255,0.08)"
+                : paint.monoIcons
+                  ? paint.onLight
+                    ? "rgba(17,17,17,0.06)"
+                    : "rgba(255,255,255,0.08)"
+                  : undefined,
+              backdropFilter: paint.glass ? "blur(14px) saturate(1.55)" : undefined,
+              WebkitBackdropFilter: paint.glass ? "blur(14px) saturate(1.55)" : undefined,
             }}
             aria-hidden
           >
@@ -473,7 +535,7 @@ function BentoTile({
   ) : null;
 
   const sharedClass = cn(
-    "relative overflow-hidden rounded-[28px] outline-none transition-transform",
+    "relative isolate overflow-hidden rounded-[28px] outline-none transition-transform",
     !interactive && "hover:-translate-y-0.5",
     selected && "ring-2 ring-violet-400/75 ring-offset-2 ring-offset-transparent",
     arrangeMode && "cursor-grab active:cursor-grabbing",
@@ -481,14 +543,9 @@ function BentoTile({
   const sharedStyle = {
     gridColumn: fill ? `span ${link.colSpan}` : `${link.gridX + 1} / span ${link.colSpan}`,
     gridRow: fill ? `span ${link.rowSpan}` : `${link.gridY + 1} / span ${link.rowSpan}`,
-    background: paint.fill,
+    background: paint.glass ? "transparent" : paint.fill,
     border: paint.border,
-    backdropFilter: paint.backdropFilter,
-    boxShadow: paint.boxShadow
-      ? paint.boxShadow
-      : glow
-        ? `0 16px 28px color-mix(in oklab, ${paint.glowColor} ${Math.round(glow / 4)}%, transparent)`
-        : undefined,
+    boxShadow: paint.boxShadow,
   } as const;
 
   if (arrangeMode) {
@@ -507,6 +564,7 @@ function BentoTile({
         className={sharedClass}
         style={sharedStyle}
       >
+        {frost}
         {inner}
         {chrome}
       </div>
@@ -525,6 +583,7 @@ function BentoTile({
         style={sharedStyle}
         aria-label={name}
       >
+        {frost}
         {inner}
       </button>
     );
@@ -533,6 +592,7 @@ function BentoTile({
   if (link.kind === "gallery") {
     return (
       <div className={sharedClass} style={sharedStyle}>
+        {frost}
         {inner}
       </div>
     );
@@ -547,6 +607,7 @@ function BentoTile({
       style={sharedStyle}
       aria-label={name}
     >
+      {frost}
       {inner}
     </a>
   );

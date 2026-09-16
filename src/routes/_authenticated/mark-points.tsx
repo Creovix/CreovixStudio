@@ -6,6 +6,7 @@ import { Bookmark, Copy, Link2, Pencil, Plus, Search, Trash2, X } from "lucide-r
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { HowItWorks } from "@/components/layout/HowItWorks";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -532,14 +533,7 @@ function MarkPointsPage() {
               </div>
             </section>
 
-            <section>
-              <h2 className="text-[0.95rem] font-semibold">{c.howTitle}</h2>
-              <ol className="mt-3 list-decimal space-y-2 ps-5 text-[0.82rem] text-muted-foreground">
-                {c.how.map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-            </section>
+            <HowItWorks title={c.howTitle} steps={c.how} />
           </div>
 
           <section className="max-w-xl rounded-[20px] border border-white/[0.06] bg-zinc-900 p-5 text-start">

@@ -3,83 +3,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Zap } from "lucide-react";
 
-import { PlatformIcon } from "@/components/widgets/PlatformIcon";
+import { PlatformAsset } from "@/components/icons/platformAssets";
 import { fireTestEvent, type TestEventInput } from "@/lib/simulate.functions";
+import { TEST_EVENT_GROUPS, type TestEventGroup, type TestEventSpec } from "@/lib/testEvents";
 import { useLanguage } from "@/lib/i18n";
-
-type Group = {
-  platform: TestEventInput["platform"];
-  label: string;
-  color: string;
-  events: { type: TestEventInput["eventType"]; labelEn: string; amount?: number }[];
-};
-
-/**
- * Only the events each source is actually allowed to report — the same
- * routing the live ingest pipeline enforces.
- */
-const GROUPS: Group[] = [
-  {
-    platform: "KICK",
-    label: "Kick",
-    color: "#53FC18",
-    events: [
-      { type: "FOLLOW", labelEn: "Follow" },
-      { type: "SUBSCRIPTION", labelEn: "Sub" },
-      { type: "GIFT_SUB", labelEn: "Gift Sub" },
-      { type: "RAID", labelEn: "Raid" },
-    ],
-  },
-  {
-    platform: "TWITCH",
-    label: "Twitch",
-    color: "#9F77F7",
-    events: [
-      { type: "FOLLOW", labelEn: "Follow" },
-      { type: "SUBSCRIPTION", labelEn: "Sub" },
-      { type: "GIFT_SUB", labelEn: "Gift Sub" },
-      { type: "BITS", labelEn: "100 Bits", amount: 100 },
-      { type: "RAID", labelEn: "Raid" },
-    ],
-  },
-  {
-    platform: "YOUTUBE",
-    label: "YouTube",
-    color: "#FF4444",
-    events: [
-      { type: "FOLLOW", labelEn: "Subscribe" },
-      { type: "SUBSCRIPTION", labelEn: "Membership" },
-      { type: "DONATION", labelEn: "Super Chat $5", amount: 5 },
-    ],
-  },
-  {
-    platform: "TIKTOK",
-    label: "TikTok",
-    color: "#2DCCD3",
-    events: [
-      { type: "FOLLOW", labelEn: "Follow" },
-      { type: "DONATION", labelEn: "Gift $2", amount: 2 },
-    ],
-  },
-  {
-    platform: "X",
-    label: "X (Twitter)",
-    color: "#E7E9EA",
-    events: [{ type: "FOLLOW", labelEn: "Follower" }],
-  },
-  {
-    platform: "STREAMLABS",
-    label: "Streamlabs",
-    color: "#80F5D2",
-    events: [{ type: "DONATION", labelEn: "Donation $10", amount: 10 }],
-  },
-  {
-    platform: "STREAMELEMENTS",
-    label: "StreamElements",
-    color: "#4FC3F7",
-    events: [{ type: "DONATION", labelEn: "Tip $5", amount: 5 }],
-  },
-];
 
 /** Developer harness for firing one simulated event per platform. */
 export function EventTestPanel() {
@@ -96,9 +23,9 @@ export function EventTestPanel() {
         | { ok: false; error: string },
   });
 
-  const fire = async (group: Group, event: Group["events"][number]) => {
-    const id = `${group.platform}-${event.type}`;
-    const label = event.labelEn;
+  const fire = async (group: TestEventGroup, event: TestEventSpec) => {
+    const id = `${group.platform}-${event.type}-${event.label}`;
+    const label = event.label;
     setPending(id);
     try {
       const response = await mutation.mutateAsync({
@@ -106,17 +33,19 @@ export function EventTestPanel() {
         eventType: event.type,
         amount: event.amount ?? null,
         actorName: name || null,
+        message: event.message ?? null,
+        quantity: event.quantity ?? null,
       });
       const text = response.ok
-        ? `${group.label} · ${label} → ${response.result.status}${
+        ? `${t(group.headingKey)} · ${label} → ${response.result.status}${
             response.result.secondsAdded ? ` (+${response.result.secondsAdded}s)` : ""
           }`
-        : `${group.label} · ${label} → ${response.error}`;
+        : `${t(group.headingKey)} · ${label} → ${response.error}`;
       setLog((prev) => [{ text, ok: response.ok }, ...prev].slice(0, 12));
     } catch (error) {
       setLog((prev) =>
         [
-          { text: `${group.label} · ${label} → ${(error as Error).message}`, ok: false },
+          { text: `${t(group.headingKey)} · ${label} → ${(error as Error).message}`, ok: false },
           ...prev,
         ].slice(0, 12),
       );
@@ -148,18 +77,18 @@ export function EventTestPanel() {
       </label>
 
       <div className="mt-6 divide-y divide-white/5 border-y border-white/5">
-        {GROUPS.map((group) => (
+        {TEST_EVENT_GROUPS.map((group) => (
           <div
             key={group.platform}
             className="flex flex-wrap items-center justify-between gap-3 py-4"
           >
             <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: group.color }}>
-              <PlatformIcon platform={group.platform} size={14} />
-              {group.label}
+              <PlatformAsset name={group.icon} size={14} label="" />
+              {t(group.headingKey)}
             </p>
             <div className="flex flex-wrap gap-2">
               {group.events.map((event) => {
-                const id = `${group.platform}-${event.type}`;
+                const id = `${group.platform}-${event.type}-${event.label}`;
                 return (
                   <button
                     key={id}
@@ -168,7 +97,7 @@ export function EventTestPanel() {
                     onClick={() => void fire(group, event)}
                     className="rounded-full border border-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                   >
-                    {pending === id ? t("settings.test.sending") : event.labelEn}
+                    {pending === id ? t("settings.test.sending") : event.label}
                   </button>
                 );
               })}

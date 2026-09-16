@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { toast } from "sonner";
 
 import {
@@ -18,6 +18,7 @@ import {
   applyUsernameClaim,
   sanitizeHandle,
   sanitizeSlug,
+  sanitizeTheme,
   slugError,
   urlFromHandle,
   type LinkInBioLink,
@@ -213,7 +214,7 @@ export function useLinkInBioDraft(userId: string) {
     if (hydrated) return;
     if (stateQuery.data) {
       setProfile(stateQuery.data.profile);
-      setTheme(stateQuery.data.theme);
+      setTheme(sanitizeTheme(stateQuery.data.theme));
       setLinks(stateQuery.data.links);
       setHydrated(true);
       return;
@@ -251,7 +252,7 @@ export function useLinkInBioDraft(userId: string) {
       setProfile(claimed);
       saveTestLinkInBio({
         profile: claimed,
-        theme: nextTheme,
+        theme: sanitizeTheme(nextTheme),
         links: nextLinks,
         kickUsername: stateQuery.data?.kickUsername ?? null,
         twitchUsername: stateQuery.data?.twitchUsername ?? null,
@@ -322,6 +323,10 @@ export function useLinkInBioDraft(userId: string) {
     setLinks(linksFromHandles(handles, links));
   };
 
+  const patchTheme = (next: SetStateAction<LinkInBioTheme>) => {
+    setTheme((prev) => sanitizeTheme(typeof next === "function" ? next(prev) : next));
+  };
+
   return {
     test,
     loading: !hydrated,
@@ -329,7 +334,7 @@ export function useLinkInBioDraft(userId: string) {
     profile,
     setProfile,
     theme,
-    setTheme,
+    setTheme: patchTheme,
     links,
     setLinks,
     preview,

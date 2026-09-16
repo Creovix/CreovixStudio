@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { DollarSign, FlaskConical, Gem, Loader2, Star, UserPlus } from "lucide-react";
+import { FlaskConical, Loader2 } from "lucide-react";
 
+import { PlatformAsset } from "@/components/icons/platformAssets";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { fireTestEvent, sendTestChatMessage, type TestEventInput } from "@/lib/simulate.functions";
+import { TEST_EVENT_GROUPS, type TestEventSpec } from "@/lib/testEvents";
 import { isTestMode } from "@/lib/testMode";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
 
@@ -25,80 +30,58 @@ export type InjectedFeedEvent = {
   created_at: string;
 };
 
-type Kind = "FOLLOW" | "DONATION" | "SUBSCRIPTION" | "BITS";
-
 type Connection = { platform: string; is_active?: boolean | null };
 
-const KINDS: {
-  type: Kind;
-  label: TranslationKey;
-  icon: typeof UserPlus;
-}[] = [
-  { type: "FOLLOW", label: "activity.test.follower", icon: UserPlus },
-  { type: "DONATION", label: "activity.test.donation", icon: DollarSign },
-  { type: "SUBSCRIPTION", label: "activity.test.subscriber", icon: Star },
-  { type: "BITS", label: "activity.test.bits", icon: Gem },
-];
-
-const CHAT_KEY: Record<Kind, TranslationKey> = {
+const CHAT_KEY: Record<TestEventInput["eventType"], TranslationKey> = {
   FOLLOW: "activity.chat.FOLLOW",
   DONATION: "activity.chat.DONATION",
   SUBSCRIPTION: "activity.chat.SUBSCRIPTION",
   BITS: "activity.chat.BITS",
+  GIFT_SUB: "activity.chat.GIFT_SUB",
+  RAID: "activity.chat.RAID",
+  LIKE: "activity.chat.LIKE",
 };
 
-function pickPlatform(eventType: Kind, connections: Connection[]): TestEventInput["platform"] {
-  const active = new Set(
-    connections.filter((item) => item.is_active !== false).map((item) => item.platform),
-  );
-  const first = (
-    list: TestEventInput["platform"][],
-    fallback: TestEventInput["platform"],
-  ): TestEventInput["platform"] => list.find((platform) => active.has(platform)) ?? fallback;
-
-  if (eventType === "BITS") return "TWITCH";
-  if (eventType === "DONATION") {
-    return first(["STREAMLABS", "STREAMELEMENTS", "YOUTUBE", "TIKTOK"], "MANUAL");
-  }
-  if (eventType === "SUBSCRIPTION") {
-    return first(["TWITCH", "KICK", "YOUTUBE"], "TWITCH");
-  }
-  return first(["TWITCH", "KICK", "TIKTOK", "YOUTUBE", "X"], "TWITCH");
+function actorFor(type: TestEventInput["eventType"]): string {
+  const stamp = Math.floor(Math.random() * 900 + 100);
+  if (type === "DONATION") return `TestDonor${stamp}`;
+  if (type === "SUBSCRIPTION") return `TestSub${stamp}`;
+  if (type === "GIFT_SUB") return `TestGifter${stamp}`;
+  if (type === "BITS") return `TestCheer${stamp}`;
+  if (type === "RAID") return `TestRaider${stamp}`;
+  if (type === "LIKE") return `TestFan${stamp}`;
+  return `TestFan${stamp}`;
 }
 
-function buildLocalEvent(kind: Kind, platform: TestEventInput["platform"]): InjectedFeedEvent {
-  const stamp = Math.floor(Math.random() * 900 + 100);
-  const actors: Record<Kind, string> = {
-    FOLLOW: `TestFan${stamp}`,
-    DONATION: `TestDonor${stamp}`,
-    SUBSCRIPTION: `TestSub${stamp}`,
-    BITS: `TestCheer${stamp}`,
-  };
-  const amount = kind === "DONATION" ? 5 : kind === "BITS" ? 100 : null;
-  const message =
-    kind === "DONATION" ? "Keep it up!" : kind === "BITS" ? "Let's go!" : null;
+function buildLocalEvent(
+  platform: TestEventInput["platform"],
+  spec: TestEventSpec,
+): InjectedFeedEvent {
+  const amount =
+    spec.amount ??
+    (spec.type === "DONATION" ? 5 : spec.type === "BITS" ? 100 : null);
+  const quantity = Math.max(1, Math.round(spec.quantity ?? 1));
 
   return {
     id: `local-${crypto.randomUUID()}`,
     platform,
-    event_type: kind,
-    actor_name: actors[kind],
+    event_type: spec.type,
+    actor_name: actorFor(spec.type),
     amount,
-    currency: kind === "DONATION" ? "USD" : null,
-    quantity: 1,
+    currency: spec.type === "DONATION" ? "USD" : null,
+    quantity,
     seconds_added: 0,
-    message,
+    message: spec.message ?? null,
     created_at: new Date().toISOString(),
   };
 }
 
 /**
- * Header control: pick a synthetic follow / tip / sub / bits event.
+ * Header control: fire a synthetic event for any ingest source.
  * The row is injected locally immediately; authenticated sessions also run
  * the existing ingest + overlay chat test pipeline.
  */
 export function TestEventMenu({
-  connections,
   widgetId,
   onInject,
   onPersisted,
@@ -113,10 +96,9 @@ export function TestEventMenu({
   const testChat = useServerFn(sendTestChatMessage);
   const [pending, setPending] = useState(false);
 
-  const pick = async (kind: Kind) => {
+  const pick = async (platform: TestEventInput["platform"], spec: TestEventSpec) => {
     if (pending) return;
-    const platform = pickPlatform(kind, connections);
-    const local = buildLocalEvent(kind, platform);
+    const local = buildLocalEvent(platform, spec);
     onInject(local);
     if (isTestMode()) return;
 
@@ -125,10 +107,11 @@ export function TestEventMenu({
       const response = (await fire({
         data: {
           platform,
-          eventType: kind,
+          eventType: spec.type,
           amount: local.amount,
           actorName: local.actor_name,
           message: local.message,
+          quantity: local.quantity,
         },
       })) as
         | { ok: true; result: { status: string; eventId?: string | null } }
@@ -144,7 +127,7 @@ export function TestEventMenu({
           data: {
             widgetId,
             author,
-            text: `${author} ${t(CHAT_KEY[kind])}`,
+            text: `${author} ${t(CHAT_KEY[spec.type])}`,
           },
         }).catch(() => {
           /* overlay chat is best-effort; the feed row already landed */
@@ -173,21 +156,27 @@ export function TestEventMenu({
           {t("activity.testEvent")}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-52">
-        {KINDS.map((kind) => {
-          const Icon = kind.icon;
-          return (
-            <DropdownMenuItem
-              key={kind.type}
-              disabled={pending}
-              className="gap-2.5 py-2.5 text-start"
-              onSelect={() => void pick(kind.type)}
-            >
-              <Icon className="size-4 text-primary" aria-hidden />
-              {t(kind.label)}
-            </DropdownMenuItem>
-          );
-        })}
+      <DropdownMenuContent align="end" className="min-w-60 p-1.5">
+        {TEST_EVENT_GROUPS.map((group, index) => (
+          <DropdownMenuGroup key={group.platform}>
+            {index > 0 ? <DropdownMenuSeparator className="bg-white/8" /> : null}
+            <DropdownMenuLabel className="flex items-center gap-2 px-2 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <PlatformAsset name={group.icon} size={12} label="" />
+              {t(group.headingKey)}
+            </DropdownMenuLabel>
+            {group.events.map((event) => (
+              <DropdownMenuItem
+                key={`${group.platform}-${event.type}-${event.label}`}
+                disabled={pending}
+                className="gap-2 py-1.5 text-start text-[0.82rem]"
+                onSelect={() => void pick(group.platform, event)}
+              >
+                <span className="size-1.5 shrink-0 rounded-full" style={{ background: group.color }} />
+                {event.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

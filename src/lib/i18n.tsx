@@ -199,6 +199,8 @@ const DICT = {
   "activity.filter.streamlabs": "Streamlabs Events",
   "activity.filter.streamelements": "StreamElements Events",
   "activity.filter.other": "Other Sources",
+  "activity.test.group.other": "Other Sources / Custom Events",
+  "activity.type.LIKE": "Likes",
   "activity.anonymous": "Anonymous",
   "activity.analyticsBack": "Back to Activity Feed",
   "activity.range.7": "7 Days",
@@ -210,6 +212,9 @@ const DICT = {
   "activity.chat.DONATION": "just tipped",
   "activity.chat.SUBSCRIPTION": "just subscribed",
   "activity.chat.BITS": "just cheered",
+  "activity.chat.GIFT_SUB": "just gifted a sub",
+  "activity.chat.RAID": "just raided",
+  "activity.chat.LIKE": "just liked",
   "error.title": "This page didn't load",
   "error.body":
     "An unexpected error occurred while loading this page. You can try again or go back home.",

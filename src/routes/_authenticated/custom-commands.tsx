@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ListFilter, MessageSquareCode, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { CommandVariablesSidebar } from "@/components/commands/CommandVariables";
 import { AppShell } from "@/components/layout/AppShell";
+import { HowItWorks } from "@/components/layout/HowItWorks";
+import { StudioPageTabs } from "@/components/layout/StudioPageTabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -123,9 +126,6 @@ const COPY = {
     prefixHint:
       "Choose how viewers fire commands: a symbol before the word (!hello), a question mark after it (hello? or سؤال؟), or the word alone.",
     none: "No symbol (direct)",
-    prefixGroup: "Symbol at the start",
-    suffixGroup: "Question mark at the end",
-    custom: "Custom symbol",
     savePrefix: "Save trigger",
     add: "Add command",
     empty: "No commands yet. Add one to start auto-replies in chat.",
@@ -144,13 +144,12 @@ const COPY = {
     namePlaceholder: "discord",
     prefixLabel: "Where the symbol goes",
     inherit: "Use default",
-    prefixAtStart: "Before the word",
     suffixAuto: "Arabic letters use ؟ and English letters use ? automatically.",
-    livePreview: "Viewers will type",
     testerPlaceholder: "hello?",
+    showVariables: "Show Variables",
+    hideVariables: "Hide Variables",
     responseLabel: "Bot reply",
     responsePlaceholder: "Join Discord: discord.gg/your-server",
-    vars: "Variables: {user}  {command}",
     platformsLabel: "Platforms",
     rolesLabel: "Who can use it",
     cooldown: "Cooldown (seconds)",
@@ -519,27 +518,15 @@ function CustomCommandsPage() {
         pageTab === "defaults" ? c.defaultSubtitle : pageTab === "timers" ? c.timerSubtitle : c.subtitle
       }
     >
-      <div className="mb-6 flex flex-wrap gap-1">
-        {(
-          [
-            ["defaults", c.tabDefaults],
-            ["commands", c.tabCommands],
-            ["timers", c.tabTimers],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setPageTab(id)}
-            className={cn(
-              "rounded-lg px-3 py-1.5 text-[0.82rem] font-medium transition-colors",
-              pageTab === id ? "bg-zinc-800 text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <StudioPageTabs
+        value={pageTab}
+        onChange={setPageTab}
+        items={[
+          { id: "defaults", label: c.tabDefaults },
+          { id: "commands", label: c.tabCommands },
+          { id: "timers", label: c.tabTimers },
+        ]}
+      />
 
       {pageTab === "defaults" ? (
         <DefaultCommandsPanel
@@ -575,7 +562,8 @@ function CustomCommandsPage() {
           onToggle={(id, enabled) => timerEnabledMutation.mutate({ id, enabled })}
         />
       ) : (
-      <div className="space-y-10">
+      <div className="space-y-8">
+        <HowItWorks title={c.howTitle} steps={c.how} />
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <label className="relative w-44 shrink-0">
@@ -628,126 +616,99 @@ function CustomCommandsPage() {
           )}
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <section>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h2 className="text-[0.95rem] font-semibold">{c.prefixTitle}</h2>
-                <p className="mt-1 max-w-xl text-[0.78rem] text-muted-foreground">{c.prefixHint}</p>
-              </div>
+        <section className="rounded-xl border border-white/[0.06] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-[0.95rem] font-semibold">{c.prefixTitle}</h2>
+              <p className="mt-1 max-w-xl text-[0.78rem] text-muted-foreground">{c.prefixHint}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => prefixMutation.mutate(prefixValue)}
+              className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black transition-opacity hover:opacity-90"
+            >
+              {c.savePrefix}
+            </button>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setDefaultPrefix("")}
+              className={cn(
+                pill,
+                prefixValue === ""
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                  : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {c.none}
+            </button>
+            {PREFIX_MARKERS.map((preset) => (
               <button
+                key={preset}
                 type="button"
-                onClick={() => prefixMutation.mutate(prefixValue)}
-                className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black transition-opacity hover:opacity-90"
+                onClick={() => setDefaultPrefix(preset)}
+                className={cn(
+                  pill,
+                  "font-mono",
+                  prefixValue === preset
+                    ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                    : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
+                )}
               >
-                {c.savePrefix}
+                {preset}name
               </button>
-            </div>
-            <div className="mt-4 space-y-3">
-              <div>
-                <p className="mb-1.5 text-[0.7rem] uppercase tracking-wide text-muted-foreground">{c.none}</p>
-                <button
-                  type="button"
-                  onClick={() => setDefaultPrefix("")}
-                  className={cn(
-                    pill,
-                    prefixValue === ""
-                      ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
-                      : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {c.none}
-                </button>
-              </div>
-              <div>
-                <p className="mb-1.5 text-[0.7rem] uppercase tracking-wide text-muted-foreground">{c.prefixGroup}</p>
-                <div className="flex flex-wrap gap-2">
-                  {PREFIX_MARKERS.map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setDefaultPrefix(preset)}
-                      className={cn(
-                        pill,
-                        "font-mono",
-                        prefixValue === preset
-                          ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
-                          : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {preset}name
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-[0.7rem] uppercase tracking-wide text-muted-foreground">{c.suffixGroup}</p>
-                <button
-                  type="button"
-                  onClick={() => setDefaultPrefix(QUESTION_SUFFIX)}
-                  className={cn(
-                    pill,
-                    isSuffixMarker(prefixValue)
-                      ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
-                      : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <span className="font-mono" dir="ltr">
-                    question?
-                  </span>
-                  <span className="mx-1 text-muted-foreground">/</span>
-                  <span className="font-mono">سؤال؟</span>
-                </button>
-                <p className="mt-1.5 text-[0.72rem] text-muted-foreground">{c.suffixAuto}</p>
-              </div>
-            </div>
-          </section>
-        </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setDefaultPrefix(QUESTION_SUFFIX)}
+              className={cn(
+                pill,
+                isSuffixMarker(prefixValue)
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                  : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <span className="font-mono" dir="ltr">
+                question?
+              </span>
+              <span className="mx-1 text-muted-foreground">/</span>
+              <span className="font-mono">سؤال؟</span>
+            </button>
+          </div>
+          {isSuffixMarker(prefixValue) ? (
+            <p className="mt-2 text-[0.72rem] text-muted-foreground">{c.suffixAuto}</p>
+          ) : null}
 
-        <div className="space-y-10 lg:border-s lg:border-white/5 lg:ps-8">
-          <section>
-            <h2 className="text-[0.95rem] font-semibold">{c.howTitle}</h2>
-            <ol className="mt-4 space-y-3 text-[0.82rem]">
-              {c.how.map((step, index) => (
-                <li key={step} className="flex gap-3">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-[0.72rem] font-semibold text-emerald-400">
-                    {index + 1}
-                  </span>
-                  <span className="text-muted-foreground">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          <section className="border-t border-white/5 pt-8">
-            <h2 className="text-[0.95rem] font-semibold">{c.testerTitle}</h2>
-            <p className="mt-1 text-[0.78rem] text-muted-foreground">{c.testerHint}</p>
-            <input
-              value={sample}
-              onChange={(event) => setSample(event.target.value)}
-              placeholder={c.testerPlaceholder}
-              className={`${field} mt-3 font-mono`}
-              dir="auto"
-            />
-            <div className="mt-3 rounded-lg border border-white/5 p-3 font-mono text-[0.78rem]">
+          <div className="mt-5 grid gap-3 border-t border-white/5 pt-4 sm:grid-cols-[1fr_auto] sm:items-end">
+            <label className="block min-w-0">
+              <span className="mb-1.5 block text-[0.72rem] font-medium text-muted-foreground">{c.testerTitle}</span>
+              <span className="mb-1.5 block text-[0.68rem] text-muted-foreground">{c.testerHint}</span>
+              <input
+                value={sample}
+                onChange={(event) => setSample(event.target.value)}
+                placeholder={c.testerPlaceholder}
+                className={`${field} font-mono`}
+                dir="auto"
+              />
+            </label>
+            <div className="rounded-lg border border-white/5 px-3 py-2.5 font-mono text-[0.78rem] sm:min-w-56">
               {sampleHit ? (
-                <>
-                  <p className="text-emerald-400">{c.testerHit}</p>
-                  <p className="mt-1 text-muted-foreground">
+                <p className="truncate text-emerald-400">
+                  {c.testerHit}:{" "}
+                  <span className="text-muted-foreground" dir="auto">
                     {formatCommandReply(sampleHit.response, {
                       user: "viewer",
                       command: commandTrigger(sampleHit, prefixValue),
                     })}
-                  </p>
-                </>
+                  </span>
+                </p>
               ) : (
                 <p className="text-muted-foreground">{c.testerMiss}</p>
               )}
             </div>
-          </section>
-        </div>
-      </div>
+          </div>
+        </section>
       </div>
       )}
 
@@ -927,6 +888,7 @@ function DefaultCommandsPanel({
   const page = useFaceLoadMore(commands.length);
   return (
     <div className="space-y-8">
+      <HowItWorks title={copy.defaultHowTitle} steps={copy.defaultHow} />
       <div>
         <div className={FACE_ROW}>
           {commands.slice(0, page.limit).map((command) => (
@@ -947,20 +909,6 @@ function DefaultCommandsPanel({
         </div>
         {page.canLoadMore ? <LoadMoreButton label={copy.loadMore} onClick={page.loadMore} /> : null}
       </div>
-
-      <section>
-        <h2 className="text-[0.95rem] font-semibold">{copy.defaultHowTitle}</h2>
-        <ol className="mt-4 space-y-3 text-[0.82rem]">
-          {copy.defaultHow.map((step, index) => (
-            <li key={step} className="flex gap-3">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-zinc-800 text-[0.72rem] font-semibold text-zinc-300">
-                {index + 1}
-              </span>
-              <span className="text-muted-foreground">{step}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
     </div>
   );
 }
@@ -1134,6 +1082,7 @@ function MessageTimersPanel({
   const page = useFaceLoadMore(timers.length);
   return (
     <div className="space-y-8">
+      <HowItWorks title={copy.timerHowTitle} steps={copy.timerHow} />
       <div className="flex flex-wrap items-center justify-end gap-2">
         <button
           type="button"
@@ -1177,20 +1126,6 @@ function MessageTimersPanel({
         {page.canLoadMore ? <LoadMoreButton label={copy.loadMore} onClick={page.loadMore} /> : null}
         </div>
       )}
-
-      <section>
-        <h2 className="text-[0.95rem] font-semibold">{copy.timerHowTitle}</h2>
-        <ol className="mt-4 space-y-3 text-[0.82rem]">
-          {copy.timerHow.map((step, index) => (
-            <li key={step} className="flex gap-3">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-zinc-800 text-[0.72rem] font-semibold text-zinc-300">
-                {index + 1}
-              </span>
-              <span className="text-muted-foreground">{step}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
     </div>
   );
 }
@@ -1452,9 +1387,9 @@ function CommandEditor({
   onChange: (next: CustomChatCommandInput) => void;
   onSave: () => void;
 }) {
+  const [showVars, setShowVars] = useState(false);
+  const responseRef = useRef<HTMLTextAreaElement>(null);
   if (!draft) return null;
-  const trigger = commandTrigger({ name: draft.name || "name", prefix: draft.prefix }, defaultPrefix);
-  const preview = formatCommandReply(draft.response || "…", { user: "viewer", command: trigger });
   const prefixMode = draft.prefix === null ? "inherit" : draft.prefix === "" ? "none" : "custom";
   const suffixSelected = draft.prefix !== null && isSuffixMarker(draft.prefix);
   const liveName = draft.name.trim() || "name";
@@ -1472,9 +1407,28 @@ function CommandEditor({
     onChange({ ...draft, roles: next.length ? next : ["Everyone"] });
   };
 
+  const insertTag = (tag: string) => {
+    const el = responseRef.current;
+    const current = draft.response;
+    const start = el?.selectionStart ?? current.length;
+    const end = el?.selectionEnd ?? current.length;
+    const next = `${current.slice(0, start)}${tag}${current.slice(end)}`.slice(0, 480);
+    onChange({ ...draft, response: next });
+    requestAnimationFrame(() => {
+      el?.focus();
+      const pos = Math.min(start + tag.length, 480);
+      el?.setSelectionRange(pos, pos);
+    });
+  };
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="glass-3d max-h-[90vh] overflow-y-auto border-[oklch(1_0_0/0.1)] sm:max-w-lg">
+      <DialogContent
+        className={cn(
+          "glass-3d max-h-[90vh] overflow-y-auto border-[oklch(1_0_0/0.1)]",
+          showVars ? "sm:max-w-3xl" : "sm:max-w-lg",
+        )}
+      >
         <DialogHeader>
           <div className="flex items-center justify-between gap-3 pe-10">
             <DialogTitle className="min-w-0">{draft.id ? copy.modalEdit : copy.modalCreate}</DialogTitle>
@@ -1491,32 +1445,32 @@ function CommandEditor({
           <DialogDescription>{copy.modalHint}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <label className="block">
-            <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {copy.nameLabel}
-            </span>
-            <input
-              value={draft.name}
-              onChange={(event) => {
-                const name = event.target.value;
-                const prefix =
-                  draft.prefix !== null && isSuffixMarker(draft.prefix)
-                    ? questionSuffixForText(name)
-                    : draft.prefix;
-                onChange({ ...draft, name, prefix });
-              }}
-              placeholder={copy.namePlaceholder}
-              className={field}
-              dir="auto"
-            />
-          </label>
+        <div className={cn("gap-4", showVars && "lg:flex")}>
+          <div className="min-w-0 flex-1 space-y-3">
+            <label className="block">
+              <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+                {copy.nameLabel}
+              </span>
+              <input
+                value={draft.name}
+                onChange={(event) => {
+                  const name = event.target.value;
+                  const prefix =
+                    draft.prefix !== null && isSuffixMarker(draft.prefix)
+                      ? questionSuffixForText(name)
+                      : draft.prefix;
+                  onChange({ ...draft, name, prefix });
+                }}
+                placeholder={copy.namePlaceholder}
+                className={field}
+                dir="auto"
+              />
+            </label>
 
-          <div>
-            <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {copy.prefixLabel}
-            </span>
-            <div className="space-y-3">
+            <div>
+              <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+                {copy.prefixLabel}
+              </span>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -1528,11 +1482,10 @@ function CommandEditor({
                       : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                   )}
                 >
-                  {copy.inherit} (
+                  {copy.inherit}{" "}
                   <span className="font-mono" dir="ltr">
-                    {commandTrigger({ name: draft.name || "name", prefix: null }, defaultPrefix)}
+                    ({commandTrigger({ name: liveName, prefix: null }, defaultPrefix)})
                   </span>
-                  )
                 </button>
                 <button
                   type="button"
@@ -1546,31 +1499,23 @@ function CommandEditor({
                 >
                   {copy.none}
                 </button>
-              </div>
-              <div>
-                <p className="mb-1.5 text-[0.7rem] text-muted-foreground">{copy.prefixAtStart}</p>
-                <div className="flex flex-wrap gap-2">
-                  {PREFIX_MARKERS.map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => onChange({ ...draft, prefix: preset })}
-                      className={cn(
-                        pill,
-                        "font-mono",
-                        draft.prefix === preset
-                          ? "border-emerald-500/50 bg-emerald-500/15"
-                          : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
-                      )}
-                    >
-                      {preset}
-                      {draft.name || "name"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1.5 text-[0.7rem] text-muted-foreground">{copy.suffixGroup}</p>
+                {PREFIX_MARKERS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => onChange({ ...draft, prefix: preset })}
+                    className={cn(
+                      pill,
+                      "font-mono",
+                      draft.prefix === preset
+                        ? "border-emerald-500/50 bg-emerald-500/15"
+                        : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
+                    )}
+                  >
+                    {preset}
+                    {liveName}
+                  </button>
+                ))}
                 <button
                   type="button"
                   onClick={() => onChange({ ...draft, prefix: questionSuffixForText(liveName) })}
@@ -1586,109 +1531,106 @@ function CommandEditor({
                     {liveSuffix}
                   </span>
                 </button>
-                <p className="mt-1.5 text-[0.72rem] text-muted-foreground">{copy.suffixAuto}</p>
               </div>
             </div>
-          </div>
 
-          <label className="block">
-            <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {copy.responseLabel}
-            </span>
-            <textarea
-              value={draft.response}
-              onChange={(event) => onChange({ ...draft, response: event.target.value.slice(0, 480) })}
-              placeholder={copy.responsePlaceholder}
-              rows={4}
-              className={`${field} resize-y`}
-            />
-            <span className="mt-1.5 block text-[0.72rem] text-muted-foreground">{copy.vars}</span>
-          </label>
-
-          <div>
-            <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {copy.platformsLabel}
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map((platform) => {
-                const active = draft.platforms.includes(platform.id);
-                return (
-                  <button
-                    key={platform.id}
-                    type="button"
-                    onClick={() => togglePlatform(platform.id)}
-                    className={cn(
-                      pill,
-                      "inline-flex items-center gap-2",
-                      active
-                        ? "border-emerald-500/50 bg-emerald-500/15"
-                        : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
-                    )}
-                  >
-                    <PlatformIcon platform={platform.id} size={14} />
-                    {platform.label}
-                  </button>
-                );
-              })}
+            <div>
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+                  {copy.responseLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowVars((open) => !open)}
+                  className="text-[0.72rem] font-medium text-emerald-400 hover:underline"
+                >
+                  {showVars ? copy.hideVariables : copy.showVariables}
+                </button>
+              </div>
+              <textarea
+                ref={responseRef}
+                value={draft.response}
+                onChange={(event) => onChange({ ...draft, response: event.target.value.slice(0, 480) })}
+                placeholder={copy.responsePlaceholder}
+                rows={4}
+                className={`${field} resize-y`}
+                dir="auto"
+              />
             </div>
-          </div>
 
-          <div>
-            <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {copy.rolesLabel}
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {COMMAND_ROLES.map((role) => {
-                const active = draft.roles.includes(role);
-                return (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => toggleRole(role)}
-                    className={cn(
-                      pill,
-                      active
-                        ? "border-emerald-500/50 bg-emerald-500/15"
-                        : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
-                    )}
-                  >
-                    {role}
-                  </button>
-                );
-              })}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+                  {copy.platformsLabel}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((platform) => {
+                    const active = draft.platforms.includes(platform.id);
+                    return (
+                      <button
+                        key={platform.id}
+                        type="button"
+                        onClick={() => togglePlatform(platform.id)}
+                        className={cn(
+                          pill,
+                          "inline-flex items-center gap-2",
+                          active
+                            ? "border-emerald-500/50 bg-emerald-500/15"
+                            : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
+                        )}
+                      >
+                        <PlatformIcon platform={platform.id} size={14} />
+                        {platform.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+                  {copy.rolesLabel}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {COMMAND_ROLES.map((role) => {
+                    const active = draft.roles.includes(role);
+                    return (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => toggleRole(role)}
+                        className={cn(
+                          pill,
+                          active
+                            ? "border-emerald-500/50 bg-emerald-500/15"
+                            : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
+                        )}
+                      >
+                        {role}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <label className="block">
-            <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
-              {copy.cooldown}
-            </span>
-            <input
-              type="number"
-              min={0}
-              max={3600}
-              value={draft.cooldownSeconds}
-              onChange={(event) =>
-                onChange({ ...draft, cooldownSeconds: Number(event.target.value) || 0 })
-              }
-              className={`${field} w-28`}
-              dir="ltr"
-            />
-          </label>
-
-          <div className="rounded-lg border border-[oklch(1_0_0/0.08)] bg-[oklch(0_0_0/0.4)] p-3 text-[0.78rem]">
-            <p className="text-muted-foreground">{copy.livePreview}</p>
-            <p className="mt-1 font-mono text-lg text-primary" dir="auto">
-              {trigger}
-            </p>
-            {suffixSelected || (draft.prefix === null && isSuffixMarker(defaultPrefix)) ? (
-              <p className="mt-1.5 text-[0.72rem] text-muted-foreground">{copy.suffixAuto}</p>
-            ) : null}
-            <p className="mt-2 font-mono">
-              <span className="text-emerald-400">CreovixStudio:</span>{" "}
-              <span className="text-muted-foreground" dir="auto">{preview}</span>
-            </p>
+            <label className="block">
+              <span className="mb-1.5 block text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+                {copy.cooldown}
+              </span>
+              <input
+                type="number"
+                min={0}
+                max={3600}
+                value={draft.cooldownSeconds}
+                onChange={(event) =>
+                  onChange({ ...draft, cooldownSeconds: Number(event.target.value) || 0 })
+                }
+                className={`${field} w-28`}
+                dir="ltr"
+              />
+            </label>
           </div>
+          {showVars ? <CommandVariablesSidebar onInsert={insertTag} /> : null}
         </div>
 
         <DialogFooter>

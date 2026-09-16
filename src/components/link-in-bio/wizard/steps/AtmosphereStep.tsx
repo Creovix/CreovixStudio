@@ -5,12 +5,12 @@ import { useWizard } from "@/components/link-in-bio/wizard/WizardProvider";
 import { wizardUi } from "@/components/link-in-bio/wizard/wizardTokens";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BENTO_COLOR_MODES, BACKGROUND_PRESETS, FONT_CHOICES, type BentoColorMode, type LinkInBioTheme } from "@/lib/linkInBio";
+import { BENTO_COLOR_MODES, BACKGROUND_PRESETS, FONT_CHOICES, isLightBioTheme, type BentoColorMode, type LinkInBioTheme } from "@/lib/linkInBio";
 import { extractLogoPalette } from "@/lib/logoPalette";
 import { cn } from "@/lib/utils";
 
 function isLightTheme(theme: LinkInBioTheme) {
-  return theme.paletteBg === BACKGROUND_PRESETS[0]!.paletteBg;
+  return isLightBioTheme(theme.paletteBg);
 }
 
 function BentoModeSwatch({
@@ -38,7 +38,7 @@ function BentoModeSwatch({
     return (
       <span
         className="block h-7 rounded-lg border border-white/10"
-        style={{ background: light ? "#ecece8" : "#171717" }}
+        style={{ background: light ? "linear-gradient(180deg, #f4f4f5, #d4d4d4)" : "linear-gradient(180deg, #3f3f46, #171717)" }}
       />
     );
   }
@@ -46,7 +46,7 @@ function BentoModeSwatch({
     return (
       <span
         className="block h-7 rounded-lg"
-        style={{ background: `linear-gradient(160deg, #E62117 0%, ${light ? "#f7f7f5" : "#0a0a0a"} 100%)` }}
+        style={{ background: `linear-gradient(160deg, #E62117 0%, ${light ? "#f8f9fa" : "#0a0a0a"} 100%)` }}
       />
     );
   }
@@ -55,7 +55,7 @@ function BentoModeSwatch({
       <span
         className="block h-7 rounded-lg"
         style={{
-          background: `color-mix(in oklab, ${accent} 55%, ${light ? "#f7f7f5" : "#0a0a0a"})`,
+          background: `color-mix(in oklab, ${accent} 55%, ${light ? "#f8f9fa" : "#0a0a0a"})`,
           boxShadow: `inset 0 0 10px ${accent}`,
         }}
       />
@@ -64,8 +64,14 @@ function BentoModeSwatch({
   if (mode === "glass") {
     return (
       <span
-        className="block h-7 rounded-lg border border-white/25"
-        style={{ background: `color-mix(in oklab, ${accent} 28%, rgba(255,255,255,0.18))` }}
+        className="block h-7 rounded-lg border border-white/35"
+        style={{
+          background: light ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.1)",
+          boxShadow: light
+            ? "inset 0 1px 0 rgba(255,255,255,0.9), 0 0 0 1px rgba(15,23,32,0.06)"
+            : "inset 0 1px 0 rgba(255,255,255,0.18)",
+          backdropFilter: "blur(10px) saturate(1.4)",
+        }}
       />
     );
   }
@@ -99,14 +105,15 @@ export function AtmosphereStep() {
       return;
     }
     const light = isLightTheme(theme);
+    const paper = BACKGROUND_PRESETS[0]!;
     onPatch({
-      paletteBg: light ? "#f7f7f5" : palette.background,
-      paletteFg: light ? "#171717" : palette.foreground,
-      paletteAccent: palette.accent,
-      paletteMuted: light ? "#5c5c57" : palette.muted,
-      gradientStyle: "soft",
+      paletteBg: light ? paper.paletteBg : palette.background,
+      paletteFg: light ? paper.paletteFg : palette.foreground,
+      paletteAccent: light ? paper.paletteAccent : palette.accent,
+      paletteMuted: light ? paper.paletteMuted : palette.muted,
+      gradientStyle: "none",
       glowStrength: Math.max(theme.glowStrength, 48),
-      ambientEnabled: true,
+      ambientEnabled: false,
     });
   };
 
@@ -140,7 +147,8 @@ export function AtmosphereStep() {
       <TabsContent value="background" className={wizardUi.tabBody}>
         <div className="grid grid-cols-2 gap-3">
           {BACKGROUND_PRESETS.map((preset) => {
-            const active = theme.paletteBg === preset.paletteBg && theme.paletteFg === preset.paletteFg;
+            const active =
+              preset.id === "paper" ? isLightTheme(theme) : !isLightTheme(theme);
             return (
               <OptionTile
                 key={preset.id}
