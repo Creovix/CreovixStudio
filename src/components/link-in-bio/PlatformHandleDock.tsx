@@ -10,6 +10,7 @@ import {
   type SocialPlatform,
 } from "@/hooks/useLinkInBioDraft";
 import {
+  customLinkFaviconUrl,
   hostnameFromLink,
   LINK_PLATFORMS,
   looksLikeHttpUrl,
@@ -134,6 +135,8 @@ export function PlatformHandleDock({
         {items.map((item) => {
           const active = openKey === item.key;
           const hasValue = item.platform === "custom" ? Boolean(item.slot.url) : Boolean(handles[item.platform]);
+          const favicon =
+            item.platform === "custom" ? customLinkFaviconUrl(item.slot.url) : null;
           return (
             <button
               key={item.key}
@@ -150,7 +153,11 @@ export function PlatformHandleDock({
                 inspector && "w-5",
               )}
             >
-              <LinkInBioPlatformLogo platform={item.platform} size={inspector ? 20 : 24} />
+              <LinkInBioPlatformLogo
+                platform={item.platform}
+                size={inspector ? 20 : 24}
+                faviconUrl={favicon}
+              />
               <span
                 className={cn(
                   "size-1.5 rounded-full",
@@ -182,7 +189,13 @@ export function PlatformHandleDock({
           }
         >
           <div className="mb-4 flex items-center gap-3">
-            <LinkInBioPlatformLogo platform={open.platform} size={24} />
+            <LinkInBioPlatformLogo
+              platform={open.platform}
+              size={24}
+              faviconUrl={
+                open.platform === "custom" ? customLinkFaviconUrl(value) : null
+              }
+            />
             <div className="min-w-0">
               <p className="text-sm font-medium">{open.label}</p>
               <p className="truncate text-[0.68rem] text-white/40" dir="auto">

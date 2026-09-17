@@ -1,5 +1,6 @@
 import {
   discordInviteCode,
+  googleFaviconUrl,
   hostnameFromLink,
   instagramPostUrl,
   kickUsernameFromUrl,
@@ -239,7 +240,7 @@ function previewCustom(value: string): PlatformLivePreviewData {
   const href = urlFromHandle("custom", value);
   const host = hostnameFromLink(href || value);
   if (!href || !host) return { kind: "empty" };
-  return { kind: "favicon", host, href };
+  return { kind: "favicon", host, faviconUrl: googleFaviconUrl(host), href };
 }
 
 export async function previewPlatformLive(platformRaw: string, valueRaw: string): Promise<PlatformLivePreviewData> {

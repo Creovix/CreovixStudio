@@ -88,7 +88,7 @@ function PreviewBody({
   if (data.kind === "favicon") {
     return (
       <div className={cn("mt-3 flex items-center gap-2.5", muted)}>
-        <LinkInBioPlatformLogo platform={platform} size={18} />
+        <LinkInBioPlatformLogo platform={platform} size={18} faviconUrl={data.faviconUrl} />
         <span className="truncate text-[0.68rem]">{data.host}</span>
       </div>
     );

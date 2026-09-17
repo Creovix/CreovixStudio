@@ -8,6 +8,7 @@ import {
   BENTO_SIZES,
   bentoSizeOf,
   bentoTilePaint,
+  customLinkFaviconUrl,
   packBento,
   sanitizeColSpan,
   sanitizeRowSpan,
@@ -381,6 +382,7 @@ function BentoTile({
             onLight={paint.onLight}
             whiteIcons={paint.whiteIcons}
             monoIcons={paint.monoIcons}
+            faviconUrl={link.platform === "custom" ? customLinkFaviconUrl(link.url) : null}
           />
         </span>
         {live ? (
