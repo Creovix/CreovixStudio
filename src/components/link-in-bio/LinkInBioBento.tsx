@@ -8,8 +8,6 @@ import {
   BENTO_SIZES,
   bentoSizeOf,
   bentoTilePaint,
-  googleFaviconUrl,
-  hostnameFromLink,
   packBento,
   sanitizeColSpan,
   sanitizeRowSpan,
@@ -40,12 +38,6 @@ const PLATFORM_NAME: Record<PublicBioLink["platform"], string> = {
 
 const GAP = 20;
 const ROW = 188;
-
-function customFaviconUrl(link: PublicBioLink): string | null {
-  if (link.platform !== "custom") return null;
-  const host = hostnameFromLink(link.url);
-  return host ? googleFaviconUrl(host) : null;
-}
 
 function cellFromPoint(root: DOMRect, clientX: number, clientY: number, colSpan: number) {
   const cellW = (root.width - GAP * (BENTO_COLS - 1)) / BENTO_COLS;
@@ -389,7 +381,6 @@ function BentoTile({
             onLight={paint.onLight}
             whiteIcons={paint.whiteIcons}
             monoIcons={paint.monoIcons}
-            faviconUrl={customFaviconUrl(link)}
           />
         </span>
         {live ? (

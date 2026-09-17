@@ -54,6 +54,7 @@ import {
   setTestCommandEnabled,
   upsertTestCommand,
   type ChatCommandPlatform,
+  type CommandRole,
   type CustomChatCommand,
   type CustomChatCommandInput,
 } from "@/lib/customCommands";
@@ -178,6 +179,7 @@ const COPY = {
     search: "Search commands…",
     filters: "Filters",
     filterAll: "All",
+    filterRoles: "User Roles",
     filterDisabled: "Disabled",
     filterNone: "No commands match.",
     loadMore: "Load More",
@@ -232,6 +234,13 @@ const PLATFORMS: { id: ChatCommandPlatform; label: string }[] = [
   { id: "TWITCH", label: "Twitch" },
 ];
 
+const ROLE_FILTERS: { id: CommandRole; label: string }[] = [
+  { id: "Everyone", label: "Everyone" },
+  { id: "Subs", label: "Subscribers" },
+  { id: "VIPs", label: "VIPs" },
+  { id: "Mods", label: "Moderators & Streamer" },
+];
+
 const FACE_GRID = "grid grid-cols-[repeat(auto-fill,190px)] justify-start gap-3";
 const FACE_ROW = "flex flex-wrap justify-start gap-3";
 const FACE_PAGE_INITIAL = 12;
@@ -265,6 +274,7 @@ function LoadMoreButton({ label, onClick }: { label: string; onClick: () => void
 
 type StatusFilter = "all" | "enabled" | "disabled";
 type PlatformFilter = "all" | ChatCommandPlatform;
+type RoleFilter = "all" | CommandRole;
 
 function CustomCommandsPage() {
   const { user } = Route.useRouteContext();
@@ -305,6 +315,7 @@ function CustomCommandsPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [pageTab, setPageTab] = useState<"defaults" | "commands" | "timers">("defaults");
   const [timerEditor, setTimerEditor] = useState<MessageTimerInput | null>(null);
   const [timerDeleteId, setTimerDeleteId] = useState<string | null>(null);
@@ -419,6 +430,10 @@ function CustomCommandsPage() {
       if (statusFilter === "enabled" && !command.enabled) return false;
       if (statusFilter === "disabled" && command.enabled) return false;
       if (platformFilter !== "all" && !command.platforms.includes(platformFilter)) return false;
+      if (roleFilter !== "all") {
+        const roles = command.roles.length ? command.roles : ["Everyone"];
+        if (!roles.includes(roleFilter)) return false;
+      }
       if (!needle) return true;
       const trigger = commandTrigger(command, prefixValue).toLowerCase();
       return (
@@ -427,7 +442,7 @@ function CustomCommandsPage() {
         command.response.toLowerCase().includes(needle)
       );
     });
-  }, [commands, query, statusFilter, platformFilter, prefixValue]);
+  }, [commands, query, statusFilter, platformFilter, roleFilter, prefixValue]);
 
   const timerSaveMutation = useMutation({
     mutationFn: async (input: MessageTimerInput) => {
@@ -584,8 +599,10 @@ function CustomCommandsPage() {
               copy={c}
               statusFilter={statusFilter}
               platformFilter={platformFilter}
+              roleFilter={roleFilter}
               onStatusFilter={setStatusFilter}
               onPlatformFilter={setPlatformFilter}
+              onRoleFilter={setRoleFilter}
             />
             <button
               type="button"
@@ -783,16 +800,20 @@ function CommandFilterMenu({
   copy,
   statusFilter,
   platformFilter,
+  roleFilter,
   onStatusFilter,
   onPlatformFilter,
+  onRoleFilter,
 }: {
   copy: CommandsCopy;
   statusFilter: StatusFilter;
   platformFilter: PlatformFilter;
+  roleFilter: RoleFilter;
   onStatusFilter: (value: StatusFilter) => void;
   onPlatformFilter: (value: PlatformFilter) => void;
+  onRoleFilter: (value: RoleFilter) => void;
 }) {
-  const active = statusFilter !== "all" || platformFilter !== "all";
+  const active = statusFilter !== "all" || platformFilter !== "all" || roleFilter !== "all";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -832,6 +853,21 @@ function CommandFilterMenu({
                 <PlatformIcon platform={platform.id} size={12} />
                 {platform.label}
               </span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground">
+          {copy.filterRoles}
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={roleFilter}
+          onValueChange={(value) => onRoleFilter(value as RoleFilter)}
+        >
+          <DropdownMenuRadioItem value="all">{copy.filterAll}</DropdownMenuRadioItem>
+          {ROLE_FILTERS.map((role) => (
+            <DropdownMenuRadioItem key={role.id} value={role.id}>
+              {role.label}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

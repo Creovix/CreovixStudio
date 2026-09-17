@@ -11,6 +11,7 @@ import kickPrimary from "@/assets/icons/Kick/Primary.svg";
 import kickWhite from "@/assets/icons/Kick/White.svg";
 import kickBlack from "@/assets/icons/Kick/Black.svg";
 import linkPrimary from "@/assets/icons/Link/Primary.svg";
+import linkWhite from "@/assets/icons/Link/White.svg";
 import linkBlack from "@/assets/icons/Link/Black.svg";
 import snapchatPrimary from "@/assets/icons/SnapChat/Primary.svg";
 import snapchatWhite from "@/assets/icons/SnapChat/White.svg";
@@ -116,6 +117,7 @@ const WHITE_ASSET_URLS: Partial<Record<PlatformBrand, string>> = {
   discord: discordWhite,
   instagram: instagramWhite,
   kick: kickWhite,
+  link: linkWhite,
   snapchat: snapchatWhite,
   tiktok: tiktokWhite,
   twitch: twitchWhite,

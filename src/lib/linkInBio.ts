@@ -599,10 +599,6 @@ export function hostnameFromLink(raw: string): string | null {
   }
 }
 
-export function googleFaviconUrl(host: string): string {
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
-}
-
 export function sanitizeLinkUrl(raw: string): string {
   const value = raw.trim();
   if (!isValidHttpUrl(value) || value.length > 2048) return "";

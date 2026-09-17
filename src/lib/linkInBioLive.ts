@@ -34,7 +34,6 @@ export type PlatformLivePreviewData =
   | {
       kind: "favicon";
       host: string;
-      faviconUrl: string;
       href: string;
     }
   | {

@@ -51,10 +51,13 @@ const NAV = [
   { to: "/giveaway" as const, icon: Gift, label: "Giveaway" },
   { to: "/custom-commands" as const, icon: MessageSquareCode, label: "Chat Commands" },
   { to: "/clip-command" as const, icon: Scissors, label: "Clip Command" },
+  { to: "/link-in-bio" as const, icon: Link2, label: "Link in Bio" },
   { to: "/schedule" as const, icon: CalendarDays, label: "Schedule", comingSoon: true },
   { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points", comingSoon: true },
-  { to: "/link-in-bio" as const, icon: Link2, label: "Link in Bio" },
-];
+].sort(
+  (a, b) =>
+    Number("comingSoon" in a && a.comingSoon) - Number("comingSoon" in b && b.comingSoon),
+);
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";
 const menuSurfaceStyle = {

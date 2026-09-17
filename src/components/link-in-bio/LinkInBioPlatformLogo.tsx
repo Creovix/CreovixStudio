@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 
 import { PlatformAsset, type PlatformAssetName } from "@/components/icons/platformAssets";
 import type { LinkPlatform } from "@/lib/linkInBio";
@@ -13,7 +13,7 @@ const ASSET: Record<LinkPlatform, PlatformAssetName> = {
   x: "x",
   discord: "discord",
   whatsapp: "whatsapp",
-  custom: "website",
+  custom: "link",
 };
 
 function markKey({
@@ -36,14 +36,12 @@ function markKey({
 function PlatformLogoMark({
   platform,
   size = 40,
-  faviconUrl,
   onLight = false,
   whiteIcons = false,
   monoIcons = false,
 }: {
   platform: LinkPlatform;
   size?: number;
-  faviconUrl?: string | null;
   onBrand?: boolean;
   ink?: string;
   onLight?: boolean;
@@ -51,26 +49,6 @@ function PlatformLogoMark({
   monoIcons?: boolean;
   surface?: string | undefined;
 }) {
-  const [failed, setFailed] = useState<string | null>(null);
-  const showFavicon = platform === "custom" && Boolean(faviconUrl) && failed !== faviconUrl;
-  if (showFavicon && faviconUrl) {
-    return (
-      <img
-        src={faviconUrl}
-        alt=""
-        width={size}
-        height={size}
-        className="size-full object-contain"
-        style={
-          monoIcons
-            ? { filter: onLight ? "grayscale(1) contrast(1.15)" : "grayscale(1) brightness(1.15)" }
-            : undefined
-        }
-        onError={() => setFailed(faviconUrl)}
-      />
-    );
-  }
-
   return (
     <PlatformAsset
       key={markKey({ platform, onLight, whiteIcons, monoIcons })}
