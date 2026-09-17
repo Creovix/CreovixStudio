@@ -3,7 +3,7 @@ export const LINK_IN_BIO_SLUG_LIST_KEY = "creovix:link-in-bio-slugs";
 export const LINK_IN_BIO_WIZARD_STEP_KEY = "creovix:link-in-bio-wizard-step";
 export const LINK_IN_BIO_PUBLIC_PREFIX = "/u";
 export const WIZARD_STEPS = 4;
-export const MAX_CUSTOM_LINKS = 10;
+export const MAX_CUSTOM_LINKS = 20;
 export const USERNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type LinkPlatform =

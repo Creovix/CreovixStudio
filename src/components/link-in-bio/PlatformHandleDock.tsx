@@ -128,7 +128,7 @@ export function PlatformHandleDock({
   return (
     <div className="grid gap-3">
       <div
-        className="flex gap-8 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-8 overflow-x-auto pb-1 [scrollbar-width:thin] [-ms-overflow-style:auto]"
         role="tablist"
         aria-label="Platforms"
       >
