@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Copy, ExternalLink, ImagePlus, RotateCcw } from "lucide-react";
+import { Check, Copy, ExternalLink, ImagePlus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
@@ -56,6 +56,7 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
   const { profile, setProfile, theme, setTheme, links, setLinks, preview, persist, save, state, slugStatus } = draft;
   const [editing, setEditing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [handles, setHandles] = useState<HandleMap>(() => handlesFromLinks(links));
   const slugLocked = usernameCooldownActive(profile.usernameChangedAt);
   const unlockOn = usernameUnlockLabel(profile.usernameChangedAt);
@@ -134,44 +135,66 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
     toast.success(published ? "Published" : "Unpublished");
   };
 
+  const copyPublicUrl = async () => {
+    if (!publicUrl) {
+      toast.error("Set a username before copying your page link.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      toast.success("Link copied");
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
+
   const liveFlags = preview.livePlatforms;
 
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
       {editing ? (
         <>
-          <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => setEditing(false)}>
             Done
           </Button>
-          <Button type="button" onClick={() => void publish(!profile.published)} disabled={!profile.slug || save.isPending}>
+          <Button
+            type="button"
+            className="min-h-11"
+            onClick={() => void publish(!profile.published)}
+            disabled={!profile.slug || save.isPending}
+          >
             {profile.published ? "Unpublish" : "Publish"}
           </Button>
         </>
-      ) : null}
+      ) : (
+        <Button type="button" className="min-h-11" onClick={() => setEditing(true)}>
+          Edit page
+        </Button>
+      )}
       <Button
-          type="button"
-          variant="outline"
-          disabled={!publicUrl}
-          onClick={() => {
-            void navigator.clipboard.writeText(publicUrl);
-            toast.success("Copied");
-          }}
-        >
-          <Copy className="size-3.5" />
-          Copy URL
+        type="button"
+        variant="outline"
+        className="min-h-11"
+        disabled={!publicUrl}
+        onClick={() => void copyPublicUrl()}
+      >
+        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+        {copied ? "Copied" : "Copy Link"}
+      </Button>
+      {publicUrl ? (
+        <Button type="button" variant="outline" className="min-h-11" asChild>
+          <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="size-3.5" />
+            Open page
+          </a>
         </Button>
-        {publicUrl ? (
-          <Button type="button" variant="outline" asChild>
-            <a href={publicUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-3.5" />
-              Open page
-            </a>
-          </Button>
-        ) : null}
-        <Button type="button" variant="ghost" onClick={onReplay}>
-          <RotateCcw className="size-3.5" />
-          Replay setup
-        </Button>
+      ) : null}
+      <Button type="button" variant="ghost" className="min-h-11" onClick={onReplay}>
+        <RotateCcw className="size-3.5" />
+        Replay setup
+      </Button>
     </div>
   );
 
@@ -216,7 +239,12 @@ export function LinkInBioDashboard({ draft, onReplay }: { draft: Draft; onReplay
             style={{ background: theme.paletteBg, color: theme.paletteFg }}
           >
             {links.filter((link) => link.enabled).length === 0 ? (
-              <p className="py-16 text-center text-sm text-muted-foreground">Add platforms or a gallery to start the grid.</p>
+              <div className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center">
+                <p className="text-sm font-medium text-foreground/90">Grid is empty</p>
+                <p className="max-w-xs text-sm text-muted-foreground">
+                  Add platforms in the Platforms tab or create a gallery to start arranging tiles.
+                </p>
+              </div>
             ) : (
               <LinkInBioBento
                 links={preview.links}

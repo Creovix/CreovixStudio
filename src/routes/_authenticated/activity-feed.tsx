@@ -102,23 +102,16 @@ type FilterGroup = {
 };
 
 const KNOWN_PLATFORMS = [
-  "TWITCH",
   "KICK",
-  "TIKTOK",
+  "TWITCH",
   "YOUTUBE",
+  "TIKTOK",
   "X",
   "STREAMLABS",
   "STREAMELEMENTS",
 ];
 
 const FILTER_GROUPS: FilterGroup[] = [
-  {
-    id: "twitch",
-    label: "activity.filter.twitch",
-    dot: "#9F77F7",
-    icon: <PlatformIcon platform="TWITCH" size={20} />,
-    match: (e) => e.platform === "TWITCH",
-  },
   {
     id: "kick",
     label: "activity.filter.kick",
@@ -127,11 +120,11 @@ const FILTER_GROUPS: FilterGroup[] = [
     match: (e) => e.platform === "KICK",
   },
   {
-    id: "tiktok",
-    label: "activity.filter.tiktok",
-    dot: "#2DCCD3",
-    icon: <PlatformIcon platform="TIKTOK" size={20} />,
-    match: (e) => e.platform === "TIKTOK",
+    id: "twitch",
+    label: "activity.filter.twitch",
+    dot: "#9F77F7",
+    icon: <PlatformIcon platform="TWITCH" size={20} />,
+    match: (e) => e.platform === "TWITCH",
   },
   {
     id: "youtube",
@@ -139,6 +132,13 @@ const FILTER_GROUPS: FilterGroup[] = [
     dot: "#FF4444",
     icon: <PlatformIcon platform="YOUTUBE" size={20} />,
     match: (e) => e.platform === "YOUTUBE",
+  },
+  {
+    id: "tiktok",
+    label: "activity.filter.tiktok",
+    dot: "#2DCCD3",
+    icon: <PlatformIcon platform="TIKTOK" size={20} />,
+    match: (e) => e.platform === "TIKTOK",
   },
   {
     id: "x",

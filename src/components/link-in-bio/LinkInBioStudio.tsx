@@ -28,7 +28,14 @@ export function LinkInBioStudio({
   };
 
   if (draft.loading) {
-    return <div className="grid min-h-dvh place-items-center text-sm text-muted-foreground">Loading your page…</div>;
+    return (
+      <div className="grid min-h-dvh place-items-center px-6 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center gap-3">
+          <span className="size-2 animate-pulse rounded-full bg-muted-foreground/60" aria-hidden />
+          Loading your page…
+        </div>
+      </div>
+    );
   }
 
   const showWizard = forceSetup || !draft.profile.setupCompleted;

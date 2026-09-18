@@ -4,8 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Tajawal is the app-wide typeface. Only 200-500 ship as local files, so
- * semibold/bold utilities are synthesised by the browser.
+ * Tajawal is the app-wide typeface.
+ * Disk files cover 200–500; 600/700 alias Medium so Tailwind
+ * font-semibold / font-bold stay crisp (no faux-bold).
  */
 @font-face {
   font-family: "Tajawal";
@@ -32,6 +33,27 @@
   font-family: "Tajawal";
   src: url("./assets/Fonts/Tajawal-Medium.ttf") format("truetype");
   font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/Fonts/Tajawal-Medium.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/Fonts/Tajawal-Medium.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/Fonts/Tajawal-Medium.ttf") format("truetype");
+  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
@@ -111,6 +133,10 @@
   --color-overlay-box-border: var(--overlay-box-border);
   --font-sans: "Tajawal", ui-sans-serif, system-ui, sans-serif;
   --font-arabic: "Tajawal", ui-sans-serif, sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 }
 
 :root {
@@ -143,8 +169,8 @@
   --secondary: oklch(0.17 0 0);
   --secondary-foreground: oklch(0.93 0 0);
   --muted: oklch(0.22 0 0);
-  /* #a3a3a3 */
-  --muted-foreground: oklch(0.65 0 0);
+  /* #a3a3a3 → slightly brighter secondary copy for WCAG-friendlier contrast */
+  --muted-foreground: oklch(0.72 0 0);
   /* #22D3EE */
   --accent: oklch(0.789 0.135 210.5);
   --accent-foreground: oklch(0.16 0 0);
@@ -209,7 +235,7 @@
   --secondary: oklch(0.17 0 0);
   --secondary-foreground: oklch(0.97 0 0);
   --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.65 0 0);
+  --muted-foreground: oklch(0.72 0 0);
   --accent: oklch(0.22 0 0);
   --accent-foreground: oklch(0.97 0 0);
   --destructive: oklch(0.63 0.23 27);
@@ -488,23 +514,53 @@ body.overlay-transparent {
 html,
 body {
   font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
+h6 {
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
 p,
 button,
 input,
 select,
-textarea {
+textarea,
+label {
   font-family: inherit;
+  line-height: 1.55;
 }
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in oklab, var(--muted-foreground) 88%, transparent);
+  letter-spacing: 0;
+}
+
+/* Arabic / auto-dir user content: Tajawal reads cleanest with open leading */
+:lang(ar),
+[lang="ar"],
+[dir="rtl"],
+[dir="auto"] {
+  letter-spacing: 0;
+  line-height: 1.7;
+  font-family: var(--font-arabic);
+}
+
 [dir="auto"] {
   unicode-bidi: plaintext;
 }

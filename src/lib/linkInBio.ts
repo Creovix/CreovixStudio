@@ -165,12 +165,96 @@ export const LINK_PLATFORMS: ReadonlyArray<{
   { id: "youtube", label: "YouTube", hint: "https://youtube.com/@you" },
   { id: "tiktok", label: "TikTok", hint: "@you or a video URL" },
   { id: "instagram", label: "Instagram", hint: "@you or a post / reel URL" },
-  { id: "snapchat", label: "Snapchat", hint: "@you or snapchat.com/add/…" },
   { id: "x", label: "X", hint: "@you or a post URL" },
   { id: "discord", label: "Discord", hint: "discord.gg/invite" },
+  { id: "snapchat", label: "Snapchat", hint: "@you or snapchat.com/add/…" },
   { id: "whatsapp", label: "WhatsApp Community", hint: "https://chat.whatsapp.com/… or whatsapp.com/channel/…" },
   { id: "custom", label: "Link", hint: "https://…" },
 ];
+
+/**
+ * Baseline popularity for streamer/creator audiences (higher = more used).
+ * Custom extras always sort last among platform *types*.
+ */
+export const PLATFORM_POPULARITY: Record<LinkPlatform, number> = {
+  kick: 100,
+  twitch: 96,
+  youtube: 92,
+  tiktok: 88,
+  instagram: 82,
+  x: 76,
+  discord: 64,
+  snapchat: 52,
+  whatsapp: 40,
+  custom: 10,
+};
+
+export const PLATFORM_USAGE_STORAGE_KEY = "creovix:link-platform-usage";
+
+export function readPlatformUsageCounts(): Partial<Record<LinkPlatform, number>> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(PLATFORM_USAGE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: Partial<Record<LinkPlatform, number>> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (key in PLATFORM_POPULARITY && typeof value === "number" && Number.isFinite(value)) {
+        out[key as LinkPlatform] = Math.max(0, Math.floor(value));
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function bumpPlatformUsage(platform: LinkPlatform, amount = 1): void {
+  if (typeof window === "undefined" || amount <= 0) return;
+  try {
+    const next = { ...readPlatformUsageCounts() };
+    next[platform] = (next[platform] ?? 0) + amount;
+    window.localStorage.setItem(PLATFORM_USAGE_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+export function platformUsageScore(
+  platform: LinkPlatform,
+  usage: Partial<Record<LinkPlatform, number>> = {},
+): number {
+  return (PLATFORM_POPULARITY[platform] ?? 0) + (usage[platform] ?? 0) * 12;
+}
+
+/** Filled platforms rise first, then score (popularity + local usage). Custom types stay last. */
+export function sortPlatformsByUsage<T extends { id: LinkPlatform }>(
+  platforms: ReadonlyArray<T>,
+  options?: {
+    filled?: Partial<Record<LinkPlatform, boolean>> | ReadonlySet<LinkPlatform>;
+    usage?: Partial<Record<LinkPlatform, number>>;
+  },
+): T[] {
+  const usage = options?.usage ?? {};
+  const isFilled = (id: LinkPlatform) => {
+    if (!options?.filled) return false;
+    if (options.filled instanceof Set) return options.filled.has(id);
+    return Boolean(options.filled[id]);
+  };
+
+  return [...platforms].sort((a, b) => {
+    const aCustom = a.id === "custom" ? 1 : 0;
+    const bCustom = b.id === "custom" ? 1 : 0;
+    if (aCustom !== bCustom) return aCustom - bCustom;
+
+    const aFilled = isFilled(a.id) ? 1 : 0;
+    const bFilled = isFilled(b.id) ? 1 : 0;
+    if (aFilled !== bFilled) return bFilled - aFilled;
+
+    return platformUsageScore(b.id, usage) - platformUsageScore(a.id, usage);
+  });
+}
 
 export type PrefixedPlatform = Exclude<LinkPlatform, "custom" | "whatsapp">;
 

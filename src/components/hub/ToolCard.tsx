@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Check, Copy, Lock, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
-import { PLATFORM_META, type PlatformId } from "@/components/hub/platforms";
+import { PLATFORM_META, sortHubPlatforms, type PlatformId } from "@/components/hub/platforms";
 import { HubPlatformDot } from "@/components/hub/HubPlatformDot";
 import { useLanguage } from "@/lib/i18n";
 
@@ -67,9 +67,9 @@ export function ToolCard({
 
   return (
     <div
-      className={`glass-3d relative flex h-full min-h-[18.5rem] flex-col overflow-visible rounded-2xl p-5 text-start ${
+      className={`glass-3d glass-lift relative flex h-full min-h-[18.5rem] flex-col overflow-visible rounded-2xl p-5 text-start transition-[opacity,transform] duration-300 ease-out ${
         removing ? "pointer-events-none scale-95 opacity-0" : "scale-100 opacity-100"
-      } ${comingSoon ? "pointer-events-none" : ""}`}
+      } ${comingSoon ? "pointer-events-none opacity-60" : ""}`}
     >
       <div className="relative h-[132px] overflow-hidden rounded-xl border border-[oklch(1_0_0/0.06)] bg-[oklch(1_0_0/0.02)]">
         <div className={`h-full overflow-hidden ${previewLocked ? "blur-[3px] saturate-50" : ""}`}>
@@ -97,7 +97,7 @@ export function ToolCard({
             <p className="truncate text-[0.9rem] font-medium tracking-tight">{name}</p>
             {platforms.length > 0 ? (
               <span className="inline-flex items-center gap-1.5 overflow-visible" aria-hidden>
-                {platforms.map((id) => (
+                {sortHubPlatforms(platforms).map((id) => (
                   <HubPlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
                 ))}
               </span>

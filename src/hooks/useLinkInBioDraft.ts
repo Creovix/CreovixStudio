@@ -48,9 +48,9 @@ const SOCIAL_PLATFORMS: SocialPlatform[] = [
   "youtube",
   "tiktok",
   "instagram",
-  "snapchat",
   "x",
   "discord",
+  "snapchat",
   "whatsapp",
 ];
 

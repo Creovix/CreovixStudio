@@ -18,14 +18,14 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
     <div className="relative flex h-dvh min-h-0 flex-col overflow-hidden bg-[#0a0a0a] text-neutral-100">
       <style>{MOTION_CSS}</style>
 
-      <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-5 py-3 md:px-8">
-        <p className="text-[0.72rem] uppercase tracking-[0.2em] text-white/38">Creovix · Link in Bio</p>
-        <div className="flex items-center gap-3">
+      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-4 py-3 sm:px-5 md:px-8">
+        <p className="truncate text-[0.72rem] uppercase tracking-[0.2em] text-white/38">Creovix · Link in Bio</p>
+        <div className="flex shrink-0 items-center gap-3">
           <span className="text-sm tabular-nums text-white/40">
             {step} / {total}
           </span>
           {canExit ? (
-            <button type="button" className="text-sm text-white/60 hover:text-white" onClick={onExit}>
+            <button type="button" className="min-h-10 text-sm text-white/60 hover:text-white" onClick={onExit}>
               Back to studio
             </button>
           ) : null}
@@ -95,9 +95,9 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
         </aside>
       </div>
 
-      <footer className="relative z-20 shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]/90 px-5 py-3 backdrop-blur-xl md:px-8">
-        <div className="mx-auto flex w-full max-w-[110rem] items-center justify-between gap-4">
-          <Button type="button" variant="ghost" disabled={step === 1} onClick={goBack}>
+      <footer className="relative z-20 shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]/90 px-4 py-3 backdrop-blur-xl sm:px-5 md:px-8">
+        <div className="mx-auto flex w-full max-w-[110rem] items-center justify-between gap-3">
+          <Button type="button" variant="ghost" className="min-h-11" disabled={step === 1} onClick={goBack}>
             <ChevronLeft className="size-4" />
             Back
           </Button>
@@ -121,14 +121,14 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
               ))}
             </ol>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {step !== 1 && step !== 4 ? (
-              <Button type="button" variant="ghost" className={wizardUi.ctaQuiet} onClick={() => void goNext()}>
+              <Button type="button" variant="ghost" className={cn(wizardUi.ctaQuiet, "min-h-11")} onClick={() => void goNext()}>
                 Skip
               </Button>
             ) : null}
             {step < total ? (
-              <Button type="button" className={wizardUi.ctaPrimary} onClick={() => void goNext()} disabled={!canProceed || saving}>
+              <Button type="button" className={cn(wizardUi.ctaPrimary, "min-h-11")} onClick={() => void goNext()} disabled={!canProceed || saving}>
                 Next
                 <ChevronRight className="size-4" />
               </Button>
@@ -137,7 +137,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                 <Button
                   type="button"
                   variant="ghost"
-                  className={wizardUi.ctaQuiet}
+                  className={cn(wizardUi.ctaQuiet, "min-h-11")}
                   onClick={() => void finish(false)}
                   disabled={saving}
                 >
@@ -145,7 +145,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                 </Button>
                 <Button
                   type="button"
-                  className={cn(wizardUi.ctaPrimary, "min-w-[8.5rem] px-8")}
+                  className={cn(wizardUi.ctaPrimary, "min-h-11 min-w-[7.5rem] px-6 sm:min-w-[8.5rem] sm:px-8")}
                   onClick={() => void finish(true)}
                   disabled={!draft.profile.slug || saving}
                 >

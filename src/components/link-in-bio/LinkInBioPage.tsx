@@ -1,10 +1,12 @@
+import { Check, Copy, Link2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
 import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
 import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
-import { resolveBioFont, type PublicLinkInBio } from "@/lib/linkInBio";
+import { publicBioPath, resolveBioFont, type PublicLinkInBio } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
 
 export function LinkInBioPage({
@@ -55,9 +57,10 @@ export function LinkInBioPage({
           "@container relative mx-auto flex w-full flex-col",
           preview
             ? "w-full max-w-full px-3 py-6 sm:px-4"
-            : "max-w-[min(94vw,76rem)] px-3 py-12 sm:px-4 md:px-5 md:py-16 lg:px-6",
+            : "max-w-[min(94vw,76rem)] px-3 py-10 sm:px-4 sm:py-12 md:px-5 md:py-16 lg:px-6",
         )}
       >
+        {!preview ? <PublicCopyLink slug={profile.slug} accent={theme.paletteAccent} /> : null}
         <Header
           profile={profile}
           compact={theme.layout === "grid"}
@@ -73,7 +76,7 @@ export function LinkInBioPage({
             href={schedule.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 rounded-2xl px-4 py-3 text-sm font-semibold"
+            className="mt-3 min-h-11 rounded-2xl px-4 py-3 text-sm font-semibold"
             style={{
               background: cardBg,
               border,
@@ -85,11 +88,9 @@ export function LinkInBioPage({
         ) : null}
 
         {links.length === 0 ? (
-          <p className="mt-8 text-center text-sm" style={{ color: theme.paletteMuted }}>
-            No links yet.
-          </p>
+          <EmptyLinksPlaceholder muted={theme.paletteMuted} border={border} glass={glass} />
         ) : (
-          <div className="mt-10">
+          <div className="mt-8 sm:mt-10">
             <LinkInBioBento
               links={links}
               theme={theme}
@@ -104,6 +105,88 @@ export function LinkInBioPage({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function PublicCopyLink({ slug, accent }: { slug: string; accent: string }) {
+  const [copied, setCopied] = useState(false);
+  const [href, setHref] = useState("");
+
+  useEffect(() => {
+    setHref(`${window.location.origin}${publicBioPath(slug)}`);
+  }, [slug]);
+
+  const copy = async () => {
+    const target = href || `${window.location.origin}${publicBioPath(slug)}`;
+    try {
+      await navigator.clipboard.writeText(target);
+      setCopied(true);
+      toast.success("Link copied");
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
+
+  return (
+    <div className="mb-6 flex justify-end sm:mb-8">
+      <button
+        type="button"
+        onClick={() => void copy()}
+        className={cn(
+          "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium",
+          "backdrop-blur-md transition-[transform,background-color,border-color] duration-200",
+          "active:scale-[0.98] touch-manipulation",
+        )}
+        style={{
+          borderColor: copied ? accent : "color-mix(in oklab, var(--bio-fg) 16%, transparent)",
+          background: copied
+            ? `color-mix(in oklab, ${accent} 18%, var(--bio-bg))`
+            : "color-mix(in oklab, var(--bio-fg) 6%, var(--bio-bg))",
+          color: "var(--bio-fg)",
+        }}
+        aria-label={copied ? "Link copied" : "Copy page link"}
+      >
+        {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+        {copied ? "Copied" : "Copy Link"}
+      </button>
+    </div>
+  );
+}
+
+function EmptyLinksPlaceholder({
+  muted,
+  border,
+  glass,
+}: {
+  muted: string;
+  border: string;
+  glass: boolean;
+}) {
+  return (
+    <div
+      className="mt-8 flex flex-col items-center justify-center rounded-3xl border border-dashed px-5 py-14 text-center sm:mt-10 sm:px-8"
+      style={{
+        borderColor: "color-mix(in oklab, var(--bio-fg) 18%, transparent)",
+        background: glass
+          ? "rgba(255,255,255,0.04)"
+          : "color-mix(in oklab, var(--bio-fg) 4%, var(--bio-bg))",
+      }}
+    >
+      <span
+        className="mb-3 grid size-12 place-items-center rounded-2xl"
+        style={{
+          border,
+          background: "color-mix(in oklab, var(--bio-fg) 8%, transparent)",
+        }}
+      >
+        <Link2 className="size-5 opacity-70" aria-hidden />
+      </span>
+      <p className="text-sm font-semibold tracking-tight">No links yet</p>
+      <p className="mt-1.5 max-w-sm text-sm leading-relaxed" style={{ color: muted }}>
+        Platforms and custom links will appear here once they are added to this page.
+      </p>
     </div>
   );
 }
@@ -131,14 +214,14 @@ function Header({
             key={headerUrl}
             src={headerUrl}
             alt=""
-            className="aspect-[21/9] w-full rounded-3xl object-cover"
+            className="aspect-[21/9] w-full rounded-2xl object-cover sm:rounded-3xl"
             style={{ border }}
           />
         ) : null}
         {showAvatar ? (
           <span
             className={cn(
-              "relative block size-24 overflow-hidden rounded-full shadow-[0_10px_28px_-10px_rgba(0,0,0,0.45)]",
+              "relative block size-20 overflow-hidden rounded-full shadow-[0_10px_28px_-10px_rgba(0,0,0,0.45)] sm:size-24",
               overlap
                 ? "absolute bottom-0 left-1/2 z-20 -translate-x-1/2 translate-y-1/2"
                 : "mx-auto",
@@ -148,7 +231,7 @@ function Header({
           </span>
         ) : null}
       </div>
-      <LinkInBioText as="h1" className="mx-auto mt-4 w-full min-w-0 max-w-2xl text-2xl font-semibold tracking-tight md:text-3xl">
+      <LinkInBioText as="h1" className="mx-auto mt-4 w-full min-w-0 max-w-2xl text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
         {profile.displayName || profile.slug || "Your page"}
       </LinkInBioText>
       {profile.bio ? (

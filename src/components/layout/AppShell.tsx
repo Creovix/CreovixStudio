@@ -15,7 +15,6 @@ import {
   Link2,
   Scissors,
   Settings,
-  Sparkles,
 } from "lucide-react";
 
 import { StreamlabsBridge } from "@/components/layout/StreamlabsBridge";
@@ -172,18 +171,30 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           }}
         >
           <div className={cn("flex items-center gap-2 border-b border-white/10 px-3 py-3", collapsed && "justify-center")}>
-            <Link to="/dashboard" className={cn("flex min-w-0 items-center gap-2.5", collapsed && "justify-center")}>
-              <span
-                className="grid size-9 shrink-0 place-items-center rounded-xl border border-border"
-                style={{
-                  background:
-                    "linear-gradient(140deg, color-mix(in oklab, var(--primary) 65%, transparent), color-mix(in oklab, var(--cyan) 40%, transparent))",
-                }}
-              >
-                <Sparkles className="size-4 text-primary-foreground" aria-hidden />
-              </span>
-              {collapsed ? null : (
-                <span className="truncate text-sm font-semibold tracking-tight">Creovix Studio</span>
+            <Link
+              to="/dashboard"
+              className={cn("flex min-w-0 items-center gap-2", collapsed && "justify-center")}
+              aria-label="CreovixStudio"
+            >
+              {collapsed ? (
+                <span className="text-sm font-semibold tracking-tight text-foreground" title="CreovixStudio">
+                  CS
+                </span>
+              ) : (
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span className="truncate text-sm font-semibold tracking-tight text-foreground">
+                    CreovixStudio
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-md border border-primary/35 bg-primary/10",
+                      "px-1.5 py-0.5 text-[0.58rem] font-semibold uppercase leading-none tracking-[0.14em]",
+                      "text-primary",
+                    )}
+                  >
+                    Beta
+                  </span>
+                </span>
               )}
             </Link>
             {collapsed ? null : (

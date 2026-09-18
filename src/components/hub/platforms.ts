@@ -25,6 +25,15 @@ export const ALL_PLATFORMS: PlatformId[] = ["KICK", "TWITCH", "YOUTUBE", "TIKTOK
 
 export const FILTER_ORDER: PlatformFilter[] = ["ALL", "KICK", "TWITCH", "YOUTUBE", "TIKTOK"];
 
+/** Streamer-hub popularity: Kick → Twitch → YouTube → TikTok */
+export const PLATFORM_USAGE_ORDER: PlatformId[] = ["KICK", "TWITCH", "YOUTUBE", "TIKTOK"];
+
+export function sortHubPlatforms(platforms: readonly PlatformId[]): PlatformId[] {
+  return [...platforms].sort(
+    (a, b) => PLATFORM_USAGE_ORDER.indexOf(a) - PLATFORM_USAGE_ORDER.indexOf(b),
+  );
+}
+
 export function platformAccent(platforms: PlatformId[]): string {
   const first = platforms[0];
   return first ? PLATFORM_META[first].color : PLATFORM_META.KICK.color;

@@ -56,15 +56,23 @@ function PublicLinkInBioRoute() {
 
   if (missing) {
     return (
-      <div className="grid min-h-screen place-items-center bg-[#0a0a0a] text-neutral-300">
-        <p className="text-sm">This page is not published.</p>
+      <div className="grid min-h-screen place-items-center bg-[#0a0a0a] px-6 text-neutral-300">
+        <div className="max-w-sm rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-10 text-center">
+          <p className="text-base font-semibold text-neutral-100">Page unavailable</p>
+          <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+            This Link in Bio page is unpublished or does not exist.
+          </p>
+        </div>
       </div>
     );
   }
   if (!data) {
     return (
-      <div className="grid min-h-screen place-items-center bg-[#0a0a0a] text-neutral-500">
-        <p className="text-sm">Loading…</p>
+      <div className="grid min-h-screen place-items-center bg-[#0a0a0a] px-6 text-neutral-500">
+        <div className="flex flex-col items-center gap-3">
+          <span className="size-2 animate-pulse rounded-full bg-neutral-500" aria-hidden />
+          <p className="text-sm">Loading page…</p>
+        </div>
       </div>
     );
   }
