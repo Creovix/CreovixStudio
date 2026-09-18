@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { FlaskConical, Loader2 } from "lucide-react";
 
@@ -6,16 +6,18 @@ import { PlatformAsset } from "@/components/icons/platformAssets";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { fireTestEvent, sendTestChatMessage, type TestEventInput } from "@/lib/simulate.functions";
-import { TEST_EVENT_GROUPS, type TestEventSpec } from "@/lib/testEvents";
+import {
+  TEST_EVENT_GROUPS,
+  TEST_EVENT_TAB_LABEL,
+  type TestEventSpec,
+} from "@/lib/testEvents";
 import { isTestMode } from "@/lib/testMode";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export type InjectedFeedEvent = {
   id: string;
@@ -78,8 +80,7 @@ function buildLocalEvent(
 
 /**
  * Header control: fire a synthetic event for any ingest source.
- * The row is injected locally immediately; authenticated sessions also run
- * the existing ingest + overlay chat test pipeline.
+ * Platform tabs keep the panel short; only the active source’s events show.
  */
 export function TestEventMenu({
   widgetId,
@@ -95,6 +96,12 @@ export function TestEventMenu({
   const fire = useServerFn(fireTestEvent);
   const testChat = useServerFn(sendTestChatMessage);
   const [pending, setPending] = useState(false);
+  const [tab, setTab] = useState<TestEventInput["platform"]>(TEST_EVENT_GROUPS[0]!.platform);
+
+  const activeGroup = useMemo(
+    () => TEST_EVENT_GROUPS.find((group) => group.platform === tab) ?? TEST_EVENT_GROUPS[0]!,
+    [tab],
+  );
 
   const pick = async (platform: TestEventInput["platform"], spec: TestEventSpec) => {
     if (pending) return;
@@ -146,7 +153,7 @@ export function TestEventMenu({
         <button
           type="button"
           disabled={pending}
-          className="inline-flex items-center gap-2 rounded-xl border border-primary/35 bg-primary/15 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-primary/25 disabled:opacity-60"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/35 bg-primary/15 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-primary/25 disabled:opacity-60"
         >
           {pending ? (
             <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -156,27 +163,77 @@ export function TestEventMenu({
           {t("activity.testEvent")}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-60 p-1.5">
-        {TEST_EVENT_GROUPS.map((group, index) => (
-          <DropdownMenuGroup key={group.platform}>
-            {index > 0 ? <DropdownMenuSeparator className="bg-white/8" /> : null}
-            <DropdownMenuLabel className="flex items-center gap-2 px-2 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              <PlatformAsset name={group.icon} size={12} label="" />
-              {t(group.headingKey)}
-            </DropdownMenuLabel>
-            {group.events.map((event) => (
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(22.5rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border-white/10 bg-[rgba(12,12,12,0.97)] p-0 shadow-2xl shadow-black/50"
+      >
+        <div className="border-b border-white/8 px-3 pb-2 pt-3">
+          <p className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Platform
+          </p>
+          <div
+            className="flex gap-1 overflow-x-auto pb-0.5 [scrollbar-width:thin]"
+            role="tablist"
+            aria-label="Test event platforms"
+          >
+            {TEST_EVENT_GROUPS.map((group) => {
+              const selected = group.platform === activeGroup.platform;
+              return (
+                <button
+                  key={group.platform}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onPointerDown={(event) => event.preventDefault()}
+                  onClick={() => setTab(group.platform)}
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.72rem] font-medium",
+                    "transition-[color,background-color,box-shadow,border-color] duration-200 ease-out",
+                    selected
+                      ? "bg-zinc-800 text-foreground shadow-sm ring-1 ring-white/10"
+                      : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+                  )}
+                >
+                  <PlatformAsset name={group.icon} size={12} label="" />
+                  <span>{TEST_EVENT_TAB_LABEL[group.platform]}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div
+          key={activeGroup.platform}
+          role="tabpanel"
+          className="animate-in fade-in-0 slide-in-from-top-1 p-3 duration-200"
+        >
+          <div className="mb-2.5 flex items-center gap-2">
+            <span
+              className="size-1.5 rounded-full"
+              style={{ background: activeGroup.color }}
+              aria-hidden
+            />
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              {t(activeGroup.headingKey)}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+            {activeGroup.events.map((event) => (
               <DropdownMenuItem
-                key={`${group.platform}-${event.type}-${event.label}`}
+                key={`${activeGroup.platform}-${event.type}-${event.label}`}
                 disabled={pending}
-                className="gap-2 py-1.5 text-start text-[0.82rem]"
-                onSelect={() => void pick(group.platform, event)}
+                className="cursor-pointer rounded-xl border border-transparent px-3 py-2.5 text-[0.82rem] focus:border-white/8 focus:bg-white/[0.06]"
+                onSelect={() => void pick(activeGroup.platform, event)}
               >
-                <span className="size-1.5 shrink-0 rounded-full" style={{ background: group.color }} />
+                <span
+                  className="me-2 size-1.5 shrink-0 rounded-full"
+                  style={{ background: activeGroup.color }}
+                />
                 {event.label}
               </DropdownMenuItem>
             ))}
-          </DropdownMenuGroup>
-        ))}
+          </div>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

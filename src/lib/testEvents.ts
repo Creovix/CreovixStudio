@@ -32,6 +32,18 @@ export type TestEventGroup = {
  */
 export const TEST_EVENT_GROUPS: TestEventGroup[] = [
   {
+    platform: "KICK",
+    headingKey: "activity.filter.kick",
+    icon: "kick",
+    color: "#53FC18",
+    events: [
+      { type: "FOLLOW", label: "Follow" },
+      { type: "SUBSCRIPTION", label: "Sub" },
+      { type: "GIFT_SUB", label: "Gift Sub" },
+      { type: "RAID", label: "Raid" },
+    ],
+  },
+  {
     platform: "TWITCH",
     headingKey: "activity.filter.twitch",
     icon: "twitch",
@@ -45,15 +57,14 @@ export const TEST_EVENT_GROUPS: TestEventGroup[] = [
     ],
   },
   {
-    platform: "KICK",
-    headingKey: "activity.filter.kick",
-    icon: "kick",
-    color: "#53FC18",
+    platform: "YOUTUBE",
+    headingKey: "activity.filter.youtube",
+    icon: "youtube",
+    color: "#FF4444",
     events: [
-      { type: "FOLLOW", label: "Follow" },
-      { type: "SUBSCRIPTION", label: "Sub" },
-      { type: "GIFT_SUB", label: "Gift Sub" },
-      { type: "RAID", label: "Raid" },
+      { type: "FOLLOW", label: "Subscribe" },
+      { type: "SUBSCRIPTION", label: "Membership" },
+      { type: "DONATION", label: "Super Chat $5", amount: 5, message: "Keep it up!" },
     ],
   },
   {
@@ -65,17 +76,6 @@ export const TEST_EVENT_GROUPS: TestEventGroup[] = [
       { type: "FOLLOW", label: "Follow" },
       { type: "DONATION", label: "Gift $2", amount: 2, message: "Keep it up!" },
       { type: "LIKE", label: "Likes / Taps", quantity: 50 },
-    ],
-  },
-  {
-    platform: "YOUTUBE",
-    headingKey: "activity.filter.youtube",
-    icon: "youtube",
-    color: "#FF4444",
-    events: [
-      { type: "FOLLOW", label: "Subscribe" },
-      { type: "SUBSCRIPTION", label: "Membership" },
-      { type: "DONATION", label: "Super Chat $5", amount: 5, message: "Keep it up!" },
     ],
   },
   {
@@ -114,3 +114,15 @@ export const TEST_EVENT_GROUPS: TestEventGroup[] = [
     ],
   },
 ];
+
+/** Compact tab labels for the Test Event panel. */
+export const TEST_EVENT_TAB_LABEL: Record<TestEventInput["platform"], string> = {
+  KICK: "Kick",
+  TWITCH: "Twitch",
+  YOUTUBE: "YouTube",
+  TIKTOK: "TikTok",
+  X: "X",
+  STREAMLABS: "Streamlabs",
+  STREAMELEMENTS: "SE",
+  MANUAL: "Other",
+};

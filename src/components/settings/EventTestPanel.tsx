@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Zap } from "lucide-react";
 
 import { PlatformAsset } from "@/components/icons/platformAssets";
 import { fireTestEvent, type TestEventInput } from "@/lib/simulate.functions";
-import { TEST_EVENT_GROUPS, type TestEventGroup, type TestEventSpec } from "@/lib/testEvents";
+import {
+  TEST_EVENT_GROUPS,
+  TEST_EVENT_TAB_LABEL,
+  type TestEventGroup,
+  type TestEventSpec,
+} from "@/lib/testEvents";
 import { useLanguage } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 /** Developer harness for firing one simulated event per platform. */
 export function EventTestPanel() {
@@ -15,6 +21,12 @@ export function EventTestPanel() {
   const [name, setName] = useState("");
   const [log, setLog] = useState<{ text: string; ok: boolean }[]>([]);
   const [pending, setPending] = useState<string | null>(null);
+  const [tab, setTab] = useState<TestEventInput["platform"]>(TEST_EVENT_GROUPS[0]!.platform);
+
+  const activeGroup = useMemo(
+    () => TEST_EVENT_GROUPS.find((group) => group.platform === tab) ?? TEST_EVENT_GROUPS[0]!,
+    [tab],
+  );
 
   const mutation = useMutation({
     mutationFn: async (input: TestEventInput) =>
@@ -76,34 +88,62 @@ export function EventTestPanel() {
         />
       </label>
 
-      <div className="mt-6 divide-y divide-white/5 border-y border-white/5">
-        {TEST_EVENT_GROUPS.map((group) => (
-          <div
-            key={group.platform}
-            className="flex flex-wrap items-center justify-between gap-3 py-4"
-          >
-            <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: group.color }}>
-              <PlatformAsset name={group.icon} size={14} label="" />
-              {t(group.headingKey)}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {group.events.map((event) => {
-                const id = `${group.platform}-${event.type}-${event.label}`;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    disabled={pending !== null}
-                    onClick={() => void fire(group, event)}
-                    className="rounded-full border border-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
-                  >
-                    {pending === id ? t("settings.test.sending") : event.label}
-                  </button>
-                );
-              })}
-            </div>
+      <div className="mt-6 overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02]">
+        <div
+          className="flex gap-1 overflow-x-auto border-b border-white/8 p-2 [scrollbar-width:thin]"
+          role="tablist"
+          aria-label="Test event platforms"
+        >
+          {TEST_EVENT_GROUPS.map((group) => {
+            const selected = group.platform === activeGroup.platform;
+            return (
+              <button
+                key={group.platform}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setTab(group.platform)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.72rem] font-medium",
+                  "transition-[color,background-color,box-shadow] duration-200 ease-out",
+                  selected
+                    ? "bg-zinc-800 text-foreground shadow-sm ring-1 ring-white/10"
+                    : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+                )}
+              >
+                <PlatformAsset name={group.icon} size={12} label="" />
+                {TEST_EVENT_TAB_LABEL[group.platform]}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          key={activeGroup.platform}
+          role="tabpanel"
+          className="animate-in fade-in-0 slide-in-from-top-1 p-4 duration-200"
+        >
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold" style={{ color: activeGroup.color }}>
+            <PlatformAsset name={activeGroup.icon} size={14} label="" />
+            {t(activeGroup.headingKey)}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {activeGroup.events.map((event) => {
+              const id = `${activeGroup.platform}-${event.type}-${event.label}`;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  disabled={pending !== null}
+                  onClick={() => void fire(activeGroup, event)}
+                  className="min-h-9 rounded-full border border-white/8 px-3.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+                >
+                  {pending === id ? t("settings.test.sending") : event.label}
+                </button>
+              );
+            })}
           </div>
-        ))}
+        </div>
       </div>
 
       {log.length > 0 ? (
