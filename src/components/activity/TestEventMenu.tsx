@@ -154,45 +154,19 @@ export function TestEventMenu({
           type="button"
           disabled={pending}
           className={cn(
-            "group relative inline-flex min-h-11 items-center gap-2.5 overflow-hidden rounded-2xl px-5 py-2.5",
-            "text-sm font-semibold tracking-tight text-white",
-            "backdrop-blur-xl",
-            "transition-[transform,box-shadow,filter] duration-300 ease-out",
-            "hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-zinc-900 px-4 py-2.5",
+            "text-sm font-medium text-white",
+            "transition-colors hover:bg-zinc-800 hover:border-white/15",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
             "disabled:pointer-events-none disabled:opacity-60",
-            "shadow-[0_0_0_1px_rgba(167,139,250,0.45),0_14px_40px_-14px_rgba(124,58,237,0.95),inset_0_1px_0_rgba(255,255,255,0.18)]",
-            "hover:shadow-[0_0_0_1px_rgba(196,181,253,0.7),0_0_28px_rgba(124,58,237,0.55),0_18px_44px_-12px_rgba(124,58,237,1),inset_0_1px_0_rgba(255,255,255,0.28)]",
           )}
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(124,58,237,0.72) 0%, rgba(91,33,182,0.55) 42%, rgba(34,211,238,0.22) 100%)",
-          }}
         >
-          <span
-            className="pointer-events-none absolute inset-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
-            style={{
-              background:
-                "linear-gradient(115deg, transparent 10%, rgba(255,255,255,0.18) 42%, transparent 70%)",
-            }}
-            aria-hidden
-          />
-          <span
-            className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{
-              background:
-                "radial-gradient(120% 80% at 50% 120%, rgba(34,211,238,0.35), transparent 55%)",
-            }}
-            aria-hidden
-          />
           {pending ? (
-            <Loader2 className="relative size-4 animate-spin text-white" aria-hidden />
+            <Loader2 className="size-4 animate-spin text-white/80" aria-hidden />
           ) : (
-            <span className="relative grid size-7 place-items-center rounded-lg bg-white/15 ring-1 ring-white/25">
-              <FlaskConical className="size-3.5 text-white" aria-hidden />
-            </span>
+            <FlaskConical className="size-4 text-white/80" aria-hidden />
           )}
-          <span className="relative">{t("activity.testEvent")}</span>
+          {t("activity.testEvent")}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
