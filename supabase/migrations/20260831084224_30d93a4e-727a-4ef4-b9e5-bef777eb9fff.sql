@@ -1,2 +1,0 @@
-ALTER TYPE public.platform_type ADD VALUE IF NOT EXISTS 'TIKTOK';
-ALTER TYPE public.rule_event_type ADD VALUE IF NOT EXISTS 'RAID';

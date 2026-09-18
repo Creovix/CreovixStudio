@@ -1,2 +1,0 @@
-ALTER TYPE public.widget_type ADD VALUE IF NOT EXISTS 'TIKTOK_TAPPERS';
-ALTER TYPE public.rule_event_type ADD VALUE IF NOT EXISTS 'LIKE';
