@@ -46,11 +46,11 @@ const NAV = [
   { to: "/dashboard" as const, icon: Home, label: "Home" },
   { to: "/analytics" as const, icon: BarChart3, label: "Analytics" },
   { to: "/activity-feed" as const, icon: Activity, label: "Activity" },
+  { to: "/custom-commands" as const, icon: MessageSquareCode, label: "Chat Commands" },
+  { to: "/link-in-bio" as const, icon: Link2, label: "Link in Bio" },
   { to: "/live-counter" as const, icon: Hash, label: "Counter" },
   { to: "/giveaway" as const, icon: Gift, label: "Giveaway" },
-  { to: "/custom-commands" as const, icon: MessageSquareCode, label: "Chat Commands" },
   { to: "/clip-command" as const, icon: Scissors, label: "Clip Command" },
-  { to: "/link-in-bio" as const, icon: Link2, label: "Link in Bio" },
   { to: "/schedule" as const, icon: CalendarDays, label: "Schedule", comingSoon: true },
   { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points", comingSoon: true },
 ].sort(

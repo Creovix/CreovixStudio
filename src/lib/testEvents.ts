@@ -123,6 +123,6 @@ export const TEST_EVENT_TAB_LABEL: Record<TestEventInput["platform"], string> = 
   TIKTOK: "TikTok",
   X: "X",
   STREAMLABS: "Streamlabs",
-  STREAMELEMENTS: "SE",
+  STREAMELEMENTS: "StreamElements",
   MANUAL: "Other",
 };

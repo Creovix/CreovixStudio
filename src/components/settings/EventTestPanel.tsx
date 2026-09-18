@@ -90,7 +90,14 @@ export function EventTestPanel() {
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02]">
         <div
-          className="flex gap-1 overflow-x-auto border-b border-white/8 p-2 [scrollbar-width:thin]"
+          className={cn(
+            "flex flex-nowrap gap-1.5 overflow-x-auto overscroll-x-contain border-b border-white/8 p-2",
+            "scroll-smooth snap-x snap-mandatory",
+            "![scrollbar-width:thin] ![-ms-overflow-style:auto]",
+            "[&::-webkit-scrollbar]:!block [&::-webkit-scrollbar]:h-1.5",
+            "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20",
+            "[&::-webkit-scrollbar-track]:bg-transparent",
+          )}
           role="tablist"
           aria-label="Test event platforms"
         >
@@ -104,7 +111,7 @@ export function EventTestPanel() {
                 aria-selected={selected}
                 onClick={() => setTab(group.platform)}
                 className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.72rem] font-medium",
+                  "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.72rem] font-medium whitespace-nowrap",
                   "transition-[color,background-color,box-shadow] duration-200 ease-out",
                   selected
                     ? "bg-zinc-800 text-foreground shadow-sm ring-1 ring-white/10"
