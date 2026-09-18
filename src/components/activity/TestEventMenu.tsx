@@ -179,7 +179,7 @@ export function TestEventMenu({
             Platform
           </p>
           <div
-            className="flex flex-wrap gap-1.5"
+            className="grid grid-cols-2 gap-2 sm:grid-cols-4"
             role="tablist"
             aria-label="Test event platforms"
           >
@@ -194,15 +194,16 @@ export function TestEventMenu({
                   onPointerDown={(event) => event.preventDefault()}
                   onClick={() => setTab(group.platform)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[0.72rem] font-medium",
-                    "whitespace-nowrap transition-[color,background-color,box-shadow,transform] duration-200 ease-out",
+                    "flex h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-xl px-2",
+                    "text-[0.7rem] font-medium leading-none",
+                    "transition-[color,background-color,box-shadow] duration-200 ease-out",
                     selected
                       ? "bg-primary/20 text-foreground shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_45%,transparent)]"
                       : "bg-white/[0.04] text-muted-foreground ring-1 ring-white/8 hover:bg-white/[0.07] hover:text-foreground",
                   )}
                 >
                   <PlatformAsset name={group.icon} size={13} label="" />
-                  <span>{TEST_EVENT_TAB_LABEL[group.platform]}</span>
+                  <span className="truncate">{TEST_EVENT_TAB_LABEL[group.platform]}</span>
                 </button>
               );
             })}

@@ -90,7 +90,7 @@ export function EventTestPanel() {
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02]">
         <div
-          className="flex flex-wrap gap-1.5 border-b border-white/8 p-2.5"
+          className="grid grid-cols-2 gap-2 border-b border-white/8 p-2.5 sm:grid-cols-4"
           role="tablist"
           aria-label="Test event platforms"
         >
@@ -104,7 +104,8 @@ export function EventTestPanel() {
                 aria-selected={selected}
                 onClick={() => setTab(group.platform)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[0.72rem] font-medium whitespace-nowrap",
+                  "flex h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-xl px-2",
+                  "text-[0.7rem] font-medium leading-none",
                   "transition-[color,background-color,box-shadow] duration-200 ease-out",
                   selected
                     ? "bg-primary/20 text-foreground shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_45%,transparent)]"
@@ -112,7 +113,7 @@ export function EventTestPanel() {
                 )}
               >
                 <PlatformAsset name={group.icon} size={13} label="" />
-                {TEST_EVENT_TAB_LABEL[group.platform]}
+                <span className="truncate">{TEST_EVENT_TAB_LABEL[group.platform]}</span>
               </button>
             );
           })}
