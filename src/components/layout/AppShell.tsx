@@ -42,6 +42,7 @@ const SIDEBAR_KEY = "creovix:sidebar-collapsed";
 const EXPANDED_W = "16.5rem";
 const COLLAPSED_W = "4.75rem";
 
+/** Live sidebar destinations only — unfinished tools stay off the nav until ready. */
 const NAV = [
   { to: "/dashboard" as const, icon: Home, label: "Home" },
   { to: "/analytics" as const, icon: BarChart3, label: "Analytics" },
@@ -51,12 +52,9 @@ const NAV = [
   { to: "/live-counter" as const, icon: Hash, label: "Counter" },
   { to: "/giveaway" as const, icon: Gift, label: "Giveaway" },
   { to: "/clip-command" as const, icon: Scissors, label: "Clip Command" },
-  { to: "/schedule" as const, icon: CalendarDays, label: "Schedule", comingSoon: true },
-  { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points", comingSoon: true },
-].sort(
-  (a, b) =>
-    Number("comingSoon" in a && a.comingSoon) - Number("comingSoon" in b && b.comingSoon),
-);
+  { to: "/schedule" as const, icon: CalendarDays, label: "Schedule" },
+  { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points" },
+] as const;
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";
 const menuSurfaceStyle = {
@@ -140,15 +138,13 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
     "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-start text-[0.8rem] transition-colors";
   const sidebarW = collapsed ? COLLAPSED_W : EXPANDED_W;
 
-  const navBtn = (active: boolean, locked = false) =>
+  const navBtn = (active: boolean) =>
     cn(
       "group relative flex w-full items-center rounded-xl border border-transparent text-[0.82rem] transition-colors",
       collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
-      locked
-        ? "pointer-events-none cursor-not-allowed text-muted-foreground opacity-50"
-        : active
-          ? "border-[color-mix(in_oklab,var(--primary)_45%,transparent)] bg-[color-mix(in_oklab,var(--primary)_16%,transparent)] text-foreground"
-          : "text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground",
+      active
+        ? "border-[color-mix(in_oklab,var(--primary)_45%,transparent)] bg-[color-mix(in_oklab,var(--primary)_16%,transparent)] text-foreground"
+        : "text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground",
     );
 
   return (
@@ -227,40 +223,16 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
             {NAV.map((item) => {
               const Icon = item.icon;
-              const comingSoon = "comingSoon" in item && item.comingSoon;
-              const tipLabel = comingSoon ? `${item.label} — ${t("home.comingSoon")}` : item.label;
               return (
-                <IconTip key={item.to} label={tipLabel} collapsed={collapsed}>
-                  {comingSoon ? (
-                    <span className="block w-full">
-                      <button
-                        type="button"
-                        disabled
-                        aria-disabled="true"
-                        aria-label={tipLabel}
-                        className={navBtn(false, true)}
-                      >
-                        <Icon className="size-4 shrink-0" aria-hidden />
-                        {collapsed ? null : (
-                          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                            <span className="truncate">{item.label}</span>
-                            <span className="rounded-full bg-zinc-800/80 px-2 py-0.5 text-[0.62rem] leading-none text-muted-foreground">
-                              {t("home.comingSoon")}
-                            </span>
-                          </span>
-                        )}
-                      </button>
-                    </span>
-                  ) : (
-                    <Link
-                      to={item.to}
-                      className={navBtn(false)}
-                      activeProps={{ className: navBtn(true) }}
-                    >
-                      <Icon className="size-4 shrink-0" aria-hidden />
-                      {collapsed ? null : <span className="truncate">{item.label}</span>}
-                    </Link>
-                  )}
+                <IconTip key={item.to} label={item.label} collapsed={collapsed}>
+                  <Link
+                    to={item.to}
+                    className={navBtn(false)}
+                    activeProps={{ className: navBtn(true) }}
+                  >
+                    <Icon className="size-4 shrink-0" aria-hidden />
+                    {collapsed ? null : <span className="truncate">{item.label}</span>}
+                  </Link>
                 </IconTip>
               );
             })}
