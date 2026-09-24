@@ -1,4 +1,5 @@
 import {
+  KICK_AUTHORIZE_URL,
   PROVIDERS,
   buildAuthorizeUrl,
   cookie,
@@ -35,11 +36,6 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
   const verifier = config.usesPkce ? createVerifier() : null;
   const redirectUri = redirectUriFor(request, provider);
 
-  // Kick rejects authorize if redirect_uri is not an exact console match.
-  if (provider === "kick") {
-    console.info(`[oauth:kick] authorize redirect_uri=${redirectUri} scopes=${config.scopes}`);
-  }
-
   const location = buildAuthorizeUrl({
     provider,
     clientId,
@@ -47,6 +43,21 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
     state,
     verifier,
   });
+
+  // Kick's consent UI may call api.kick.com under the hood for validation; the
+  // 302 Location we send must still be https://id.kick.com/oauth/authorize.
+  if (provider === "kick") {
+    if (!location.startsWith(KICK_AUTHORIZE_URL)) {
+      console.error(`[oauth:kick] refused non-id host Location=${location.slice(0, 120)}`);
+      return Response.redirect(
+        new URL(`/login?error=oauth_failed&detail=bad_kick_authorize_host`, `${publicSiteUrl(request)}/`),
+        302,
+      );
+    }
+    console.info(
+      `[oauth:kick] Location host=id.kick.com redirect_uri=${redirectUri} scopes=${config.scopes}`,
+    );
+  }
 
   const headers = new Headers({ Location: location });
   headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, state, 600));

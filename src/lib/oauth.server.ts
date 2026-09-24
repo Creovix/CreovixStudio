@@ -4,6 +4,10 @@ import { publicSiteUrl } from "@/lib/siteUrl.server";
 
 export type OAuthProvider = "twitch" | "kick" | "streamelements" | "streamlabs" | "tiktok";
 
+/** Kick OAuth 2.1 authorize host — NEVER api.kick.com (API host only). */
+export const KICK_AUTHORIZE_URL = "https://id.kick.com/oauth/authorize";
+export const KICK_TOKEN_URL = "https://id.kick.com/oauth/token";
+
 export type ProviderProfile = {
   id: string;
   username: string;
@@ -72,8 +76,8 @@ export const PROVIDERS: Record<OAuthProvider, ProviderConfig> = {
   },
   kick: {
     platform: "KICK",
-    authorizeUrl: "https://id.kick.com/oauth/authorize",
-    tokenUrl: "https://id.kick.com/oauth/token",
+    authorizeUrl: KICK_AUTHORIZE_URL,
+    tokenUrl: KICK_TOKEN_URL,
     // Scopes must be enabled on the Kick Developer App. Prefer a login-safe
     // default; override with KICK_OAUTH_SCOPES (space-separated) if needed.
     get scopes() {
@@ -233,10 +237,16 @@ export const isOAuthProvider = (value: string): value is OAuthProvider =>
 export const base64Url = (input: Buffer) =>
   input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
+/** Base64url that keeps `=` padding (Kick swagger examples use padded challenges). */
+export const base64UrlPadded = (input: Buffer) =>
+  input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_");
+
 export const createVerifier = () => base64Url(randomBytes(32));
 export const createState = () => base64Url(randomBytes(24));
-export const challengeFor = (verifier: string) =>
-  base64Url(createHash("sha256").update(verifier).digest());
+export const challengeFor = (verifier: string, padded = false) => {
+  const digest = createHash("sha256").update(verifier).digest();
+  return padded ? base64UrlPadded(digest) : base64Url(digest);
+};
 
 export const oauthCallbackPath = (provider: OAuthProvider) => {
   if (provider === "tiktok") return "/api/auth/callback/tiktok";
@@ -253,11 +263,10 @@ export const redirectUriFor = (request: Request, provider: OAuthProvider) =>
 /**
  * Build the authorize URL.
  *
- * Kick is strict: `URLSearchParams` leaves `:`/`/` unencoded and turns spaces into
- * `+`, which Kick rejects as `{"message":"invalid authorization request"}`.
- * Encode every value with encodeURIComponent (spaces → `%20`, colons → `%3A`).
- * Param order matches Kick docs: response_type → client_id → redirect_uri →
- * scope → code_challenge → code_challenge_method → state.
+ * Kick requires host `id.kick.com` (not `api.kick.com`). Encode every value with
+ * `encodeURIComponent` so spaces are `%20` and colons are `%3A`. Param order
+ * matches Kick docs: response_type → client_id → redirect_uri → scope →
+ * code_challenge → code_challenge_method → state.
  */
 export function buildAuthorizeUrl(args: {
   provider: OAuthProvider;
@@ -267,7 +276,15 @@ export function buildAuthorizeUrl(args: {
   verifier: string | null;
 }): string {
   const config = PROVIDERS[args.provider];
+  const isKick = args.provider === "kick";
+  const authorizeBase = isKick ? KICK_AUTHORIZE_URL : config.authorizeUrl;
   const clientKey = args.provider === "tiktok" ? "client_key" : "client_id";
+
+  // Kick PKCE: keep base64 padding so the challenge matches Kick's swagger examples
+  // (`...Ahg8%3D` after encodeURIComponent).
+  const challenge = args.verifier
+    ? challengeFor(args.verifier, isKick)
+    : null;
 
   const pairs: Array<[string, string]> = [
     ["response_type", "code"],
@@ -276,8 +293,8 @@ export function buildAuthorizeUrl(args: {
     ["scope", config.scopes],
   ];
 
-  if (config.usesPkce && args.verifier) {
-    pairs.push(["code_challenge", challengeFor(args.verifier)]);
+  if (config.usesPkce && challenge) {
+    pairs.push(["code_challenge", challenge]);
     pairs.push(["code_challenge_method", "S256"]);
   }
 
@@ -287,7 +304,13 @@ export function buildAuthorizeUrl(args: {
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
 
-  return `${config.authorizeUrl}?${query}`;
+  const location = `${authorizeBase}?${query}`;
+
+  if (isKick && location.includes("api.kick.com")) {
+    throw new Error("Kick authorize URL must use id.kick.com, not api.kick.com");
+  }
+
+  return location;
 }
 
 function requestIsHttps(request: Request): boolean {
