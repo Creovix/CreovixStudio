@@ -284,7 +284,6 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
   );
 
   const liveOauth = OAUTH_PLATFORMS.filter((entry) => !entry.comingSoon);
-  const soonOauth = OAUTH_PLATFORMS.filter((entry) => entry.comingSoon);
 
   const renderOAuthRow = (entry: (typeof OAUTH_PLATFORMS)[number]) => {
     const connection = findConnection(entry.platform);
@@ -505,8 +504,6 @@ export function ConnectionsPanel({ userId }: { userId: string }) {
             </div>
           }
         />
-
-        {soonOauth.map(renderOAuthRow)}
       </div>
     </section>
   );

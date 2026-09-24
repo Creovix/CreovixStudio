@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Plus, Radio, Search, Star, Swords, Trash2, Users } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { StudioPageTabs } from "@/components/layout/StudioPageTabs";
 import { DarkSelect } from "@/components/ui/dark-select";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
@@ -750,6 +751,7 @@ function SocialCounterSection() {
   const [accounts, setAccounts] = useState<Saved[]>([]);
   const [input, setInput] = useState("");
   const [platform, setPlatform] = useState<Exclude<CounterPlatform, "ALL">>("TWITCH");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setAccounts(readJson<Saved[]>(SOCIAL_KEY, []));
@@ -800,6 +802,11 @@ function SocialCounterSection() {
     setInput("");
   };
 
+  const focusAdd = () => {
+    inputRef.current?.focus();
+    inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   return (
     <div className="space-y-4">
       <form
@@ -810,6 +817,7 @@ function SocialCounterSection() {
         }}
       >
         <input
+          ref={inputRef}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Username or handle"
@@ -840,25 +848,34 @@ function SocialCounterSection() {
         </button>
       </form>
 
-      <div className="rounded-2xl border border-white/5 px-5 py-6 text-center">
-        {total === null ? (
-          <p className="text-sm text-muted-foreground">
-            {accounts.length === 0
-              ? "Add accounts to sum public follower totals. Counts stay empty until a platform API returns them."
-              : "No public follower totals yet for these accounts."}
-          </p>
-        ) : (
-          <>
-            <RollingCounter value={total} size="text-6xl" />
-            <p className="mt-2 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              <Users className="size-3.5" aria-hidden /> Combined followers
+      {accounts.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No accounts yet"
+          description="Add Kick, Twitch, or other channels to sum public follower totals in one live counter."
+          actionLabel="Add first account"
+          onAction={focusAdd}
+        />
+      ) : (
+        <div className="rounded-2xl border border-white/5 px-5 py-6 text-center">
+          {total === null ? (
+            <p className="text-sm text-muted-foreground">
+              No public follower totals yet for these accounts.
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {knownCounts.length} of {accounts.length} account{accounts.length === 1 ? "" : "s"} with a live total
-            </p>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <RollingCounter value={total} size="text-6xl" />
+              <p className="mt-2 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                <Users className="size-3.5" aria-hidden /> Combined followers
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {knownCounts.length} of {accounts.length} account
+                {accounts.length === 1 ? "" : "s"} with a live total
+              </p>
+            </>
+          )}
+        </div>
+      )}
 
       {accounts.length > 0 ? (
         <ul className="space-y-2">

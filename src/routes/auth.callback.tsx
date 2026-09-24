@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
+import { isGatewayCompleted } from "@/lib/plans";
 
 type CallbackSearch = { token_hash?: string | undefined };
 
@@ -40,7 +41,7 @@ function AuthCallback() {
         navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
         return;
       }
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
     })();
     return () => {
       active = false;

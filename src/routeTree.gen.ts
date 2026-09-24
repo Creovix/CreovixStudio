@@ -28,6 +28,7 @@ import { Route as AuthenticatedMarkPointsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMediaRequestsRouteImport } from './routes/_authenticated/media-requests'
 import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated/schedule'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BioSlugRouteImport } from './routes/bio.$slug'
 import { Route as ClipIdRouteImport } from './routes/clip.$id'
@@ -174,6 +175,11 @@ const AuthenticatedScheduleRoute = AuthenticatedScheduleRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -463,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/media-requests': typeof AuthenticatedMediaRequestsRoute
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bio/$slug': typeof BioSlugRoute
   '/clip/$id': typeof ClipIdRoute
@@ -531,6 +538,7 @@ export interface FileRoutesByTo {
   '/media-requests': typeof AuthenticatedMediaRequestsRoute
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bio/$slug': typeof BioSlugRoute
   '/clip/$id': typeof ClipIdRoute
@@ -600,6 +608,7 @@ export interface FileRoutesById {
   '/_authenticated/media-requests': typeof AuthenticatedMediaRequestsRoute
   '/_authenticated/schedule': typeof AuthenticatedScheduleRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bio/$slug': typeof BioSlugRoute
   '/clip/$id': typeof ClipIdRoute
@@ -670,6 +679,7 @@ export interface FileRouteTypes {
     | '/media-requests'
     | '/schedule'
     | '/settings'
+    | '/welcome'
     | '/auth/callback'
     | '/bio/$slug'
     | '/clip/$id'
@@ -738,6 +748,7 @@ export interface FileRouteTypes {
     | '/media-requests'
     | '/schedule'
     | '/settings'
+    | '/welcome'
     | '/auth/callback'
     | '/bio/$slug'
     | '/clip/$id'
@@ -806,6 +817,7 @@ export interface FileRouteTypes {
     | '/_authenticated/media-requests'
     | '/_authenticated/schedule'
     | '/_authenticated/settings'
+    | '/_authenticated/welcome'
     | '/auth/callback'
     | '/bio/$slug'
     | '/clip/$id'
@@ -1036,6 +1048,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/welcome': {
+      id: '/_authenticated/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/auth/callback': {
@@ -1415,6 +1434,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMediaRequestsRoute: typeof AuthenticatedMediaRequestsRoute
   AuthenticatedScheduleRoute: typeof AuthenticatedScheduleRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedWidgetsWidgetIdRoute: typeof AuthenticatedWidgetsWidgetIdRouteWithChildren
   AuthenticatedWidgetsIndexRoute: typeof AuthenticatedWidgetsIndexRoute
   AuthenticatedSubathonsIdControlRoute: typeof AuthenticatedSubathonsIdControlRoute
@@ -1436,6 +1456,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMediaRequestsRoute: AuthenticatedMediaRequestsRoute,
   AuthenticatedScheduleRoute: AuthenticatedScheduleRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedWidgetsWidgetIdRoute:
     AuthenticatedWidgetsWidgetIdRouteWithChildren,
   AuthenticatedWidgetsIndexRoute: AuthenticatedWidgetsIndexRoute,
@@ -1509,13 +1530,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

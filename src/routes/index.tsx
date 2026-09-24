@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isGatewayCompleted } from "@/lib/plans";
 import { isTestMode } from "@/lib/testMode";
 
 export const Route = createFileRoute("/")({
@@ -17,12 +18,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Multi-platform subathon timer: Twitch and Kick events, rule-based time rewards, deduplicated payloads and public overlays.",
+          "Multi-platform streaming studio: Twitch, Kick, YouTube and TikTok widgets, commands and overlays.",
       },
       { property: "og:title", content: "CreovixStudio" },
       {
         property: "og:description",
-        content: "Sign in with Twitch or Kick to run a rule-driven subathon timer.",
+        content: "Sign in to pick Free or Pro and run your multi-platform stream tools.",
       },
     ],
   }),
@@ -34,7 +35,7 @@ function AuthGate() {
 
   useEffect(() => {
     if (isTestMode()) {
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
       return;
     }
     if (!isSupabaseConfigured()) {
@@ -42,7 +43,11 @@ function AuthGate() {
       return;
     }
     supabase.auth.getSession().then(({ data }) => {
-      navigate({ to: data.session ? "/dashboard" : "/login", replace: true });
+      if (!data.session) {
+        navigate({ to: "/login", replace: true });
+        return;
+      }
+      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
     });
   }, [navigate]);
 

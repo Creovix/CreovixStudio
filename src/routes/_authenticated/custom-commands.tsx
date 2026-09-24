@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { CommandVariablesSidebar } from "@/components/commands/CommandVariables";
 import { AppShell } from "@/components/layout/AppShell";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { HowItWorks } from "@/components/layout/HowItWorks";
 import { StudioPageTabs } from "@/components/layout/StudioPageTabs";
 import {
@@ -129,7 +130,9 @@ const COPY = {
     none: "No symbol (direct)",
     savePrefix: "Save trigger",
     add: "Add command",
-    empty: "No commands yet. Add one to start auto-replies in chat.",
+    emptyTitle: "No commands yet",
+    empty: "Create a chat trigger and auto-reply so viewers get instant answers.",
+    createFirst: "Create first command",
     name: "Command",
     reply: "Auto-reply",
     platform: "Platforms",
@@ -615,10 +618,14 @@ function CustomCommandsPage() {
           </div>
 
           {commands.length === 0 ? (
-            <div className="mt-5 grid place-items-center gap-2 py-10 text-center">
-              <MessageSquareCode className="size-7 text-muted-foreground" aria-hidden />
-              <p className="max-w-sm text-[0.82rem] text-muted-foreground">{c.empty}</p>
-            </div>
+            <EmptyState
+              className="mt-5"
+              icon={MessageSquareCode}
+              title={c.emptyTitle}
+              description={c.empty}
+              actionLabel={c.createFirst}
+              onAction={openCreate}
+            />
           ) : visibleCommands.length === 0 ? (
             <p className="mt-4 text-start text-[0.78rem] text-muted-foreground">{c.filterNone}</p>
           ) : (

@@ -228,8 +228,10 @@ function HomePage() {
   const [visibleCount, setVisibleCount] = useState(HUB_INITIAL_VISIBLE);
 
   const visibleTools = TOOLS.filter(
-    (tool) => platformFilter === "ALL" || tool.platforms.includes(platformFilter),
-  ).sort((a, b) => Number(Boolean(a.comingSoon)) - Number(Boolean(b.comingSoon)));
+    (tool) =>
+      !tool.comingSoon &&
+      (platformFilter === "ALL" || tool.platforms.includes(platformFilter)),
+  );
   const shownTools = visibleTools.slice(0, visibleCount);
 
   useEffect(() => {

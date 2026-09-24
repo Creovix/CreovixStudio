@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Activity,
   ArrowUp,
   Check,
   ChevronDown,
@@ -9,10 +10,12 @@ import {
   Globe,
   Layers,
   Pause,
+  Plug,
 } from "lucide-react";
 
 
 import { AppShell } from "@/components/layout/AppShell";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { TestEventMenu, type InjectedFeedEvent } from "@/components/activity/TestEventMenu";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { supabase } from "@/lib/supabase/client";
@@ -527,11 +530,25 @@ function ActivityFeedPage() {
 
       <section className="border-t border-white/5 pt-2">
         {visible.length === 0 ? (
-          <p className="py-14 text-center text-sm text-muted-foreground">
-            {query.isLoading && !testMode
-              ? t("activity.loading")
-              : t("activity.empty")}
-          </p>
+          query.isLoading && !testMode ? (
+            <p className="py-14 text-center text-sm text-muted-foreground">{t("activity.loading")}</p>
+          ) : (workspace?.connections?.length ?? 0) === 0 ? (
+            <EmptyState
+              className="mt-2"
+              icon={Plug}
+              title={t("activity.emptyTitle")}
+              description={t("activity.emptyConnectDesc")}
+              actionLabel={t("activity.connectCta")}
+              actionTo="/settings"
+            />
+          ) : (
+            <EmptyState
+              className="mt-2"
+              icon={Activity}
+              title={t("activity.emptyTitle")}
+              description={t("activity.emptyWaitingDesc")}
+            />
+          )
         ) : (
           <ul className="divide-y divide-white/5">
             {visible.map((event) => {

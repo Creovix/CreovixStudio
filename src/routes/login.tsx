@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { PlatformAsset } from "@/components/icons/platformAssets";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isGatewayCompleted } from "@/lib/plans";
 import { enableTestMode, isTestMode } from "@/lib/testMode";
 import { useLanguage } from "@/lib/i18n";
 
@@ -50,12 +51,14 @@ function LoginPage() {
 
   useEffect(() => {
     if (isTestMode()) {
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
       return;
     }
     if (!isSupabaseConfigured()) return;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) {
+        navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+      }
     });
   }, [navigate]);
 
@@ -68,7 +71,7 @@ function LoginPage() {
   const continueAsGuest = () => {
     setPending("test");
     enableTestMode();
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
   };
 
 
