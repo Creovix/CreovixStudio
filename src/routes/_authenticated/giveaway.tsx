@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Lock, Sparkles, Unlock } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -89,7 +89,7 @@ const field =
   "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-foreground outline-none focus:border-zinc-600";
 const label = "mb-1.5 block text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground";
 const primary =
-  "inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40";
+  "inline-flex items-center gap-2 rounded-full bg-[#bee1fc] px-5 py-2.5 text-sm font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-40";
 const selectClass = "h-10 rounded-xl border-zinc-800 bg-zinc-900";
 
 const SPIN_DURATIONS = [3, 5, 8, 10, 15];
@@ -355,22 +355,30 @@ function GiveawayPage() {
           <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm">
             <input
               type="checkbox"
-              className="size-4 accent-emerald-500"
+              className="size-4 accent-[#bee1fc]"
               checked={form.subsOnly}
               onChange={(e) => update({ subsOnly: e.target.checked })}
             />
             {c.subsOnly}
           </label>
-          <button
-            type="button"
-            onClick={() => update({ isOpen: !form.isOpen })}
-            className={`bg-transparent p-0 pb-2 text-sm font-medium ${
-              form.isOpen ? "text-emerald-400" : "text-red-400"
-            }`}
-          >
-            {form.isOpen ? c.entriesOpen : c.entriesClosed}
-          </button>
-          <div className="flex flex-wrap items-center gap-4 pb-0.5">
+          <div className="flex flex-wrap items-center gap-3 pb-0.5">
+            <button
+              type="button"
+              onClick={() => update({ isOpen: !form.isOpen })}
+              aria-pressed={form.isOpen}
+              className={
+                form.isOpen
+                  ? primary
+                  : "inline-flex items-center gap-2 rounded-full border border-red-400/40 bg-red-500/15 px-5 py-2.5 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/25"
+              }
+            >
+              {form.isOpen ? (
+                <Unlock className="size-4" aria-hidden />
+              ) : (
+                <Lock className="size-4" aria-hidden />
+              )}
+              {form.isOpen ? c.entriesOpen : c.entriesClosed}
+            </button>
             <button
               type="button"
               onClick={() => void runDraw()}

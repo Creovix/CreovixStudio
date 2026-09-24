@@ -540,32 +540,43 @@ function MarkPointsPage() {
             <HowItWorks title={c.howTitle} steps={c.how} />
           </div>
 
-          <section className="max-w-xl rounded-[20px] border border-white/[0.06] bg-zinc-900 p-5 text-start">
-            <h2 className="text-[0.95rem] font-semibold">{c.whoTitle}</h2>
-            <p className="mt-2 text-[0.78rem] leading-relaxed text-muted-foreground">{c.who}</p>
-            <p className="mt-3 text-[0.72rem] text-muted-foreground">{c.twitchNote}</p>
-            <div className="mt-4 flex flex-wrap gap-2 font-mono text-[0.72rem]">
-              <code className="rounded-md bg-zinc-800 px-1.5 py-0.5 text-zinc-200">!mark</code>
-              <code className="rounded-md bg-zinc-800 px-1.5 py-0.5 text-zinc-200">/mark</code>
-              <code className="rounded-md bg-zinc-800 px-1.5 py-0.5 text-zinc-200">!emark</code>
-              <code className="rounded-md bg-zinc-800 px-1.5 py-0.5 text-zinc-200">/emark</code>
+          <section className="max-w-xl overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/90 text-start shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)]">
+            <div className="space-y-4 p-5 sm:p-6">
+              <div>
+                <h2 className="text-[0.95rem] font-semibold tracking-tight">{c.whoTitle}</h2>
+                <p className="mt-2 text-[0.8rem] leading-relaxed text-muted-foreground">{c.who}</p>
+                <p className="mt-2 text-[0.72rem] leading-relaxed text-muted-foreground/85">{c.twitchNote}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {["!mark", "/mark", "!emark", "/emark"].map((cmd) => (
+                  <code
+                    key={cmd}
+                    className="rounded-lg border border-[#bee1fc]/20 bg-[#bee1fc]/10 px-2.5 py-1 font-mono text-[0.72rem] font-medium text-[#bee1fc]"
+                  >
+                    {cmd}
+                  </code>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-6 border-t border-white/[0.06] pt-4">
-              <h3 className="text-[0.82rem] font-semibold">{c.shareTitle}</h3>
-              <p className="mt-1 text-[0.72rem] leading-relaxed text-muted-foreground">{c.shareHint}</p>
+            <div className="space-y-3 border-t border-white/[0.06] px-5 py-5 sm:px-6">
+              <div>
+                <h3 className="text-[0.82rem] font-semibold tracking-tight">{c.shareTitle}</h3>
+                <p className="mt-1.5 text-[0.72rem] leading-relaxed text-muted-foreground">{c.shareHint}</p>
+              </div>
               <input
                 readOnly
                 value={shareUrl}
-                className="mt-3 h-8 w-full rounded-lg border border-zinc-800/60 bg-zinc-950 px-2.5 font-mono text-[0.68rem] text-zinc-400 outline-none"
+                className="h-10 w-full rounded-xl border border-white/[0.08] bg-zinc-950 px-3 font-mono text-[0.72rem] text-zinc-400 outline-none"
                 dir="ltr"
               />
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => void copyShare()}
                   disabled={!shareUrl}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-[0.72rem] font-medium text-zinc-200 hover:bg-zinc-800 disabled:opacity-40"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#bee1fc] px-4 text-[0.75rem] font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   <Copy className="size-3.5" aria-hidden />
                   {copied ? c.shareCopied : c.shareCopy}
@@ -573,18 +584,20 @@ function MarkPointsPage() {
                 <button
                   type="button"
                   onClick={() => rotateMutation.mutate()}
-                  className="h-8 rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-[0.72rem] font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                  className="inline-flex h-9 items-center rounded-full border border-white/[0.1] bg-transparent px-4 text-[0.75rem] font-medium text-zinc-300 transition-colors hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
                 >
                   {c.shareRotate}
                 </button>
               </div>
             </div>
 
-            <div className="mt-6 border-t border-white/[0.06] pt-4">
-              <h3 className="text-[0.82rem] font-semibold">{c.allowTitle}</h3>
-              <p className="mt-1 text-[0.72rem] text-muted-foreground">{c.allowHint}</p>
+            <div className="space-y-3 border-t border-white/[0.06] px-5 py-5 sm:px-6">
+              <div>
+                <h3 className="text-[0.82rem] font-semibold tracking-tight">{c.allowTitle}</h3>
+                <p className="mt-1.5 text-[0.72rem] leading-relaxed text-muted-foreground">{c.allowHint}</p>
+              </div>
               <form
-                className="mt-3 flex gap-2"
+                className="flex items-stretch gap-2"
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (!allowName.trim()) {
@@ -598,31 +611,31 @@ function MarkPointsPage() {
                   value={allowName}
                   onChange={(event) => setAllowName(event.target.value)}
                   placeholder={c.allowPlaceholder}
-                  className={`${field} h-8 py-0 text-[0.78rem]`}
+                  className="h-10 min-w-0 flex-1 rounded-xl border border-white/[0.1] bg-zinc-950 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-[#bee1fc]/45"
                   dir="auto"
                 />
                 <button
                   type="submit"
-                  className="shrink-0 rounded-full bg-primary px-3 text-[0.72rem] font-semibold text-primary-foreground"
+                  className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#bee1fc] px-5 text-[0.78rem] font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90"
                 >
                   {c.allowAdd}
                 </button>
               </form>
               {allowlist.length === 0 ? (
-                <p className="mt-3 text-[0.72rem] text-muted-foreground">{c.allowEmpty}</p>
+                <p className="text-[0.72rem] text-muted-foreground">{c.allowEmpty}</p>
               ) : (
-                <ul className="mt-3 flex flex-wrap gap-2">
+                <ul className="flex flex-wrap gap-2">
                   {allowlist.map((name) => (
                     <li
                       key={name}
-                      className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2.5 py-1 font-mono text-[0.72rem] text-zinc-200"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#bee1fc]/20 bg-[#bee1fc]/10 py-1 ps-2.5 pe-1.5 font-mono text-[0.72rem] text-[#d7efff]"
                     >
                       <span dir="auto">{name}</span>
                       <button
                         type="button"
                         aria-label={`${c.delete} ${name}`}
                         onClick={() => removeAllowMutation.mutate(name)}
-                        className="text-zinc-400 hover:text-zinc-100"
+                        className="grid size-5 place-items-center rounded-full text-[#bee1fc]/80 transition-colors hover:bg-[#bee1fc]/20 hover:text-[#bee1fc]"
                       >
                         <X className="size-3" aria-hidden />
                       </button>
