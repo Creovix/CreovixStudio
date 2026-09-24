@@ -31,11 +31,7 @@ type SharedPayload = {
 export const Route = createFileRoute("/marks/$token")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Mark Points" },
-=======
-      { title: "Mark Points — Creovix" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { name: "description", content: "Private review of stream marks. Authorized names only." },
       { name: "robots", content: "noindex, nofollow" },
     ],

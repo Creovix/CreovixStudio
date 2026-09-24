@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 # CylixStudio
-=======
-# Creovix Studio
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
 Live-stream overlays and studio tools for Twitch, Kick, and TikTok: subathon timer, goals, chat box, clips, giveaways, and more.
 

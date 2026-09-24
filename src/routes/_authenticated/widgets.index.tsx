@@ -14,21 +14,13 @@ import { DarkSelect } from "@/components/ui/dark-select";
 export const Route = createFileRoute("/_authenticated/widgets/")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Widget Hub" },
-=======
-      { title: "Widget Hub — Subathon Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Create and manage OBS widgets: subathon timers, goal bars, alert boxes, activity feeds and spin wheels.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Widget Hub" },
-=======
-      { property: "og:title", content: "Widget Hub — Subathon Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "All your browser-source widgets with one-click OBS URLs.",

@@ -8,15 +8,9 @@ import { useWidgetStream } from "@/hooks/useWidgetStream";
 export const Route = createFileRoute("/_authenticated/widgets/$widgetId/control")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Timer Control Panel" },
       { name: "description", content: "Standalone live Subathon timer controls for streamers." },
       { property: "og:title", content: "CylixStudio — Timer Control Panel" },
-=======
-      { title: "Timer Control Panel — Creovix" },
-      { name: "description", content: "Standalone live Subathon timer controls for streamers." },
-      { property: "og:title", content: "Timer Control Panel — Creovix" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { property: "og:description", content: "Standalone live Subathon timer controls for streamers." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

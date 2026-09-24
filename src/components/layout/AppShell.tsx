@@ -170,27 +170,16 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
             <Link
               to="/dashboard"
               className={cn("flex min-w-0 items-center gap-2", collapsed && "justify-center")}
-<<<<<<< HEAD
               aria-label="CylixStudio"
             >
               {collapsed ? (
                 <span className="text-sm font-semibold tracking-tight text-foreground" title="CylixStudio">
-=======
-              aria-label="CreovixStudio"
-            >
-              {collapsed ? (
-                <span className="text-sm font-semibold tracking-tight text-foreground" title="CreovixStudio">
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
                   CS
                 </span>
               ) : (
                 <span className="flex min-w-0 items-baseline gap-2">
                   <span className="truncate text-sm font-semibold tracking-tight text-foreground">
-<<<<<<< HEAD
                     CylixStudio
-=======
-                    CreovixStudio
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
                   </span>
                   <span
                     className={cn(
@@ -274,11 +263,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                   {collapsed ? null : (
                     <span className="min-w-0 flex-1 text-start">
                       <span className="block truncate text-xs font-semibold" dir="auto">
-<<<<<<< HEAD
                         {profile?.name ?? "CylixStudio"}
-=======
-                        {profile?.name ?? "Creovix"}
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
                       </span>
                       <span className="block truncate text-[0.65rem] text-muted-foreground">
                         {user.email ?? ""}
@@ -299,11 +284,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                   role="menu"
                 >
                   <div className="px-3 py-2.5">
-<<<<<<< HEAD
                     <p className="text-[0.82rem] font-semibold" dir="auto">{profile?.name ?? "CylixStudio"}</p>
-=======
-                    <p className="text-[0.82rem] font-semibold" dir="auto">{profile?.name ?? "Creovix"}</p>
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
                     <p className="mt-0.5 truncate text-[0.72rem] text-muted-foreground">
                       {user.email ?? "creovix0@gmail.com"}
                     </p>

@@ -10,11 +10,7 @@ export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio" },
-=======
-      { title: "CreovixStudio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "tiktok-developers-site-verification",
         content: "k1s5lp842wjBLAa3X1QlqR1A2cNY2Kzi",
@@ -24,11 +20,7 @@ export const Route = createFileRoute("/")({
         content:
           "Multi-platform streaming studio: Twitch, Kick, YouTube and TikTok widgets, commands and overlays.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio" },
-=======
-      { property: "og:title", content: "CreovixStudio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Sign in to pick Free or Pro and run your multi-platform stream tools.",

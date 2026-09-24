@@ -12,13 +12,9 @@ import {
 } from "@/lib/customCommands";
 
 export const SETTINGS_BACKUP_VERSION = 1;
-<<<<<<< HEAD
 export const SETTINGS_BACKUP_PRODUCT = "cylix-studio";
 /** Legacy product id still accepted on import. */
 export const SETTINGS_BACKUP_PRODUCT_LEGACY = "creovix-studio";
-=======
-export const SETTINGS_BACKUP_PRODUCT = "creovix-studio";
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 export const SETTINGS_BACKUP_SIDEBAR_KEY = "creovix:sidebar-collapsed";
 export const SETTINGS_BACKUP_LANG_KEY = "creovix.lang";
 
@@ -181,14 +177,10 @@ export function parseSettingsBackup(
 ): { ok: true; data: SettingsBackupFile } | { ok: false; error: SettingsBackupParseError } {
   if (!isRecord(raw)) return { ok: false, error: "invalid" };
   if (field(raw, "version") !== SETTINGS_BACKUP_VERSION) return { ok: false, error: "unsupported" };
-<<<<<<< HEAD
   const product = field(raw, "product");
   if (product !== SETTINGS_BACKUP_PRODUCT && product !== SETTINGS_BACKUP_PRODUCT_LEGACY) {
     return { ok: false, error: "invalid" };
   }
-=======
-  if (field(raw, "product") !== SETTINGS_BACKUP_PRODUCT) return { ok: false, error: "invalid" };
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
   const customCommands = field(raw, "customCommands");
   const commandsRaw = isRecord(customCommands) ? field(customCommands, "commands") : null;
@@ -265,11 +257,7 @@ export function writeLocalPrefs(prefs: SettingsBackupPrefs) {
 }
 
 export function backupFileName(exportedAt = new Date().toISOString()) {
-<<<<<<< HEAD
   return `cylix-settings-${exportedAt.slice(0, 10)}.json`;
-=======
-  return `creovix-settings-${exportedAt.slice(0, 10)}.json`;
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 }
 
 export function downloadSettingsBackup(file: SettingsBackupFile) {

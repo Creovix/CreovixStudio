@@ -25,11 +25,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/marks/$token/$markId")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Mark Points" },
-=======
-      { title: "Mark Points — Creovix" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { name: "description", content: "Private playback of a stream mark. Authorized names only." },
       { name: "robots", content: "noindex, nofollow" },
     ],

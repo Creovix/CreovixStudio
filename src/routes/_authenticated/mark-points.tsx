@@ -70,21 +70,13 @@ import { isTestMode } from "@/lib/testMode";
 export const Route = createFileRoute("/_authenticated/mark-points")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Mark Points" },
-=======
-      { title: "Mark Points — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Private stream marks from Kick chat. !mark and !emark record stream uptime. Owner, mods and an allowlist only.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Mark Points" },
-=======
-      { property: "og:title", content: "Mark Points — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Silent Kick marks stored as stream uptime for the channel owner.",

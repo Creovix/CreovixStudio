@@ -180,11 +180,7 @@ function ogContent(html: string, prop: string): string | null {
 
 async function fetchOpenGraph(url: string): Promise<{ title: string | null; artist: string | null; thumbnailUrl: string | null }> {
   try {
-<<<<<<< HEAD
     const response = await fetch(url, { headers: { Accept: "text/html", "User-Agent": "CylixStudio/1.0" } });
-=======
-    const response = await fetch(url, { headers: { Accept: "text/html", "User-Agent": "CreovixStudio/1.0" } });
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     if (!response.ok) return { title: null, artist: null, thumbnailUrl: null };
     const html = (await response.text()).slice(0, 80_000);
     const rawTitle = ogContent(html, "title") ?? ogContent(html, "site_name");

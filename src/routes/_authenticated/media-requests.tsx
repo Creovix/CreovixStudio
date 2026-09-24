@@ -41,14 +41,10 @@ function useChatMediaRequests(enabled:boolean){
 type Req=Awaited<ReturnType<typeof getMediaRequestDashboard>>["requests"][number];
 const glass="overflow-hidden rounded-2xl border border-white/5";
 const fmt=(s:number)=>`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
-<<<<<<< HEAD
 export const Route=createFileRoute("/_authenticated/media-requests")({
   head:()=>({meta:[{title:"CylixStudio — Media Requests"},{property:"og:title",content:"CylixStudio — Media Requests"}]}),
   component:Page,
 });
-=======
-export const Route=createFileRoute("/_authenticated/media-requests")({component:Page});
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 function Page(){const{user}=Route.useRouteContext();const qc=useQueryClient();const query=useQuery({queryKey:["media-requests"],queryFn:()=>getMediaRequestDashboard()});const d=query.data;const settings=d?.settings as (NonNullable<typeof query.data>["settings"]&{player_layout?:string})|null|undefined;
   const[form,setForm]=useState({kickRewardId:"",requestMode:"MANUAL" as "AUTO"|"MANUAL"|"PAUSED",keywordBlacklist:"",userBlacklist:"",displayMode:"VIDEO" as "VIDEO"|"AUDIO_ONLY",playerLayout:"VERTICAL_CARD" as PlayerLayout,volume:80});
   const[setupTab,setSetupTab]=useState<"setup"|"links"|"safety">("setup");

@@ -28,11 +28,7 @@ const TOC: LegalTocItem[] = [
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Privacy Policy" },
-=======
-      { title: "Privacy Policy — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "tiktok-developers-site-verification",
         content: "TG3OrSUXmfGrebUgymWUiCpJMPANy5z3",
@@ -40,7 +36,6 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-<<<<<<< HEAD
           "How CylixStudio collects, uses, stores and deletes data from connected streaming accounts, widgets, media requests and analytics.",
       },
       { property: "og:title", content: "CylixStudio — Privacy Policy" },
@@ -48,15 +43,6 @@ export const Route = createFileRoute("/privacy")({
         property: "og:description",
         content:
           "What CylixStudio reads from Twitch, Kick and optional connections, how overlays use it, and how you can delete it.",
-=======
-          "How Creovix Studio collects, uses, stores and deletes data from connected streaming accounts, widgets, media requests and analytics.",
-      },
-      { property: "og:title", content: "Privacy Policy — Creovix Studio" },
-      {
-        property: "og:description",
-        content:
-          "What Creovix Studio reads from Twitch, Kick and optional connections, how overlays use it, and how you can delete it.",
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -71,19 +57,11 @@ function PrivacyPage() {
       title="Privacy Policy"
       lastUpdated={LEGAL_UPDATED}
       toc={TOC}
-<<<<<<< HEAD
       lede="This Privacy Policy explains how CylixStudio handles information when you sign in, connect streaming platforms, run overlays, or use studio tools. It is the platform’s policy text — not legal advice about your stream, your audience, or the laws that apply to you. If you need advice for your own situation, consult qualified counsel."
     >
       <LegalSection id="who-we-are" title="Who we are">
         <p>
           CylixStudio is a live-stream overlay and studio product for creators. The service is
-=======
-      lede="This Privacy Policy explains how Creovix Studio handles information when you sign in, connect streaming platforms, run overlays, or use studio tools. It is the platform’s policy text — not legal advice about your stream, your audience, or the laws that apply to you. If you need advice for your own situation, consult qualified counsel."
-    >
-      <LegalSection id="who-we-are" title="Who we are">
-        <p>
-          Creovix Studio is a live-stream overlay and studio product for creators. The service is
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           operated by {LEGAL_OPERATOR}. We have not published a separate registered legal entity
           name or company number in this product.
         </p>
@@ -99,11 +77,7 @@ function PrivacyPage() {
 
       <LegalSection id="scope" title="Scope of this policy">
         <p>
-<<<<<<< HEAD
           This policy covers the CylixStudio website, control room, public overlay URLs, clip
-=======
-          This policy covers the Creovix Studio website, control room, public overlay URLs, clip
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           pages, mark-point share links, media-request player, giveaway overlays, schedule feeds,
           and related APIs. It does not replace the privacy policies of Twitch, Kick, TikTok,
           YouTube, Spotify, Anghami, SoundCloud, Streamlabs, StreamElements, OBS, or any payment
@@ -124,11 +98,7 @@ function PrivacyPage() {
             <strong className="font-medium text-foreground">Coming Soon</strong> and is not an
             active login path until we enable it. When a provider is connected we receive the
             identifiers they return (for example open id or user id, username, display name,
-<<<<<<< HEAD
             avatar, and email if the provider supplies one) and we create a CylixStudio account
-=======
-            avatar, and email if the provider supplies one) and we create a Creovix Studio account
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
             in Supabase Auth.
           </p>
         </LegalSub>
@@ -211,11 +181,7 @@ function PrivacyPage() {
             redeem code. We store subscription status, expiry, the active code, lifetime flag,
             and redeem metadata (who redeemed, when). Payment processors, if used, handle card
             data under their own policies; we do not ask you to paste full card numbers into
-<<<<<<< HEAD
             CylixStudio.
-=======
-            Creovix Studio.
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           </p>
         </LegalSub>
 
@@ -321,11 +287,7 @@ function PrivacyPage() {
 
       <LegalSection id="children" title="Children">
         <p>
-<<<<<<< HEAD
           CylixStudio is aimed at streamers who already have accounts on Twitch, Kick or
-=======
-          Creovix Studio is aimed at streamers who already have accounts on Twitch, Kick or
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           similar platforms. Those platforms set their own minimum ages. We do not knowingly
           collect personal information from children in violation of those rules. If you believe
           we have, contact us and we will delete the account data we hold.

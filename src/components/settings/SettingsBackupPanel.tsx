@@ -109,12 +109,8 @@ export function SettingsBackupPanel() {
       setPending(null);
       toast.success(t("settings.backup.importOk"));
     } catch (error) {
-<<<<<<< HEAD
       const code = error instanceof Error ? error.message : "";
       toast.error(code === "free_limit_commands" ? t("settings.backup.freeLimit") : code || t("settings.backup.importFail"));
-=======
-      toast.error(error instanceof Error ? error.message : t("settings.backup.importFail"));
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     } finally {
       setApplying(false);
     }

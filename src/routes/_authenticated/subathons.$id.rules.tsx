@@ -43,21 +43,13 @@ const UNIT_LABEL: Record<EventType, string> = {
 export const Route = createFileRoute("/_authenticated/subathons/$id/rules")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Rules Builder" },
-=======
-      { title: "Rules Builder — Subathon Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Create rules that convert follows, subs, gift subs, bits and donations into subathon seconds.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Rules Builder" },
-=======
-      { property: "og:title", content: "Rules Builder — Subathon Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Visual rule builder: platform + event + condition to seconds added.",

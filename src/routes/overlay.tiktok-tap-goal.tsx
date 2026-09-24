@@ -10,21 +10,13 @@ export const Route = createFileRoute("/overlay/tiktok-tap-goal")({
   }),
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — TikTok Tap Goal (OBS)" },
-=======
-      { title: "TikTok Tap Goal — OBS Browser Source" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Transparent OBS browser source showing live TikTok tap progress toward a target with confetti on completion.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — TikTok Tap Goal (OBS)" },
-=======
-      { property: "og:title", content: "TikTok Tap Goal — OBS Browser Source" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Live TikTok tap goal progress bar overlay for OBS and Streamlabs Desktop.",

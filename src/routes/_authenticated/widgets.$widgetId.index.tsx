@@ -56,21 +56,13 @@ type GoalRecord = {
 export const Route = createFileRoute("/_authenticated/widgets/$widgetId/")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Widget Builder" },
-=======
-      { title: "Widget Builder — Subathon Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Customise fonts, colours, layout and behaviour for your OBS widget with a live preview.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Widget Builder" },
-=======
-      { property: "og:title", content: "Widget Builder — Subathon Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Design your overlay widget and copy its OBS browser-source URL.",

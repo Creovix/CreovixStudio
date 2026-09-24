@@ -29,11 +29,7 @@ export const Route = createFileRoute("/overlay/schedule")({
   }),
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Stream Schedule" },
-=======
-      { title: "Stream schedule — Creovix" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { name: "description", content: "Monthly stream go-live times." },
     ],
   }),

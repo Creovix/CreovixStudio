@@ -171,11 +171,7 @@
         "exportFail": "Could not export settings.",
         "importOk": "Settings imported.",
         "importFail": "Could not import settings.",
-<<<<<<< HEAD
         "invalid": "This file is not a CylixStudio settings backup.",
-=======
-        "invalid": "This file is not a Creovix settings backup.",
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
         "unsupported": "This backup file version is not supported.",
         "confirmTitle": "Import these settings?",
         "confirmBody": "Review what the file contains before applying it to this account.",
@@ -1148,11 +1144,7 @@
     },
     {
       "file": "src/routes/_authenticated/clip-command.tsx",
-<<<<<<< HEAD
       "en": "CylixStudio:"
-=======
-      "en": "CreovixStudio:"
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
     {
       "file": "src/routes/_authenticated/clip-command.tsx",
@@ -1188,11 +1180,7 @@
     },
     {
       "file": "src/routes/_authenticated/custom-commands.tsx",
-<<<<<<< HEAD
       "en": "CylixStudio:"
-=======
-      "en": "CreovixStudio:"
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
     {
       "file": "src/routes/_authenticated/dashboard.tsx",
@@ -1596,11 +1584,7 @@
     },
     {
       "file": "src/routes/clip.$id.tsx",
-<<<<<<< HEAD
       "en": "Captured with CylixStudio"
-=======
-      "en": "Captured with Creovix Studio"
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
     {
       "file": "src/routes/index.tsx",
@@ -1712,11 +1696,7 @@
     },
     {
       "file": "src/routes/privacy.tsx",
-<<<<<<< HEAD
       "en": "CylixStudio is a live stream overlay tool for creators. Contact: store@creovix.com"
-=======
-      "en": "Creovix Studio is a live stream overlay tool for creators. Contact: store@creovix.com"
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
     {
       "file": "src/routes/privacy.tsx",
@@ -1808,11 +1788,7 @@
     },
     {
       "file": "src/routes/terms.tsx",
-<<<<<<< HEAD
       "en": "CylixStudio provides live stream overlay widgets (subathon timer, goals, chat box, chat spotlight, emote rain and related tools) that creators embed into their broadcasting software."
-=======
-      "en": "Creovix Studio provides live stream overlay widgets (subathon timer, goals, chat box, chat spotlight, emote rain and related tools) that creators embed into their broadcasting software."
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
     {
       "file": "src/routes/terms.tsx",
@@ -1840,11 +1816,7 @@
     },
     {
       "file": "src/routes/terms.tsx",
-<<<<<<< HEAD
       "en": "When you connect a platform you authorise CylixStudio to read the channel data you approved (profile details, follower statistics and channel events) so the widgets can display live information. You can disconnect any platform at any time from Settings, and we stop reading its data immediately."
-=======
-      "en": "When you connect a platform you authorise Creovix Studio to read the channel data you approved (profile details, follower statistics and channel events) so the widgets can display live information. You can disconnect any platform at any time from Settings, and we stop reading its data immediately."
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
     {
       "file": "src/routes/terms.tsx",

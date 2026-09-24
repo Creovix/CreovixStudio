@@ -27,21 +27,13 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 export const Route = createFileRoute("/_authenticated/activity-feed")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Activity Feed" },
-=======
-      { title: "Activity Feed — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Historical activity log of follows, subscriptions, gift subs, bits, raids and tips across your connected streaming platforms.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Activity Feed" },
-=======
-      { property: "og:title", content: "Activity Feed — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Browse and filter your full stream event history in one clean feed.",

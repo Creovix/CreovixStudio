@@ -140,11 +140,7 @@ async function livestreamFromPublicChannel(slug: string): Promise<string | null>
     const response = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: "application/json",
-<<<<<<< HEAD
         "User-Agent": "Mozilla/5.0 CylixStudio",
-=======
-        "User-Agent": "Mozilla/5.0 CreovixStudio",
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       },
     });
     if (!response.ok) return null;
@@ -304,11 +300,7 @@ export async function handleMarkCommand(input: {
   return { status: "closed", command: "emark" };
 }
 
-<<<<<<< HEAD
 const KICK_UA = { Accept: "application/json", "User-Agent": "Mozilla/5.0 CylixStudio" } as const;
-=======
-const KICK_UA = { Accept: "application/json", "User-Agent": "Mozilla/5.0 CreovixStudio" } as const;
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
 function vodDurationMs(raw: unknown): number {
   const n = Number(raw);

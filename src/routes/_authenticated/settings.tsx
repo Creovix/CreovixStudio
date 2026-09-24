@@ -14,20 +14,12 @@ import { useLanguage, type TranslationKey } from "@/lib/i18n";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Settings" },
-=======
-      { title: "Settings — Creovix" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content: "Manage platform connections, your creator profile and account backup.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Settings" },
-=======
-      { property: "og:title", content: "Settings — Creovix" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Connections, profile and account backup in one place.",

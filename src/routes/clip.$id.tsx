@@ -16,7 +16,6 @@ type ClipData = {
 export const Route = createFileRoute("/clip/$id")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Watch Clip" },
       {
         name: "description",
@@ -26,17 +25,6 @@ export const Route = createFileRoute("/clip/$id")({
       {
         property: "og:description",
         content: "A Kick stream moment captured by the CylixStudio clip bot.",
-=======
-      { title: "Watch clip — Creovix Studio" },
-      {
-        name: "description",
-        content: "Watch a Kick stream clip captured automatically by the Creovix Studio !clip command.",
-      },
-      { property: "og:title", content: "Watch clip — Creovix Studio" },
-      {
-        property: "og:description",
-        content: "A Kick stream moment captured by the Creovix Studio clip bot.",
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       },
       { property: "og:type", content: "video.other" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -87,11 +75,7 @@ function ClipPage() {
           </div>
         ) : null}
       </div>
-<<<<<<< HEAD
       <p className="text-xs text-muted-foreground">Captured with CylixStudio</p>
-=======
-      <p className="text-xs text-muted-foreground">Captured with Creovix Studio</p>
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     </main>
   );
 }

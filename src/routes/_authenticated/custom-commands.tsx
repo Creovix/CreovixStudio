@@ -38,13 +38,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWorkspace } from "@/hooks/useWorkspace";
-<<<<<<< HEAD
 import { useSubscription } from "@/hooks/useSubscription";
 import { useLanguage } from "@/lib/i18n";
 import { FREE_PLAN_LIMITS } from "@/lib/plans";
-=======
-import { useLanguage } from "@/lib/i18n";
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 import {
   COMMAND_ROLES,
   PREFIX_MARKERS,
@@ -109,21 +105,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/custom-commands")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Custom Chat Commands" },
-=======
-      { title: "Custom Chat Commands — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Create custom chat commands with a flexible prefix, auto-replies, platform targeting and enable/disable controls.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Custom Chat Commands" },
-=======
-      { property: "og:title", content: "Custom Chat Commands — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Streamer-owned chat commands with optional prefixes and automatic bot replies.",
@@ -215,11 +203,8 @@ const COPY = {
     defaultSave: "Save command",
     fallbackLabel: "Fallback reply",
     errReserved: "That name is reserved for a default command.",
-<<<<<<< HEAD
     errFreeCommands: `Free plan allows up to ${FREE_PLAN_LIMITS.customCommands} custom commands. Upgrade to Pro in Settings to add more.`,
     errFreeTimers: `Free plan allows up to ${FREE_PLAN_LIMITS.messageTimers} message timers. Upgrade to Pro in Settings to add more.`,
-=======
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     timerSubtitle: "Repeating Kick chat messages on an interval.",
     addTimer: "Add timer",
     timerEmpty: "No timers yet. Add one to post a repeating Kick chat message.",
@@ -301,18 +286,12 @@ type RoleFilter = "all" | CommandRole;
 function CustomCommandsPage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
-<<<<<<< HEAD
   const subscription = useSubscription(user.id);
-=======
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   const { lang } = useLanguage();
   const c = COPY;
   const queryClient = useQueryClient();
   const test = isTestMode();
-<<<<<<< HEAD
   const isPro = Boolean(subscription.data?.isActive);
-=======
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
   const loadState = useServerFn(getCustomCommandsState);
   const persistSettings = useServerFn(saveCustomCommandSettings);
@@ -424,13 +403,9 @@ function CustomCommandsPage() {
               ? c.errDup
               : error.message === "reserved_name"
                 ? c.errReserved
-<<<<<<< HEAD
                 : error.message === "free_limit_commands"
                   ? c.errFreeCommands
                   : c.errSave,
-=======
-                : c.errSave,
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       );
     },
   });
@@ -496,7 +471,6 @@ function CustomCommandsPage() {
       void invalidateTimers();
     },
     onError: (error: Error) => {
-<<<<<<< HEAD
       toast.error(
         error.message === "message_required"
           ? c.errTimerMessage
@@ -504,9 +478,6 @@ function CustomCommandsPage() {
             ? c.errFreeTimers
             : c.errTimerSave,
       );
-=======
-      toast.error(error.message === "message_required" ? c.errTimerMessage : c.errTimerSave);
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     },
   });
 
@@ -557,7 +528,6 @@ function CustomCommandsPage() {
     onSuccess: () => void invalidateDefaults(),
   });
 
-<<<<<<< HEAD
   const openCreate = () => {
     if (subscription.isSuccess && !isPro && commands.length >= FREE_PLAN_LIMITS.customCommands) {
       toast.error(c.errFreeCommands);
@@ -572,9 +542,6 @@ function CustomCommandsPage() {
     }
     setTimerEditor(emptyTimerDraft());
   };
-=======
-  const openCreate = () => setEditor(emptyCommandDraft());
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   const openEdit = (command: CustomChatCommand) =>
     setEditor({
       id: command.id,
@@ -626,11 +593,7 @@ function CustomCommandsPage() {
         <MessageTimersPanel
           copy={c}
           timers={timerRows}
-<<<<<<< HEAD
           onAdd={openAddTimer}
-=======
-          onAdd={() => setTimerEditor(emptyTimerDraft())}
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           onEdit={(timer) =>
             setTimerEditor({
               id: timer.id,

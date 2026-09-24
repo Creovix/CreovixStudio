@@ -18,11 +18,7 @@ const VARIANT_TTL_MS = 10 * 60 * 1000;
 /** Upper bound for waiting on new segments when the buffer is still cold. */
 const FORWARD_FILL_MS = 60_000;
 
-<<<<<<< HEAD
 const UA = { "User-Agent": "Mozilla/5.0 CylixStudio" } as const;
-=======
-const UA = { "User-Agent": "Mozilla/5.0 CreovixStudio" } as const;
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
 type ChannelInfo = {
   slug: string;

@@ -4,11 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 export const LEGAL_CONTACT_EMAIL = "store@creovix.com";
-<<<<<<< HEAD
 export const LEGAL_OPERATOR = "CylixStudio";
-=======
-export const LEGAL_OPERATOR = "CreovixStudio";
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 export const LEGAL_UPDATED = "12 September 2026";
 
 export type LegalTocItem = { id: string; title: string };
@@ -85,11 +81,7 @@ export function LegalDocument({
             to="/login"
             className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground transition-colors hover:text-foreground"
           >
-<<<<<<< HEAD
             CylixStudio
-=======
-            Creovix Studio
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           </Link>
           <nav className="flex items-center gap-4 text-sm text-muted-foreground" aria-label="Legal documents">
             <Link to="/privacy" className="transition-colors hover:text-foreground">

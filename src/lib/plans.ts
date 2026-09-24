@@ -15,7 +15,6 @@ export type PlanFeatureRow = {
 
 export const PLAN_PRICES = {
   free: { amount: 0, label: "$0", period: "/month" },
-<<<<<<< HEAD
   /** Default Pro list price shown in comparison table (monthly). */
   pro: { amount: 9.99, label: "$9.99", period: "/month" },
 } as const;
@@ -126,11 +125,6 @@ export const FREE_PLAN_LIMITS = {
   messageTimers: 3,
 } as const;
 
-=======
-  pro: { amount: 9.99, label: "$9.99", period: "/month" },
-} as const;
-
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 /** Full feature matrix — source of truth for cards + detailed table. */
 export const PLAN_FEATURES: PlanFeatureRow[] = [
   {

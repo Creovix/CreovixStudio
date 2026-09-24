@@ -22,15 +22,9 @@ export const Route = createFileRoute("/overlay/subathon-timer")({
   }),
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Subathon Timer (OBS)" },
       { name: "description", content: "Transparent live Subathon timer overlay for OBS." },
       { property: "og:title", content: "CylixStudio — Subathon Timer (OBS)" },
-=======
-      { title: "Subathon Timer — OBS Browser Source" },
-      { name: "description", content: "Transparent live Subathon timer overlay for OBS." },
-      { property: "og:title", content: "Subathon Timer — OBS Browser Source" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { property: "og:description", content: "Transparent live Subathon timer overlay for OBS." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

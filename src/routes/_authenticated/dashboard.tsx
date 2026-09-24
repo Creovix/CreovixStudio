@@ -60,21 +60,13 @@ import { DarkSelect } from "@/components/ui/dark-select";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Widget Hub" },
-=======
-      { title: "Widget Hub — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Discover, open and customize every streaming widget: timers, goals, alerts, chat, wheels, emote rain and more.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Widget Hub" },
-=======
-      { property: "og:title", content: "Widget Hub — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Everything you need to build, customize, and control your stream.",

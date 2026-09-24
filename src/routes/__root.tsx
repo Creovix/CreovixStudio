@@ -49,7 +49,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-<<<<<<< HEAD
       { title: "CylixStudio" },
       {
         name: "description",
@@ -58,16 +57,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "CylixStudio" },
       { property: "og:title", content: "CylixStudio" },
-=======
-      { title: "CreovixStudio" },
-      {
-        name: "description",
-        content:
-          "Creovix Studio builds live stream overlays: subathon timer, goals, chat box and more for Twitch, Kick and TikTok.",
-      },
-      { name: "author", content: "Creovix Studio" },
-      { property: "og:title", content: "CreovixStudio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Subathon timer, goals, chat box and overlays for Twitch, Kick and TikTok.",

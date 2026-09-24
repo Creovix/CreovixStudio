@@ -428,11 +428,7 @@ export function buildScheduleIcs(state: Pick<ScheduleState, "settings" | "slots"
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-<<<<<<< HEAD
     "PRODID:-//CylixStudio//Schedule//EN",
-=======
-    "PRODID:-//Creovix Studio//Schedule//EN",
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${icsEscape(state.settings.title)}`,

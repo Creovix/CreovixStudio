@@ -8,20 +8,12 @@ import { useLanguage } from "@/lib/i18n";
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Analytics" },
-=======
-      { title: "Analytics — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content: "Followers, subscriptions, tips and bits with flexible time ranges and chart series filters.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Analytics" },
-=======
-      { property: "og:title", content: "Analytics — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Studio metrics and trends for the period you choose.",

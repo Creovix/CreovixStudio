@@ -3,11 +3,7 @@ export function renderErrorPage(): string {
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
-<<<<<<< HEAD
     <title>CylixStudio</title>
-=======
-    <title>CreovixStudio</title>
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root { color-scheme: dark; }

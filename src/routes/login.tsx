@@ -28,20 +28,12 @@ export const Route = createFileRoute("/login")({
   }),
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Login" },
-=======
-      { title: "CreovixStudio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content: "Sign in with Twitch or Kick to run your subathon timer, rules and overlays.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Login" },
-=======
-      { property: "og:title", content: "CreovixStudio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Connect Twitch or Kick to control your subathon timer.",
@@ -92,11 +84,7 @@ function LoginPage() {
       />
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-<<<<<<< HEAD
           CylixStudio
-=======
-          Subathon Timer
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight">Sign in to your control room</h1>
         <p className="mt-3 text-sm text-muted-foreground">

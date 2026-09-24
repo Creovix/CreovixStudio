@@ -32,6 +32,12 @@ export default defineConfig({
     tsConfigPaths({ projects: ["./tsconfig.json"] }),
     tanstackStart({
       srcDirectory: "src",
+      // Explicit paths keep route-tree crawling deterministic on Vercel CI
+      // (same layout as local: src/routes → src/routeTree.gen.ts).
+      router: {
+        routesDirectory: "routes",
+        generatedRouteTree: "routeTree.gen.ts",
+      },
       server: {
         // Resolved from srcDirectory → src/server.ts
         entry: "server",

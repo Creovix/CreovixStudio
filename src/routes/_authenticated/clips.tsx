@@ -12,20 +12,12 @@ import { deleteClip, listChannelClips } from "@/lib/clipCommand.functions";
 export const Route = createFileRoute("/_authenticated/clips")({
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Channel Clips" },
-=======
-      { title: "Channel Clips — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content: "Browse, search, watch and share every clip your community created on your channel.",
       },
-<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Channel Clips" },
-=======
-      { property: "og:title", content: "Channel Clips — Creovix Studio" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "A searchable gallery of community clips with playback, sharing and download actions.",

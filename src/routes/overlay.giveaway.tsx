@@ -21,11 +21,7 @@ export const Route = createFileRoute("/overlay/giveaway")({
   }),
   head: () => ({
     meta: [
-<<<<<<< HEAD
       { title: "CylixStudio — Giveaway (OBS)" },
-=======
-      { title: "Giveaway — OBS Browser Source" },
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { name: "description", content: "Transparent giveaway name cloud and winner reveal for OBS." },
       { name: "robots", content: "noindex" },
     ],

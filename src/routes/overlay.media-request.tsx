@@ -24,11 +24,7 @@ type Payload = {
 
 export const Route = createFileRoute("/overlay/media-request")({
   validateSearch: (s: Record<string, unknown>) => ({ token: typeof s["token"] === "string" ? s["token"] : "" }),
-<<<<<<< HEAD
   head: () => ({ meta: [{ title: "CylixStudio — Media Request (OBS)" }, { name: "robots", content: "noindex" }] }),
-=======
-  head: () => ({ meta: [{ title: "Media Request — OBS Browser Source" }, { name: "robots", content: "noindex" }] }),
->>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   component: MediaOverlay,
 });
 
