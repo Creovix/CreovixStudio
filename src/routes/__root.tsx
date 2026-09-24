@@ -49,6 +49,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "domain-verification",
+        content: "0a7e5156a3b22075c9134e1e8c2a2694830f7013f8cec325067a0574c96528f5",
+      },
       { title: "CylixStudio" },
       {
         name: "description",
