@@ -72,12 +72,14 @@ export async function resolveSubathonByToken(
   platform: Platform,
   token: string,
 ): Promise<{ subathonId: string; userId: string; secret: string } | null> {
-  const { data: connections } = await admin
+  // Indexed equality — never scan every active connection into memory.
+  const { data: match } = await admin
     .from("platform_connections")
     .select("user_id, access_token")
     .eq("platform", platform)
-    .eq("is_active", true);
-  const match = connections?.find((c) => c.access_token && c.access_token === token);
+    .eq("is_active", true)
+    .eq("access_token", token)
+    .maybeSingle();
   if (!match?.access_token) return null;
   const subathon = await activeSubathonFor(admin, match.user_id);
   if (!subathon) return null;

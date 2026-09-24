@@ -16,6 +16,7 @@ const ERRORS: Record<string, string> = {
   kick_not_configured: "Kick login isn't configured yet. Add the Kick app credentials.",
   state_mismatch: "The sign-in attempt expired. Please try again.",
   missing_code: "The provider did not return an authorization code.",
+  pkce_verifier_missing: "The sign-in attempt expired. Please try again.",
   oauth_failed: "Sign-in failed. Please try again.",
   access_denied: "You cancelled the sign-in request.",
 };
@@ -98,7 +99,7 @@ function LoginPage() {
             className="mt-6 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground"
           >
             {ERRORS[error] ?? "Something went wrong during sign-in."}
-            {detail ? (
+            {import.meta.env.DEV && detail ? (
               <span className="mt-2 block break-words font-mono text-xs opacity-80">{detail}</span>
             ) : null}
           </div>

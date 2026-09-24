@@ -272,10 +272,15 @@ export function GatewayPage() {
 
   const unlockPro = () => {
     const payload = prepareProCheckout(proBilling);
-    // Placeholder until Tuwaiq Pay is wired — payload is persisted for the checkout adapter.
+    // Checkout gateway is not live yet — guide users to the redeem-code path.
     toast.message(
       t("gateway.billing.checkoutReady").replace("{amount}", payload.label),
     );
+    window.setTimeout(() => {
+      document.getElementById("gateway-redeem")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const input = document.querySelector<HTMLInputElement>("#gateway-redeem input");
+      input?.focus();
+    }, 150);
   };
 
   return (
@@ -364,6 +369,7 @@ export function GatewayPage() {
         </div>
 
         <RedeemCodeSection
+          id="gateway-redeem"
           className="mx-auto w-full max-w-lg shrink-0"
           compact
           onActivated={goDashboard}

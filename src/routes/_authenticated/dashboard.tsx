@@ -205,10 +205,7 @@ function HomePage() {
     staleTime: 60_000,
     enabled: !isTestMode(),
   });
-  const mediaOverlayUrl =
-    typeof window !== "undefined" && mediaRequests.data?.settings?.overlay_token
-      ? `${window.location.origin}/overlay/media-request?token=${mediaRequests.data.settings.overlay_token}`
-      : undefined;
+  const mediaOverlayUrl = mediaRequests.data?.overlayUrl ?? undefined;
   const subscription = useSubscription(user.id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -228,9 +225,7 @@ function HomePage() {
   const [visibleCount, setVisibleCount] = useState(HUB_INITIAL_VISIBLE);
 
   const visibleTools = TOOLS.filter(
-    (tool) =>
-      !tool.comingSoon &&
-      (platformFilter === "ALL" || tool.platforms.includes(platformFilter)),
+    (tool) => platformFilter === "ALL" || tool.platforms.includes(platformFilter),
   );
   const shownTools = visibleTools.slice(0, visibleCount);
 
@@ -432,8 +427,14 @@ function HomePage() {
                           : "Ready"
                   }
                   live={Boolean(existing?.is_enabled)}
-                  publicToken={existing?.public_token}
-                  overlayUrl={tool.id === "kick-media-requests" ? mediaOverlayUrl : undefined}
+                  publicToken={
+                    existing?.is_enabled && !tool.comingSoon ? existing.public_token : undefined
+                  }
+                  overlayUrl={
+                    tool.id === "kick-media-requests" && !tool.comingSoon
+                      ? mediaOverlayUrl
+                      : undefined
+                  }
                   disabled={busy === tool.id}
                   actionLabel={
                     tool.id === "kick-media-requests"

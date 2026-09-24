@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, RefreshCw, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
@@ -160,9 +161,13 @@ function WidgetBuilder() {
         if (goalError) throw goalError;
       }
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: async () => {
       setError(null);
+      toast.success("Widget saved");
       await queryClient.invalidateQueries({ queryKey: ["widget", widgetId] });
       await queryClient.invalidateQueries({ queryKey: ["widgets"] });
     },
@@ -179,6 +184,7 @@ function WidgetBuilder() {
     onError: (err: Error) => {
       setConfirmDelete(false);
       setError(err.message);
+      toast.error(err.message);
     },
     onSuccess: async () => {
       setConfirmDelete(false);
@@ -190,10 +196,15 @@ function WidgetBuilder() {
   const runSyncFollowers = useServerFn(syncGoalFollowers);
   const syncFollowers = useMutation({
     mutationFn: async () => runSyncFollowers({ data: { widgetId } }),
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: async (result) => {
       setError(null);
-      setGoalDraft((prev) => ({ ...prev, current: result.current }));
+      if ("total" in result && typeof result.total === "number") {
+        setGoalDraft((prev) => ({ ...prev, current: result.total }));
+      }
       await queryClient.invalidateQueries({ queryKey: ["widget", widgetId] });
     },
   });
@@ -212,22 +223,30 @@ function WidgetBuilder() {
       if (writeError) throw writeError;
       return result;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
   });
 
   const copyUrl = async () => {
     if (!widget) return;
+    if (!widget.is_enabled) {
+      toast.error("Enable the widget before copying an OBS URL.");
+      return;
+    }
+    if (widget.type === "TIKTOK_TAPPERS" || widget.type === "TIKTOK_TAP_GOAL") {
+      toast.error("TikTok overlays are Coming Soon until OAuth is ready.");
+      return;
+    }
     const timerLayout = parseOverlayTheme(config).layout;
     const url =
-      widget.type === "TIKTOK_TAPPERS"
-        ? `${window.location.origin}/overlay/tiktok-tappers?token=${widget.public_token}`
-        : widget.type === "TIKTOK_TAP_GOAL"
-        ? `${window.location.origin}/overlay/tiktok-tap-goal?token=${widget.public_token}`
-        : widget.type === "SUBATHON_TIMER"
-          ? `${window.location.origin}/overlay/subathon-timer?token=${widget.public_token}&layout=${timerLayout}`
+      widget.type === "SUBATHON_TIMER"
+        ? `${window.location.origin}/overlay/subathon-timer?token=${widget.public_token}&layout=${timerLayout}`
         : `${window.location.origin}/overlay/${widget.public_token}`;
     await navigator.clipboard.writeText(url);
     setCopied(true);
+    toast.success("OBS URL copied");
     setTimeout(() => setCopied(false), 1500);
   };
 
@@ -276,8 +295,16 @@ function WidgetBuilder() {
             ) : null}
             <button
               type="button"
+              disabled={!widget.is_enabled || widget.type === "TIKTOK_TAPPERS" || widget.type === "TIKTOK_TAP_GOAL"}
+              title={
+                !widget.is_enabled
+                  ? "Enable the widget to copy an OBS URL"
+                  : widget.type === "TIKTOK_TAPPERS" || widget.type === "TIKTOK_TAP_GOAL"
+                    ? "TikTok overlays are Coming Soon"
+                    : "Copy OBS browser-source URL"
+              }
               onClick={() => void copyUrl()}
-              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary"
+              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
               Copy OBS URL

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { GoalBarView } from "@/components/widgets/WidgetRenderer";
@@ -75,7 +76,10 @@ function GoalControl() {
       const { error: writeError } = await supabase.from("goals").update(patch).eq("id", goal.id);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: async () => {
       setError(null);
       await queryClient.invalidateQueries({ queryKey: ["goal-control", widgetId] });

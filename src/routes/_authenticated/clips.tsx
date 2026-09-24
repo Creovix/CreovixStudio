@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { Check, Search, Video } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ClipPlayer } from "@/components/clips/ClipPlayer";
@@ -114,7 +115,9 @@ function ClipsPage() {
     onSuccess: (_result, id) => {
       if (active?.id === id) setActive(null);
       void queryClient.invalidateQueries({ queryKey: ["channel-clips"] });
+      toast.success("Clip deleted");
     },
+    onError: (error: Error) => toast.error(error.message || "Could not delete clip"),
   });
 
   const visible = useMemo(() => {

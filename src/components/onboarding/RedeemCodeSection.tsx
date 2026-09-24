@@ -15,11 +15,18 @@ type Feedback = { kind: "success" | "error"; message: string } | null;
 type RedeemCodeSectionProps = {
   onActivated?: () => void;
   className?: string;
+  /** Anchor id for Unlock Pro CTA scroll/focus. */
+  id?: string;
   /** Tighter spacing for the single-viewport welcome gateway. */
   compact?: boolean;
 };
 
-export function RedeemCodeSection({ onActivated, className, compact }: RedeemCodeSectionProps) {
+export function RedeemCodeSection({
+  onActivated,
+  className,
+  id,
+  compact,
+}: RedeemCodeSectionProps) {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [value, setValue] = useState("");
@@ -80,7 +87,7 @@ export function RedeemCodeSection({ onActivated, className, compact }: RedeemCod
 
   return (
     <section
-      id="redeem"
+      id={id ?? "redeem"}
       className={cn(
         "rounded-2xl border border-zinc-800 bg-zinc-950/90",
         compact ? "rounded-xl p-3.5 sm:p-4" : "p-6 sm:p-7",

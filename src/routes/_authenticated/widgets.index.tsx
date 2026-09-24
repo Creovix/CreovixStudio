@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Copy, Check, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/lib/supabase/client";
@@ -10,6 +11,11 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { createWidget } from "@/lib/createWidget";
 import { WIDGET_LABEL, WIDGET_TYPES, type WidgetType } from "@/lib/widgets";
 import { DarkSelect } from "@/components/ui/dark-select";
+
+const TIKTOK_COMING_SOON: WidgetType[] = ["TIKTOK_TAPPERS", "TIKTOK_TAP_GOAL"];
+const CREATABLE_WIDGET_TYPES = WIDGET_TYPES.filter(
+  (entry) => !TIKTOK_COMING_SOON.includes(entry.value),
+);
 
 export const Route = createFileRoute("/_authenticated/widgets/")({
   head: () => ({
@@ -47,8 +53,16 @@ function WidgetHub() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["widgets"] });
 
   const create = useMutation({
-    mutationFn: () => createWidget({ userId: user.id, subathonId, type, name }),
-    onError: (err: Error) => setError(err.message),
+    mutationFn: () => {
+      if (TIKTOK_COMING_SOON.includes(type)) {
+        throw new Error("TikTok overlays are Coming Soon until OAuth is ready.");
+      }
+      return createWidget({ userId: user.id, subathonId, type, name });
+    },
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: async (widget) => {
       setError(null);
       setName("");
@@ -65,7 +79,10 @@ function WidgetHub() {
         .eq("id", id);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: () => void invalidate(),
   });
 
@@ -74,14 +91,22 @@ function WidgetHub() {
       const { error: writeError } = await supabase.from("widgets").delete().eq("id", id);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: () => void invalidate(),
   });
 
-  const copyUrl = async (token: string) => {
+  const copyUrl = async (token: string, enabled: boolean) => {
+    if (!enabled) {
+      toast.error("Enable the widget before copying an OBS URL.");
+      return;
+    }
     const url = `${window.location.origin}/overlay/${token}`;
     await navigator.clipboard.writeText(url);
     setCopied(token);
+    toast.success("OBS URL copied");
     setTimeout(() => setCopied(null), 1500);
   };
 
@@ -121,7 +146,7 @@ function WidgetHub() {
               className="mt-2"
               value={type}
               onValueChange={(next) => setType(next as WidgetType)}
-              options={WIDGET_TYPES.map((entry) => ({
+              options={CREATABLE_WIDGET_TYPES.map((entry) => ({
                 value: entry.value,
                 label: `${entry.label} — ${entry.hint}`,
               }))}
@@ -201,8 +226,14 @@ function WidgetHub() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => void copyUrl(widget.public_token)}
-                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary"
+                    disabled={!widget.is_enabled}
+                    title={
+                      widget.is_enabled
+                        ? "Copy OBS browser-source URL"
+                        : "Enable the widget to copy an OBS URL"
+                    }
+                    onClick={() => void copyUrl(widget.public_token, widget.is_enabled)}
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {copied === widget.public_token ? (
                       <Check className="size-4" aria-hidden />

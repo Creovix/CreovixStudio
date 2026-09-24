@@ -54,6 +54,7 @@ import { Route as AuthenticatedWidgetsWidgetIdRulesRouteImport } from './routes/
 import { Route as ApiAuthProviderCallbackRouteImport } from './routes/api/auth/$provider/callback'
 import { Route as ApiAuthProviderStartRouteImport } from './routes/api/auth/$provider/start'
 import { Route as ApiAuthCallbackTiktokRouteImport } from './routes/api/auth/callback/tiktok'
+import { Route as ApiAuthSessionFinishRouteImport } from './routes/api/auth/session/finish'
 import { Route as ApiPublicClipIdRouteImport } from './routes/api/public/clip/$id'
 import { Route as ApiPublicWebhooksKickRouteImport } from './routes/api/public/webhooks/kick'
 import { Route as ApiPublicWebhooksStreamelementsRouteImport } from './routes/api/public/webhooks/streamelements'
@@ -316,6 +317,11 @@ const ApiAuthCallbackTiktokRoute = ApiAuthCallbackTiktokRouteImport.update({
   path: '/api/auth/callback/tiktok',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSessionFinishRoute = ApiAuthSessionFinishRouteImport.update({
+  id: '/api/auth/session/finish',
+  path: '/api/auth/session/finish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicClipIdRoute = ApiPublicClipIdRouteImport.update({
   id: '/api/public/clip/$id',
   path: '/api/public/clip/$id',
@@ -494,6 +500,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$provider/callback': typeof ApiAuthProviderCallbackRoute
   '/api/auth/$provider/start': typeof ApiAuthProviderStartRoute
   '/api/auth/callback/tiktok': typeof ApiAuthCallbackTiktokRoute
+  '/api/auth/session/finish': typeof ApiAuthSessionFinishRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
   '/api/public/webhooks/streamelements': typeof ApiPublicWebhooksStreamelementsRoute
@@ -562,6 +569,7 @@ export interface FileRoutesByTo {
   '/api/auth/$provider/callback': typeof ApiAuthProviderCallbackRoute
   '/api/auth/$provider/start': typeof ApiAuthProviderStartRoute
   '/api/auth/callback/tiktok': typeof ApiAuthCallbackTiktokRoute
+  '/api/auth/session/finish': typeof ApiAuthSessionFinishRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
   '/api/public/webhooks/streamelements': typeof ApiPublicWebhooksStreamelementsRoute
@@ -633,6 +641,7 @@ export interface FileRoutesById {
   '/api/auth/$provider/callback': typeof ApiAuthProviderCallbackRoute
   '/api/auth/$provider/start': typeof ApiAuthProviderStartRoute
   '/api/auth/callback/tiktok': typeof ApiAuthCallbackTiktokRoute
+  '/api/auth/session/finish': typeof ApiAuthSessionFinishRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
   '/api/public/webhooks/streamelements': typeof ApiPublicWebhooksStreamelementsRoute
@@ -704,6 +713,7 @@ export interface FileRouteTypes {
     | '/api/auth/$provider/callback'
     | '/api/auth/$provider/start'
     | '/api/auth/callback/tiktok'
+    | '/api/auth/session/finish'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
     | '/api/public/webhooks/streamelements'
@@ -772,6 +782,7 @@ export interface FileRouteTypes {
     | '/api/auth/$provider/callback'
     | '/api/auth/$provider/start'
     | '/api/auth/callback/tiktok'
+    | '/api/auth/session/finish'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
     | '/api/public/webhooks/streamelements'
@@ -842,6 +853,7 @@ export interface FileRouteTypes {
     | '/api/auth/$provider/callback'
     | '/api/auth/$provider/start'
     | '/api/auth/callback/tiktok'
+    | '/api/auth/session/finish'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
     | '/api/public/webhooks/streamelements'
@@ -890,6 +902,7 @@ export interface RootRouteChildren {
   ApiAuthProviderCallbackRoute: typeof ApiAuthProviderCallbackRoute
   ApiAuthProviderStartRoute: typeof ApiAuthProviderStartRoute
   ApiAuthCallbackTiktokRoute: typeof ApiAuthCallbackTiktokRoute
+  ApiAuthSessionFinishRoute: typeof ApiAuthSessionFinishRoute
   ApiPublicClipIdRoute: typeof ApiPublicClipIdRoute
   ApiPublicWebhooksKickRoute: typeof ApiPublicWebhooksKickRoute
   ApiPublicWebhooksStreamelementsRoute: typeof ApiPublicWebhooksStreamelementsRoute
@@ -1232,6 +1245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthCallbackTiktokRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/session/finish': {
+      id: '/api/auth/session/finish'
+      path: '/api/auth/session/finish'
+      fullPath: '/api/auth/session/finish'
+      preLoaderRoute: typeof ApiAuthSessionFinishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/clip/$id': {
       id: '/api/public/clip/$id'
       path: '/api/public/clip/$id'
@@ -1502,6 +1522,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthProviderCallbackRoute: ApiAuthProviderCallbackRoute,
   ApiAuthProviderStartRoute: ApiAuthProviderStartRoute,
   ApiAuthCallbackTiktokRoute: ApiAuthCallbackTiktokRoute,
+  ApiAuthSessionFinishRoute: ApiAuthSessionFinishRoute,
   ApiPublicClipIdRoute: ApiPublicClipIdRoute,
   ApiPublicWebhooksKickRoute: ApiPublicWebhooksKickRoute,
   ApiPublicWebhooksStreamelementsRoute: ApiPublicWebhooksStreamelementsRoute,

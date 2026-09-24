@@ -115,7 +115,9 @@ function ClipCommandPage() {
       setSaved(true);
       setDirty(false);
       void queryClient.invalidateQueries({ queryKey: ["clip-command", user.id] });
+      toast.success("Clip command settings saved");
     },
+    onError: (error: Error) => toast.error(error.message || "Could not save clip settings"),
   });
 
   const save = () => saveMutation.mutate();

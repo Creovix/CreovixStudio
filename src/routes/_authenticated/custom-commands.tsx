@@ -375,6 +375,7 @@ function CustomCommandsPage() {
       toast.success(c.prefixSaved);
       void invalidate();
     },
+    onError: (error: Error) => toast.error(error.message || c.errSave),
   });
 
   const saveMutation = useMutation({
@@ -416,6 +417,7 @@ function CustomCommandsPage() {
       return persistEnabled({ data: { id, enabled } });
     },
     onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || c.errSave),
   });
 
   const deleteMutation = useMutation({
@@ -427,6 +429,7 @@ function CustomCommandsPage() {
       setDeleteId(null);
       void invalidate();
     },
+    onError: (error: Error) => toast.error(error.message || c.errSave),
   });
 
   const sampleHit = useMemo(() => {
@@ -487,6 +490,7 @@ function CustomCommandsPage() {
       return persistTimerEnabled({ data: { id, enabled } });
     },
     onSuccess: () => void invalidateTimers(),
+    onError: (error: Error) => toast.error(error.message || c.errSave),
   });
 
   const timerDeleteMutation = useMutation({
@@ -498,6 +502,7 @@ function CustomCommandsPage() {
       setTimerDeleteId(null);
       void invalidateTimers();
     },
+    onError: (error: Error) => toast.error(error.message || c.errSave),
   });
 
   const defaultSaveMutation = useMutation({
@@ -526,6 +531,7 @@ function CustomCommandsPage() {
       return persistDefaultEnabled({ data: { id, enabled } });
     },
     onSuccess: () => void invalidateDefaults(),
+    onError: (error: Error) => toast.error(error.message || c.errSave),
   });
 
   const openCreate = () => {

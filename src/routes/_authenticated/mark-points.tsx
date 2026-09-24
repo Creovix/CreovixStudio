@@ -320,6 +320,7 @@ function MarkPointsPage() {
       setDeleteId(null);
       void invalidate();
     },
+    onError: () => toast.error(c.errSave),
   });
 
   const addAllowMutation = useMutation({
@@ -344,6 +345,7 @@ function MarkPointsPage() {
       return persistAllowRemove({ data: { username } });
     },
     onSuccess: () => void invalidateAllow(),
+    onError: () => toast.error(c.errSave),
   });
 
   const statusMutation = useMutation({
@@ -352,6 +354,7 @@ function MarkPointsPage() {
       return persistStatus({ data: payload });
     },
     onSuccess: () => void invalidate(),
+    onError: () => toast.error(c.errSave),
   });
 
   const rotateMutation = useMutation({
@@ -360,6 +363,7 @@ function MarkPointsPage() {
       return persistRotate();
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["mark-point-share"] }),
+    onError: () => toast.error(c.errSave),
   });
 
   const copyShare = async (markId?: string) => {

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/lib/supabase/client";
@@ -111,7 +112,10 @@ function RulesPage() {
       );
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: () => {
       setError(null);
       void invalidate();
@@ -123,7 +127,10 @@ function RulesPage() {
       const { error: writeError } = await supabase.from("rules").update(patch).eq("id", ruleId);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: () => void invalidate(),
   });
 
@@ -132,7 +139,10 @@ function RulesPage() {
       const { error: writeError } = await supabase.from("rules").delete().eq("id", ruleId);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: (err: Error) => {
+      setError(err.message);
+      toast.error(err.message);
+    },
     onSuccess: () => void invalidate(),
   });
 

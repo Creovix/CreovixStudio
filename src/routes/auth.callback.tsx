@@ -1,16 +1,11 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isGatewayCompleted } from "@/lib/plans";
 
-type CallbackSearch = { token_hash?: string | undefined };
-
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): CallbackSearch => ({
-    token_hash: typeof search["token_hash"] === "string" ? search["token_hash"] : undefined,
-  }),
   head: () => ({
     meta: [
       { title: "CylixStudio — Finishing Sign-in" },
@@ -23,19 +18,62 @@ export const Route = createFileRoute("/auth/callback")({
 });
 
 function AuthCallback() {
-  const { token_hash: tokenHash } = useSearch({ from: "/auth/callback" });
   const navigate = useNavigate();
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      if (!tokenHash) {
+      // Prefer HttpOnly cookie handoff (no token_hash in the URL).
+      // Fall back to legacy ?token_hash= / #token_hash= for in-flight redirects.
+      let legacyHash: string | null = null;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        legacyHash = params.get("token_hash");
+        if (!legacyHash && window.location.hash.startsWith("#")) {
+          const hashParams = new URLSearchParams(window.location.hash.slice(1));
+          legacyHash = hashParams.get("token_hash");
+        }
+      } catch {
+        /* ignore */
+      }
+
+      if (legacyHash) {
+        const { error } = await supabase.auth.verifyOtp({
+          type: "magiclink",
+          token_hash: legacyHash,
+        });
+        window.history.replaceState({}, "", "/auth/callback");
+        if (!active) return;
+        if (error) {
+          setFailed(true);
+          navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
+          return;
+        }
+        navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+        return;
+      }
+
+      const response = await fetch("/api/auth/session/finish", {
+        method: "POST",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        access_token?: string;
+        refresh_token?: string;
+      } | null;
+      if (!active) return;
+      if (!response.ok || !payload?.ok || !payload.access_token || !payload.refresh_token) {
+        setFailed(true);
         navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
         return;
       }
-      const { error } = await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
-      if (!active) return;
+      const { error } = await supabase.auth.setSession({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token,
+      });
       if (error) {
         setFailed(true);
         navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
@@ -46,7 +84,7 @@ function AuthCallback() {
     return () => {
       active = false;
     };
-  }, [tokenHash, navigate]);
+  }, [navigate]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-charcoal px-6">

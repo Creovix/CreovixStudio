@@ -4,6 +4,33 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 import { createSupabaseFetch } from "./fetch";
 
+/** Thrown (or returned) so Start/Nitro surfaces a clean 401 JSON body. */
+export class UnauthorizedError extends Error {
+  readonly statusCode = 401;
+  readonly code = "unauthorized";
+
+  constructor(message = "Unauthorized") {
+    super(message);
+    this.name = "UnauthorizedError";
+  }
+
+  toResponse(): Response {
+    return new Response(JSON.stringify({ error: this.code, message: "Unauthorized" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+}
+
+function unauthorized(reason: string): never {
+  console.info(`[auth] unauthorized: ${reason}`);
+  // Throw a Response so TanStack Start / Nitro return 401 JSON (not a 500 HTML page).
+  throw new UnauthorizedError().toResponse();
+}
+
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
     const SUPABASE_URL = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
@@ -25,28 +52,15 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
 
     const request = getRequest();
 
-    if (!request?.headers) {
-      throw new Error("Unauthorized: No request headers available");
-    }
+    if (!request?.headers) unauthorized("no_request_headers");
 
     const authHeader = request.headers.get("authorization");
-
-    if (!authHeader) {
-      throw new Error("Unauthorized: No authorization header provided");
-    }
-
-    if (!authHeader.startsWith("Bearer ")) {
-      throw new Error("Unauthorized: Only Bearer tokens are supported");
-    }
+    if (!authHeader) unauthorized("missing_authorization");
+    if (!authHeader.startsWith("Bearer ")) unauthorized("invalid_scheme");
 
     const token = authHeader.replace("Bearer ", "");
-    if (!token) {
-      throw new Error("Unauthorized: No token provided");
-    }
-
-    if (token.split(".").length !== 3) {
-      throw new Error("Unauthorized: Invalid token");
-    }
+    if (!token) unauthorized("empty_token");
+    if (token.split(".").length !== 3) unauthorized("malformed_jwt");
 
     const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       global: {
@@ -63,13 +77,8 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     });
 
     const { data, error } = await supabase.auth.getClaims(token);
-    if (error || !data?.claims) {
-      throw new Error("Unauthorized: Invalid token");
-    }
-
-    if (!data.claims.sub) {
-      throw new Error("Unauthorized: No user ID found in token");
-    }
+    if (error || !data?.claims) unauthorized("invalid_token");
+    if (!data.claims.sub) unauthorized("missing_sub");
 
     return next({
       context: {

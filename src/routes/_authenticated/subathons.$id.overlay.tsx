@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { OverlayView } from "@/components/overlay/OverlayView";
@@ -91,7 +92,11 @@ function OverlayBuilder() {
         .eq("id", overlay.id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["overlay", id] }),
+    onSuccess: () => {
+      toast.success("Overlay saved");
+      void queryClient.invalidateQueries({ queryKey: ["overlay", id] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Could not save overlay"),
   });
 
   const togglePublic = useMutation({
@@ -103,7 +108,8 @@ function OverlayBuilder() {
         .eq("id", overlay.id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["overlay", id] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["overlay", id] }),
+    onError: (error: Error) => toast.error(error.message || "Could not update visibility"),
   });
 
   const createOverlay = useMutation({
@@ -113,7 +119,11 @@ function OverlayBuilder() {
         .insert({ subathon_id: id, name: "OBS Overlay", is_public: true, theme: theme as never });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["overlay", id] }),
+    onSuccess: () => {
+      toast.success("Overlay created");
+      void queryClient.invalidateQueries({ queryKey: ["overlay", id] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Could not create overlay"),
   });
 
   const subathon = useMemo(

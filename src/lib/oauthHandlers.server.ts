@@ -73,7 +73,7 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
     if (!location.startsWith(KICK_AUTHORIZE_URL)) {
       console.error(`[oauth:kick] refused non-id host Location=${location.slice(0, 120)}`);
       return Response.redirect(
-        new URL(`/login?error=oauth_failed&detail=bad_kick_authorize_host`, `${origin}/`),
+        new URL(`/login?error=oauth_failed`, `${origin}/`),
         302,
       );
     }
@@ -89,16 +89,34 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
 
 export async function handleOAuthCallback(request: Request, providerRaw: string): Promise<Response> {
   const origin = publicSiteUrl(request);
+  const isProd = process.env["NODE_ENV"] === "production";
+  const STABLE_ERRORS = new Set([
+    "oauth_failed",
+    "missing_code",
+    "state_mismatch",
+    "access_denied",
+    "pkce_verifier_missing",
+    "twitch_not_configured",
+    "kick_not_configured",
+    "streamelements_not_configured",
+    "streamlabs_not_configured",
+    "tiktok_not_configured",
+  ]);
   const fail = (provider: string, reason: string, detail?: string) => {
     console.info(`[oauth:${provider}] callback fail`, {
       reason,
-      detail: detail?.slice(0, 300) ?? null,
+      detail: detail?.slice(0, 500) ?? null,
       origin,
       requestUrl: request.url,
     });
+    const stable =
+      STABLE_ERRORS.has(reason) || reason.endsWith("_not_configured") ? reason : "oauth_failed";
     const location = new URL(`${origin}/login`);
-    location.searchParams.set("error", reason);
-    if (detail) location.searchParams.set("detail", detail.slice(0, 300));
+    location.searchParams.set("error", stable);
+    // Never leak raw provider/token errors into the URL in production.
+    if (!isProd && detail) {
+      location.searchParams.set("detail", detail.slice(0, 120));
+    }
     return new Response(null, { status: 302, headers: { Location: location.toString() } });
   };
 
@@ -107,7 +125,16 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
 
   const url = new URL(request.url);
   if (url.searchParams.get("error")) {
-    return fail(provider, url.searchParams.get("error")!);
+    const providerError = url.searchParams.get("error")!;
+    const providerDesc = url.searchParams.get("error_description") ?? undefined;
+    if (providerDesc) {
+      console.info(`[oauth:${provider}] provider error_description`, providerDesc.slice(0, 500));
+    }
+    return fail(
+      provider,
+      providerError === "access_denied" ? "access_denied" : "oauth_failed",
+      providerDesc,
+    );
   }
 
   const code = url.searchParams.get("code");
@@ -127,6 +154,11 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
   const clientSecret = readOAuthEnv(config.clientSecretEnv);
   if (!clientId || !clientSecret) return fail(provider, `${provider}_not_configured`);
 
+  const verifier = readCookie(request, `oauth_verifier_${provider}`);
+  if (config.usesPkce && !verifier) {
+    return fail(provider, "pkce_verifier_missing", "oauth_verifier_cookie_missing");
+  }
+
   try {
     const tokens = await exchangeCode({
       provider,
@@ -134,7 +166,7 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       redirectUri: redirectUriFor(request, provider),
       clientId,
       clientSecret,
-      verifier: readCookie(request, `oauth_verifier_${provider}`),
+      verifier,
     });
 
     const profile = await config.fetchProfile(tokens.access_token, clientId);
@@ -174,9 +206,22 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       );
 
       if (provider === "kick") {
-        const { ensureKickMediaSubscriptions } = await import("@/lib/kickEvents.server");
-        const subscriptions = await ensureKickMediaSubscriptions(tokens.access_token, profile.id);
-        if (!subscriptions.ok) console.error("[kick-events] subscription setup failed", subscriptions.errors);
+        const { ensureKickEventSubscriptions } = await import("@/lib/kickEvents.server");
+        const subscriptions = await ensureKickEventSubscriptions(tokens.access_token, profile.id);
+        if (!subscriptions.ok) {
+          console.error("[kick-events] subscription setup failed", subscriptions.errors);
+        }
+      }
+
+      if (provider === "twitch") {
+        const { ensureTwitchEventSub } = await import("@/lib/twitchEventSub.server");
+        const eventSub = await ensureTwitchEventSub({
+          broadcasterUserId: profile.id,
+          request,
+        });
+        if (!eventSub.ok) {
+          console.error("[twitch-eventsub] subscription setup failed", eventSub.error, eventSub.results);
+        }
       }
 
       const back = new URL(`${origin}/settings`);
@@ -262,15 +307,32 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
         scopes,
         token_expires_at: expiresAt,
         is_active: true,
-        metadata: { avatar_url: profile.image, email },
-      },
-      { onConflict: "user_id,platform,platform_user_id" },
-    );
+        metadata: {
+            avatar_url: profile.image,
+            email,
+            ...(profile.extra ?? {}),
+          },
+        },
+        { onConflict: "user_id,platform,platform_user_id" },
+      );
 
     if (provider === "kick") {
-      const { ensureKickMediaSubscriptions } = await import("@/lib/kickEvents.server");
-      const subscriptions = await ensureKickMediaSubscriptions(tokens.access_token, profile.id);
-      if (!subscriptions.ok) console.error("[kick-events] subscription setup failed", subscriptions.errors);
+      const { ensureKickEventSubscriptions } = await import("@/lib/kickEvents.server");
+      const subscriptions = await ensureKickEventSubscriptions(tokens.access_token, profile.id);
+      if (!subscriptions.ok) {
+        console.error("[kick-events] subscription setup failed", subscriptions.errors);
+      }
+    }
+
+    if (provider === "twitch") {
+      const { ensureTwitchEventSub } = await import("@/lib/twitchEventSub.server");
+      const eventSub = await ensureTwitchEventSub({
+        broadcasterUserId: profile.id,
+        request,
+      });
+      if (!eventSub.ok) {
+        console.error("[twitch-eventsub] subscription setup failed", eventSub.error, eventSub.results);
+      }
     }
 
     await supabaseAdmin.from("audit_logs").insert({
@@ -284,14 +346,17 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     });
 
     const target = new URL(`${origin}/auth/callback`);
-    target.searchParams.set("token_hash", hashedToken);
-    console.info(`[oauth:${provider}] callback ok → /auth/callback`, { origin });
+    console.info(`[oauth:${provider}] callback ok → /auth/callback (magic hash cookie)`, { origin });
     const headers = new Headers({ Location: target.toString() });
+    headers.append(
+      "Set-Cookie",
+      cookie(request, "oauth_magic_hash", encodeURIComponent(hashedToken), 300),
+    );
     headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, "", 0));
     headers.append("Set-Cookie", cookie(request, `oauth_verifier_${provider}`, "", 0));
     return new Response(null, { status: 302, headers });
   } catch (error) {
     console.error(`[oauth:${provider}] callback exception`, error);
-    return fail(provider, "oauth_failed", error instanceof Error ? error.message : String(error));
+    return fail(provider, "oauth_failed");
   }
 }

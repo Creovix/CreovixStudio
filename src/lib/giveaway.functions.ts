@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 import type { GiveawayPlatform } from "@/lib/giveaway.server";
@@ -11,6 +12,15 @@ export type GiveawaySettings = {
   claimSeconds: number;
   isOpen: boolean;
 };
+
+const GiveawaySettingsSchema = z.object({
+  keyword: z.string().trim().min(1).max(64),
+  subMultiplier: z.number().int().min(1).max(20),
+  subsOnly: z.boolean(),
+  spinDuration: z.number().int().min(1).max(60),
+  claimSeconds: z.number().int().min(10).max(3600),
+  isOpen: z.boolean(),
+});
 
 export type Participant = {
   id: string;
@@ -81,7 +91,7 @@ export const getGiveawayState = createServerFn({ method: "GET" })
 
 export const saveGiveawaySettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: GiveawaySettings) => input)
+  .inputValidator((input: GiveawaySettings) => GiveawaySettingsSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("giveaway_settings").upsert(
       {
@@ -206,21 +216,30 @@ export const publishGiveawayDraw = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-/** Private OBS browser-source URL token for the giveaway display. */
+/** Private OBS browser-source capability URL for the giveaway display (never returns raw token). */
 export const getGiveawayOverlayToken = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { publicSiteUrl } = await import("@/lib/siteUrl.server");
+    const origin = publicSiteUrl(getRequest());
     const { supabase, userId } = context;
     const { data } = await supabase
       .from("giveaway_settings")
       .select("overlay_token")
       .eq("user_id", userId)
       .maybeSingle();
-    if (data?.overlay_token) return { token: data.overlay_token as string };
-    const { data: created } = await supabase
-      .from("giveaway_settings")
-      .upsert({ user_id: userId }, { onConflict: "user_id" })
-      .select("overlay_token")
-      .maybeSingle();
-    return { token: (created?.overlay_token as string | undefined) ?? "" };
+    let token = data?.overlay_token as string | undefined;
+    if (!token) {
+      const { data: created } = await supabase
+        .from("giveaway_settings")
+        .upsert({ user_id: userId }, { onConflict: "user_id" })
+        .select("overlay_token")
+        .maybeSingle();
+      token = created?.overlay_token as string | undefined;
+    }
+    return {
+      token: null as string | null,
+      overlayUrl: token ? `${origin}/overlay/giveaway?token=${encodeURIComponent(token)}` : "",
+    };
   });

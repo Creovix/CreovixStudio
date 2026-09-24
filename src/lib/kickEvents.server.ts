@@ -1,6 +1,12 @@
+/** Kick EventSub-style webhook events required for Studio features. */
 const REQUIRED_KICK_EVENTS = [
   { name: "chat.message.sent", version: 1 },
   { name: "channel.reward.redemption.updated", version: 1 },
+  // Subathon / activity ingest (handled in api/public/webhooks/kick.ts)
+  { name: "channel.followed", version: 1 },
+  { name: "channel.subscription.new", version: 1 },
+  { name: "channel.subscription.renewal", version: 1 },
+  { name: "channel.subscription.gifts", version: 1 },
 ] as const;
 
 type KickSubscription = {
@@ -9,11 +15,20 @@ type KickSubscription = {
   broadcaster_user_id?: number;
 };
 
-/** Ensures Kick delivers chat and reward redemptions to the configured app webhook. */
-export async function ensureKickMediaSubscriptions(
+export type KickEventSubscriptionResult = {
+  ok: boolean;
+  subscribed: string[];
+  errors: string[];
+};
+
+/**
+ * Ensures Kick delivers chat, rewards, follows, and subscription events to the
+ * app webhook. Safe to call on every Kick OAuth connect.
+ */
+export async function ensureKickEventSubscriptions(
   accessToken: string,
   broadcasterUserId: string,
-): Promise<{ ok: boolean; subscribed: string[]; errors: string[] }> {
+): Promise<KickEventSubscriptionResult> {
   const headers = { Authorization: `Bearer ${accessToken}`, Accept: "application/json" };
   const broadcasterId = Number(broadcasterUserId);
   const query = Number.isSafeInteger(broadcasterId)
@@ -23,7 +38,7 @@ export async function ensureKickMediaSubscriptions(
     headers,
   });
   const existingJson = existingResponse.ok
-    ? await existingResponse.json() as { data?: KickSubscription[] }
+    ? ((await existingResponse.json()) as { data?: KickSubscription[] })
     : { data: [] as KickSubscription[] };
   const existing = new Set((existingJson.data ?? []).map((item) => item.event));
   const missing = REQUIRED_KICK_EVENTS.filter((event) => !existing.has(event.name));
@@ -38,7 +53,7 @@ export async function ensureKickMediaSubscriptions(
       ...(Number.isSafeInteger(broadcasterId) ? { broadcaster_user_id: broadcasterId } : {}),
     }),
   });
-  const payload = await response.json().catch(() => ({})) as {
+  const payload = (await response.json().catch(() => ({}))) as {
     data?: Array<{ name?: string; error?: string }>;
     message?: string;
   };
@@ -48,3 +63,6 @@ export async function ensureKickMediaSubscriptions(
   if (!response.ok && payload.message) errors.push(payload.message);
   return { ok: response.ok && errors.length === 0, subscribed, errors };
 }
+
+/** @deprecated Prefer ensureKickEventSubscriptions — kept for existing imports. */
+export const ensureKickMediaSubscriptions = ensureKickEventSubscriptions;

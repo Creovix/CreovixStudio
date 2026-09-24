@@ -247,7 +247,8 @@ const DICT = {
   "gateway.billing.sixMonths": "6 Months",
   "gateway.billing.yearly": "Yearly",
   "gateway.billing.save": "Save ~{percent}%",
-  "gateway.billing.checkoutReady": "Pro checkout ready: {amount} — payment gateway coming soon.",
+  "gateway.billing.checkoutReady":
+    "Card checkout for {amount} is coming soon — enter your license code below to unlock Pro now.",
   "gateway.billing.selectorLabel": "Billing period",
   "gateway.free.name": "Free",
   "gateway.free.description": "Core tools to get on stream, with clear limits as you grow.",

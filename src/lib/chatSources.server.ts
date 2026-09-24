@@ -30,8 +30,15 @@ export async function resolveChatSources(
 
   for (const row of data ?? []) {
     const metadata = (row.metadata ?? {}) as Record<string, unknown>;
-    if (row.platform === "TWITCH" && row.username) {
-      twitchChannel = row.username;
+    if (row.platform === "TWITCH") {
+      // IRC JOIN requires the lowercase login; display names break channel joins.
+      const loginCandidate =
+        (typeof metadata["twitch_login"] === "string" && metadata["twitch_login"]) ||
+        (typeof metadata["login"] === "string" && metadata["login"]) ||
+        row.username;
+      if (loginCandidate) {
+        twitchChannel = loginCandidate.trim().replace(/^@/, "").toLowerCase();
+      }
     }
     if (row.platform === "KICK") {
       const id = metadata["chatroom_id"];

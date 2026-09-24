@@ -48,6 +48,7 @@ export function verifyTwitchSignature(params: {
  * Kick — RSA-SHA256 signature over (messageId.timestamp.rawBody), base64 in
  * `Kick-Event-Signature`, verified with Kick's public key. Projects using a
  * shared-secret relay instead can set KICK_WEBHOOK_SECRET for HMAC mode.
+ * Rejects timestamps outside a ±10 minute window (replay protection).
  */
 export function verifyKickSignature(params: {
   publicKeyPem: string | undefined;
@@ -59,6 +60,11 @@ export function verifyKickSignature(params: {
 }): boolean {
   const { publicKeyPem, hmacSecret, messageId, timestamp, signature, rawBody } = params;
   if (!signature || !messageId || !timestamp) return false;
+
+  // Reject replays / skewed clocks outside a 10-minute window (match Twitch policy).
+  const sent = Date.parse(timestamp);
+  if (Number.isNaN(sent) || Math.abs(Date.now() - sent) > 10 * 60 * 1000) return false;
+
   const payload = `${messageId}.${timestamp}.${rawBody}`;
 
   const verificationKey = publicKeyPem?.trim() || KICK_PUBLIC_KEY;

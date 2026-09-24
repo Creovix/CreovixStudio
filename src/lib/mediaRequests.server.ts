@@ -256,9 +256,8 @@ export async function fetchMediaMetadata(parsed: ParsedMediaUrl): Promise<MediaM
 export type KickReward = { id: string; title: string; cost: number };
 
 async function kickAccessToken(userId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin.from("platform_connections")
-    .select("access_token").eq("user_id", userId).eq("platform", "KICK").eq("is_active", true).maybeSingle();
-  return data?.access_token ?? null;
+  const { getKickAccessToken } = await import("@/lib/platformTokens.server");
+  return getKickAccessToken(userId);
 }
 
 function parseRewards(json: unknown): KickReward[] {
@@ -307,23 +306,21 @@ export async function createKickMediaReward(userId: string, input: { title: stri
 }
 
 export async function rejectKickRedemption(userId: string, effectiveRedemptionId: string): Promise<boolean> {
-  const { data: connection } = await supabaseAdmin.from("platform_connections")
-    .select("access_token").eq("user_id", userId).eq("platform", "KICK").eq("is_active", true).maybeSingle();
-  if (!connection?.access_token) return false;
+  const token = await kickAccessToken(userId);
+  if (!token) return false;
   const response = await fetch("https://api.kick.com/public/v1/channels/rewards/redemptions/reject", {
     method: "POST",
-    headers: { Authorization: `Bearer ${connection.access_token}`, "Content-Type": "application/json", Accept: "application/json" },
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ ids: [effectiveRedemptionId] }),
   });
   return response.ok;
 }
 
 export async function acceptKickRedemption(userId: string, effectiveRedemptionId: string): Promise<boolean> {
-  const { data: connection } = await supabaseAdmin.from("platform_connections")
-    .select("access_token").eq("user_id", userId).eq("platform", "KICK").eq("is_active", true).maybeSingle();
-  if (!connection?.access_token) return false;
+  const token = await kickAccessToken(userId);
+  if (!token) return false;
   const response = await fetch("https://api.kick.com/public/v1/channels/rewards/redemptions/accept", {
-    method: "POST", headers: { Authorization: `Bearer ${connection.access_token}`, "Content-Type": "application/json", Accept: "application/json" },
+    method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ ids: [effectiveRedemptionId] }),
   });
   return response.ok;
@@ -368,7 +365,9 @@ export async function ingestKickMediaRedemption(input: { messageId: string; body
   const { data: connection } = await supabaseAdmin.from("platform_connections").select("user_id")
     .eq("platform", "KICK").eq("platform_user_id", broadcasterId).eq("is_active", true).maybeSingle();
   if (!connection) return { status: "ignored" as const, reason: "kick_connection_not_found" };
-  const { data: settings } = await supabaseAdmin.from("media_request_settings").select("*")
+  const { data: settings } = await supabaseAdmin.from("media_request_settings").select(
+    "user_id,kick_reward_id,request_mode,require_approval,keyword_blacklist,user_blacklist,max_duration_seconds,min_view_count",
+  )
     .eq("user_id", connection.user_id).maybeSingle();
   if (!settings) return { status: "ignored" as const, reason: "media_request_settings_not_found" };
   // Prefer the immutable reward id. If Kick recreated the reward and changed
@@ -454,7 +453,9 @@ export async function ingestChatMediaRequest(input: {
   userId: string; messageId: string; username: string; text: string;
 }): Promise<{ ok: true; status: "pending" | "queued"; title: string } | { ok: false; reason: string }> {
   const { userId, messageId, username, text } = input;
-  const { data: settings } = await supabaseAdmin.from("media_request_settings").select("*").eq("user_id", userId).maybeSingle();
+  const { data: settings } = await supabaseAdmin.from("media_request_settings").select(
+    "user_id,kick_reward_id,request_mode,require_approval,keyword_blacklist,user_blacklist,max_duration_seconds,min_view_count",
+  ).eq("user_id", userId).maybeSingle();
   if (!settings) return { ok: false, reason: "media_request_settings_not_found" };
 
   const url = extractMediaUrl(text);

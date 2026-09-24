@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { SubathonElementControlPanel } from "@/components/widgets/SubathonElementControlPanel";
 import { supabase } from "@/lib/supabase/client";
@@ -39,7 +40,11 @@ function TimerControlPopout() {
       const { error } = await supabase.from("widgets").update({ config: config as never }).eq("id", widgetId);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["widget-control", widgetId] }),
+    onSuccess: () => {
+      toast.success("Saved");
+      void queryClient.invalidateQueries({ queryKey: ["widget-control", widgetId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Could not save"),
   });
 
   if (!widget) return <main className="min-h-screen bg-background p-4 text-sm text-muted-foreground">Loading control panel…</main>;

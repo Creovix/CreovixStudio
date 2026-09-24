@@ -220,6 +220,7 @@ function SchedulePage() {
       setEditor(null);
       void invalidate();
     },
+    onError: () => toast.error(c.errSave),
   });
 
   const openCreate = (iso?: string) => {

@@ -56,7 +56,7 @@ export function ToolCard({
   const overlayLabel = comingSoon ? t("home.comingSoon") : lockLabel;
 
   const copy = async () => {
-    if (previewLocked) return;
+    if (previewLocked || disabled || status === "Paused") return;
     const origin = typeof window === "undefined" ? "" : window.location.origin;
     const url = overlayUrl ?? (publicToken ? `${origin}/overlay/${publicToken}` : null);
     if (!url) return;
@@ -126,7 +126,7 @@ export function ToolCard({
         </span>
 
         <div className="flex items-center gap-1.5">
-          {(publicToken || overlayUrl) && !locked && !comingSoon ? (
+          {(publicToken || overlayUrl) && !locked && !comingSoon && !disabled && status !== "Paused" ? (
             <button
               type="button"
               onClick={copy}

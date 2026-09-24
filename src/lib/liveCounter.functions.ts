@@ -197,7 +197,7 @@ async function xAccount(username: string): Promise<ChannelSnapshot | null> {
   };
 }
 
-/** TikTok only exposes stats for the connected (authorised) account. */
+/** TikTok only exposes stats for the connected (authorised) account. Kept for when Login Kit ships. */
 async function tiktokAccount(
   accessToken: string,
   fallbackName: string,
@@ -252,11 +252,12 @@ export const lookupChannel = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .eq("is_active", true);
     const twitchConn = connections?.find((row) => row.platform === "TWITCH") ?? null;
-    const tiktokConn = connections?.find((row) => row.platform === "TIKTOK") ?? null;
+    // TikTok OAuth is Coming Soon — do not resolve TIKTOK snapshots until Login Kit is live.
+    const tiktokReady = false;
 
     const order: ("KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE")[] =
       data.platform === "ALL"
-        ? ["KICK", "TWITCH", "X", ...(tiktokConn ? (["TIKTOK"] as const) : [])]
+        ? ["KICK", "TWITCH", "X"]
         : [data.platform as "KICK" | "TWITCH" | "X" | "TIKTOK" | "YOUTUBE"];
 
     for (const platform of order) {
@@ -284,21 +285,16 @@ export const lookupChannel = createServerFn({ method: "POST" })
         }
       }
       if (platform === "TIKTOK") {
-        const snapshot = tiktokConn?.access_token
-          ? await tiktokAccount(tiktokConn.access_token, tiktokConn.username ?? username)
-          : null;
-        if (snapshot) return snapshot;
-        if (data.platform === "TIKTOK") {
-          throw new Error(
-            tiktokConn
-              ? "TikTok returned no data for the connected account. Reconnect TikTok in Settings."
-              : "Connect your TikTok account in Settings — TikTok only exposes follower counts for the connected account.",
-          );
+        if (!tiktokReady) {
+          throw new Error("TikTok live counters are Coming Soon until TikTok OAuth is ready.");
         }
+        // Unreachable until tiktokReady flips; keeps the helper typechecked for launch.
+        const snapshot = await tiktokAccount("", username);
+        if (snapshot) return snapshot;
       }
       if (platform === "YOUTUBE") {
         throw new Error(
-          "YouTube does not offer a public live follower counter yet — track Kick, Twitch or TikTok instead.",
+          "YouTube does not offer a public live follower counter yet — track Kick or Twitch instead.",
         );
       }
     }

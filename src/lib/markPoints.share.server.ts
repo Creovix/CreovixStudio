@@ -1,4 +1,6 @@
-import { cookie, readCookie } from "@/lib/oauth.server";
+import { createHmac, timingSafeEqual } from "crypto";
+
+import { base64Url, cookie, linkSecret, readCookie, readOAuthEnv } from "@/lib/oauth.server";
 import {
   isGateUsernameAllowed,
   isMarkStatus,
@@ -6,7 +8,6 @@ import {
   markGateCookieName,
   sanitizeKickUsername,
   type MarkPlaybackPayload,
-  type MarkStatus,
   type StreamMark,
 } from "@/lib/markPoints";
 import { supabaseAdmin } from "@/lib/supabase/client.server";
@@ -23,6 +24,59 @@ type SettingsRow = {
   kick_username: string;
   cached_staff: string[] | null;
 };
+
+const GATE_TTL_SECONDS = 60 * 60 * 24 * 7;
+
+/** Prefer dedicated secret; fall back to OAuth link / service role — never a public URL. */
+function markGateSecret(): string {
+  const secret =
+    readOAuthEnv("MARK_SHARE_GATE_SECRET") ??
+    readOAuthEnv("OAUTH_LINK_SECRET") ??
+    readOAuthEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!secret) {
+    // linkSecret() throws with a clear message if both are missing.
+    return linkSecret();
+  }
+  return secret;
+}
+
+/** Cookie value: v1.{username}.{exp}.{mac} — mac binds share_token so cookies are not portable. */
+function signMarkGateValue(shareToken: string, username: string, ttlSeconds: number): string {
+  const exp = Date.now() + ttlSeconds * 1000;
+  const payload = `${shareToken}.${username}.${exp}`;
+  const mac = base64Url(createHmac("sha256", markGateSecret()).update(payload).digest());
+  return `v1.${username}.${exp}.${mac}`;
+}
+
+function verifyMarkGateValue(shareToken: string, raw: string | null): string | null {
+  if (!raw) return null;
+  const value = (() => {
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  })();
+  const parts = value.split(".");
+  // Reject legacy unsigned username-only cookies (pre-HMAC).
+  if (parts.length !== 4 || parts[0] !== "v1") return null;
+  const [, username, expRaw, mac] = parts;
+  if (!username || !expRaw || !mac) return null;
+  if (Number(expRaw) < Date.now()) return null;
+  let expected: string;
+  try {
+    expected = base64Url(
+      createHmac("sha256", markGateSecret())
+        .update(`${shareToken}.${username}.${expRaw}`)
+        .digest(),
+    );
+  } catch {
+    return null;
+  }
+  if (mac.length !== expected.length) return null;
+  if (!timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
+  return username;
+}
 
 async function loadSettings(token: string): Promise<SettingsRow | null> {
   if (!token) return null;
@@ -69,9 +123,11 @@ export async function authorizeMarkShare(
   const settings = await loadSettings(token);
   if (!settings) return { ok: false, reason: "not_found" };
   const ownerId = await userIdFromBearer(request);
-  if (ownerId && ownerId === settings.user_id) return { ok: true, userId: settings.user_id, via: "owner" };
+  if (ownerId && ownerId === settings.user_id) {
+    return { ok: true, userId: settings.user_id, via: "owner" };
+  }
   const cookieName = markGateCookieName(token);
-  const username = readCookie(request, cookieName);
+  const username = verifyMarkGateValue(token, readCookie(request, cookieName));
   if (username && isGateUsernameAllowed(username, await gateNames(settings))) {
     return { ok: true, userId: settings.user_id, via: "username" };
   }
@@ -89,9 +145,10 @@ export async function unlockMarkShare(
   if (!isGateUsernameAllowed(username, await gateNames(settings))) {
     return { ok: false, reason: "denied" };
   }
+  const signed = encodeURIComponent(signMarkGateValue(token, username, GATE_TTL_SECONDS));
   return {
     ok: true,
-    setCookie: cookie(request, markGateCookieName(token), username, 60 * 60 * 24 * 7),
+    setCookie: cookie(request, markGateCookieName(token), signed, GATE_TTL_SECONDS),
   };
 }
 

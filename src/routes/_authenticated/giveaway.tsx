@@ -119,11 +119,7 @@ function GiveawayPage() {
   });
   const sources = useQuery({ queryKey: ["giveaway-chat-sources"], queryFn: () => fetchSources() });
   const overlay = useQuery({ queryKey: ["giveaway-overlay-token"], queryFn: () => fetchOverlayToken() });
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
-  const overlayUrl = overlay.data?.token
-    ? `${origin}/overlay/giveaway?token=${overlay.data.token}`
-    : "";
+  const overlayUrl = overlay.data?.overlayUrl || "";
 
   const [form, setForm] = useState<GiveawaySettings>(DEFAULT_GIVEAWAY);
   const loaded = useRef(false);
@@ -223,6 +219,7 @@ function GiveawayPage() {
         void queryClient.invalidateQueries({ queryKey: ["giveaway"] });
       } else toast.error(result.error);
     },
+    onError: (error: Error) => toast.error(error.message || "Could not save giveaway"),
   });
 
   const update = (patch: Partial<GiveawaySettings>) => {
@@ -242,6 +239,7 @@ function GiveawayPage() {
       toast.success(c.cleared);
       void queryClient.invalidateQueries({ queryKey: ["giveaway"] });
     },
+    onError: (error: Error) => toast.error(error.message || "Could not clear participants"),
   });
 
   const runDraw = async () => {

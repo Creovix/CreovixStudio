@@ -51,7 +51,7 @@ type ChannelSuggestion = {
   isLive?: boolean;
 };
 
-const TRACKABLE: ChannelSuggestion["platform"][] = ["KICK", "TWITCH", "X", "TIKTOK", "YOUTUBE"];
+const TRACKABLE: ChannelSuggestion["platform"][] = ["KICK", "TWITCH", "X", "YOUTUBE"];
 const SOURCE_LABEL: Record<SuggestionSource, string> = {
   connected: "Connected",
   favorite: "Favorite",
@@ -59,12 +59,12 @@ const SOURCE_LABEL: Record<SuggestionSource, string> = {
   twitch: "Twitch",
 };
 
-const PLATFORMS: { id: CounterPlatform; label: string }[] = [
+const PLATFORMS: { id: CounterPlatform; label: string; comingSoon?: boolean }[] = [
   { id: "ALL", label: "All Platforms" },
   { id: "KICK", label: "Kick" },
   { id: "TWITCH", label: "Twitch" },
   { id: "X", label: "X (Twitter)" },
-  { id: "TIKTOK", label: "TikTok" },
+  { id: "TIKTOK", label: "TikTok (Coming Soon)", comingSoon: true },
   { id: "YOUTUBE", label: "YouTube" },
 ];
 
@@ -273,7 +273,7 @@ function PlatformSelect({
       onValueChange={(next) => onPlatform(next as CounterPlatform)}
       aria-label={ariaLabel}
       className={className ?? "h-11 w-[12.5rem] shrink-0"}
-      options={PLATFORMS.map((entry) => ({
+      options={PLATFORMS.filter((entry) => !entry.comingSoon).map((entry) => ({
         value: entry.id,
         label: (
           <span className="flex items-center gap-2">
@@ -738,11 +738,11 @@ function errorText(error: unknown): string | null {
   return error instanceof Error ? error.message : "Could not load this channel";
 }
 
-const SOCIAL_PLATFORMS: { id: Exclude<CounterPlatform, "ALL">; label: string }[] = [
+const SOCIAL_PLATFORMS: { id: Exclude<CounterPlatform, "ALL">; label: string; comingSoon?: boolean }[] = [
   { id: "KICK", label: "Kick" },
   { id: "TWITCH", label: "Twitch" },
   { id: "X", label: "X" },
-  { id: "TIKTOK", label: "TikTok" },
+  { id: "TIKTOK", label: "TikTok (Coming Soon)", comingSoon: true },
   { id: "YOUTUBE", label: "YouTube" },
 ];
 
@@ -790,6 +790,7 @@ function SocialCounterSection() {
   const addAccount = () => {
     const username = input.trim().replace(/^@/, "");
     if (!username) return;
+    if (platform === "TIKTOK") return;
     const key = `${platform}:${username.toLowerCase()}`;
     if (accounts.some((item) => `${item.platform}:${item.username.toLowerCase()}` === key)) {
       setInput("");
@@ -829,7 +830,7 @@ function SocialCounterSection() {
           onValueChange={(next) => setPlatform(next as Exclude<CounterPlatform, "ALL">)}
           aria-label="Social platform"
           className="h-11 w-[11.5rem] shrink-0"
-          options={SOCIAL_PLATFORMS.map((entry) => ({
+          options={SOCIAL_PLATFORMS.filter((entry) => !entry.comingSoon).map((entry) => ({
             value: entry.id,
             label: (
               <span className="flex items-center gap-2">

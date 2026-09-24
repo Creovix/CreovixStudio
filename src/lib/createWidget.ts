@@ -52,6 +52,9 @@ export async function createWidget(args: {
   name?: string;
   goalType?: GoalTypeId;
 }) {
+  if (args.type === "TIKTOK_TAPPERS" || args.type === "TIKTOK_TAP_GOAL") {
+    throw new Error("TikTok overlays are Coming Soon until OAuth is ready.");
+  }
   const { data: widget, error } = await supabase
     .from("widgets")
     .insert({

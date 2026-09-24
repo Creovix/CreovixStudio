@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
+import { readOAuthEnv } from "@/lib/oauth.server";
 
 /**
  * Reads the creator's live follower / subscriber count straight from the
@@ -12,6 +13,7 @@ export const syncGoalFollowers = createServerFn({ method: "POST" })
   .inputValidator((input: { widgetId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/lib/supabase/client.server");
+    const { getTwitchAccessToken } = await import("@/lib/platformTokens.server");
 
     const { data: goal } = await supabaseAdmin
       .from("goals")
@@ -22,7 +24,7 @@ export const syncGoalFollowers = createServerFn({ method: "POST" })
 
     const { data: connections } = await supabaseAdmin
       .from("platform_connections")
-      .select("platform, platform_user_id, username, access_token")
+      .select("platform, platform_user_id, username")
       .eq("user_id", context.userId)
       .eq("is_active", true);
 
@@ -30,14 +32,15 @@ export const syncGoalFollowers = createServerFn({ method: "POST" })
     let source: string | null = null;
 
     const twitch = connections?.find((row) => row.platform === "TWITCH");
-    if (twitch?.access_token && twitch.platform_user_id) {
-      const clientId = process.env["TWITCH_CLIENT_ID"];
-      if (clientId) {
+    if (twitch?.platform_user_id) {
+      const accessToken = await getTwitchAccessToken(context.userId);
+      const clientId = readOAuthEnv("TWITCH_CLIENT_ID");
+      if (accessToken && clientId) {
         const response = await fetch(
           `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${encodeURIComponent(twitch.platform_user_id)}&first=1`,
           {
             headers: {
-              Authorization: `Bearer ${twitch.access_token}`,
+              Authorization: `Bearer ${accessToken}`,
               "Client-Id": clientId,
             },
           },
@@ -79,8 +82,5 @@ export const syncGoalFollowers = createServerFn({ method: "POST" })
       .eq("id", goal.id);
     if (error) throw new Error(error.message);
 
-    const { broadcastToWidgets } = await import("@/lib/realtime.server");
-    await broadcastToWidgets([data.widgetId], "refresh", { reason: "goal-sync" });
-
-    return { ok: true as const, current: total, source };
+    return { ok: true as const, total, source };
   });

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 
@@ -9,6 +10,14 @@ export type ClipCommandSettingsInput = {
   maxLength: number;
   response: string;
 };
+
+const ClipCommandSettingsSchema = z.object({
+  enabled: z.boolean(),
+  roles: z.array(z.string().min(1).max(40)).max(20),
+  defaultLength: z.number().int().min(5).max(300),
+  maxLength: z.number().int().min(5).max(300),
+  response: z.string().max(500),
+});
 
 export const getClipCommandState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -53,7 +62,7 @@ export const getClipCommandState = createServerFn({ method: "GET" })
 
 export const saveClipCommandSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: ClipCommandSettingsInput) => input)
+  .inputValidator((input: ClipCommandSettingsInput) => ClipCommandSettingsSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const maxLength = Math.min(Math.max(Math.round(data.maxLength) || 120, 5), 240);

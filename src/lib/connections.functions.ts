@@ -13,8 +13,16 @@ export const startPlatformLink = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { signLinkState } = await import("@/lib/oauth.server");
-    const state = signLinkState(context.userId);
-    return { url: `/api/auth/${data.provider}/start?link=${encodeURIComponent(state)}` };
+    try {
+      const state = signLinkState(context.userId);
+      return { url: `/api/auth/${data.provider}/start?link=${encodeURIComponent(state)}` };
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "Account linking is not configured (set OAUTH_LINK_SECRET or SUPABASE_SERVICE_ROLE_KEY)",
+      );
+    }
   });
 
 /** Verifies a StreamElements account JWT and stores it for the signed-in user. */
@@ -36,18 +44,21 @@ export const connectStreamElements = createServerFn({ method: "POST" })
     return { ok: true as const, username: channel.username };
   });
 
-/** Returns the signed-in user's stored StreamElements JWT (owner only). */
+/**
+ * Reports whether a StreamElements JWT is stored (never returns the JWT itself —
+ * tips should flow via webhooks; browser sockets would require exposing the secret).
+ */
 export const getStreamElementsToken = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("platform_connections")
-      .select("access_token, is_active")
+      .select("id")
       .eq("user_id", context.userId)
       .eq("platform", "STREAMELEMENTS")
       .eq("is_active", true)
       .limit(1);
-    return { token: (data?.[0]?.access_token as string | null) ?? null };
+    return { configured: Boolean(data?.[0]?.id), token: null as string | null };
   });
 
 /** Ingests one parsed StreamElements realtime event through the shared pipeline. */
@@ -124,21 +135,25 @@ export const connectStreamlabsSocket = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-/** Returns the signed-in user's stored Streamlabs socket token (owner only). */
+/**
+ * Reports whether a Streamlabs socket connection is stored (never returns the
+ * durable socket token to the browser — use Streamlabs webhooks for production tips).
+ */
 export const getStreamlabsSocketToken = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("platform_connections")
-      .select("access_token, is_active, metadata")
+      .select("id, metadata")
       .eq("user_id", context.userId)
       .eq("platform", "STREAMLABS")
       .eq("is_active", true)
       .limit(5);
-    const row = (data ?? []).find(
-      (entry) => (entry.metadata as { source?: string } | null)?.source === "socket_token",
-    );
-    return { token: (row?.access_token as string | null) ?? null };
+    const configured = (data ?? []).some((entry) => {
+      const meta = entry.metadata as { source?: string; socket_token?: string } | null;
+      return meta?.source === "socket_token" || Boolean(meta?.socket_token) || Boolean(entry.id);
+    });
+    return { configured, token: null as string | null };
   });
 
 const SOCKET_EVENT_TYPES = [

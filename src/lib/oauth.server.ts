@@ -71,6 +71,8 @@ export const PROVIDERS: Record<OAuthProvider, ProviderConfig> = {
         username: user.display_name || user.login,
         email: user.email ?? null,
         image: user.profile_image_url ?? null,
+        // IRC JOIN requires the lowercase login, not the display name.
+        extra: { twitch_login: user.login.toLowerCase(), login: user.login.toLowerCase() },
       };
     },
   },
@@ -277,6 +279,10 @@ export function buildAuthorizeUrl(args: {
   const clientKey = args.provider === "tiktok" ? "client_key" : "client_id";
 
   // Kick + TikTok PKCE: RFC 7636 unpadded base64url (no `=` / `%3D`).
+  // Fail closed — never authorize without a verifier when the provider requires PKCE.
+  if (config.usesPkce && !args.verifier) {
+    throw new Error(`${args.provider}_pkce_verifier_required`);
+  }
   const challenge = args.verifier ? challengeFor(args.verifier) : null;
 
   const pairs: Array<[string, string]> = [
@@ -378,7 +384,13 @@ export const exchangeCode = async (args: {
     client_secret: args.clientSecret,
   });
   body.set(isTikTok ? "client_key" : "client_id", args.clientId);
-  if (config.usesPkce && args.verifier) body.set("code_verifier", args.verifier);
+  // PKCE providers must always send code_verifier — never skip it.
+  if (config.usesPkce) {
+    if (!args.verifier) {
+      throw new Error(`${args.provider}_pkce_verifier_missing`);
+    }
+    body.set("code_verifier", args.verifier);
+  }
 
   const res = await fetch(config.tokenUrl, {
     method: "POST",
@@ -398,8 +410,17 @@ export const exchangeCode = async (args: {
  * parameter, signed with a server-only secret so the callback can trust it.
  * ------------------------------------------------------------------------- */
 
-const linkSecret = () =>
-  process.env["SUPABASE_SERVICE_ROLE_KEY"] ?? process.env["SUPABASE_URL"] ?? "creovix-link";
+/** Server-only HMAC key. Never fall back to public SUPABASE_URL or a constant. */
+export function linkSecret(): string {
+  const secret =
+    readOAuthEnv("OAUTH_LINK_SECRET") ?? readOAuthEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!secret) {
+    throw new Error(
+      "OAUTH_LINK_SECRET (or SUPABASE_SERVICE_ROLE_KEY) is required for account linking",
+    );
+  }
+  return secret;
+}
 
 export const signLinkState = (userId: string, ttlSeconds = 600) => {
   const exp = Date.now() + ttlSeconds * 1000;
@@ -412,9 +433,14 @@ export const verifyLinkState = (state: string): string | null => {
   if (!state.startsWith("link:")) return null;
   const [userId, expRaw, mac] = state.slice(5).split(".");
   if (!userId || !expRaw || !mac) return null;
-  const expected = base64Url(
-    createHmac("sha256", linkSecret()).update(`${userId}.${expRaw}`).digest(),
-  );
+  let expected: string;
+  try {
+    expected = base64Url(
+      createHmac("sha256", linkSecret()).update(`${userId}.${expRaw}`).digest(),
+    );
+  } catch {
+    return null;
+  }
   if (mac.length !== expected.length) return null;
   if (!timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
   if (Number(expRaw) < Date.now()) return null;

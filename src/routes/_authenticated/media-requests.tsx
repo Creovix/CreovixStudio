@@ -14,6 +14,7 @@ import { MediaRequestPlayer, useMediaEmbedBridge } from "@/components/media/Medi
 import { MediaSourceBadge } from "@/components/media/MediaSourceBadge";
 import { extractMediaUrl, mediaArtworkUrl, mediaOpenUrl, mediaPlaybackHint, mediaPlaybackMode, mediaPlatformLabel } from "@/lib/mediaRequests";
 import { isPlayerLayout, PLAYER_LAYOUT_OPTIONS, type PlayerLayout } from "@/lib/playerPalette";
+import { toast } from "sonner";
 import { addManualMediaRequest, createKickMediaRewardFn, getMediaChatSources, getMediaRequestDashboard, ingestChatMediaRequestFn, listKickRewardsFn, mediaRequestAction, saveMediaRequestSettings } from "@/lib/mediaRequests.functions";
 
 /** Watches Kick chat for channel-point redemption messages carrying a media link. */
@@ -50,8 +51,8 @@ function Page(){const{user}=Route.useRouteContext();const qc=useQueryClient();co
   const[setupTab,setSetupTab]=useState<"setup"|"links"|"safety">("setup");
   useEffect(()=>{if(settings)setForm({kickRewardId:settings.kick_reward_id??"",requestMode:(["AUTO","MANUAL","PAUSED"].includes(settings.request_mode)?settings.request_mode:settings.require_approval?"MANUAL":"AUTO") as "AUTO"|"MANUAL"|"PAUSED",keywordBlacklist:settings.keyword_blacklist.join(", "),userBlacklist:settings.user_blacklist.join(", "),displayMode:settings.display_mode==="AUDIO_ONLY"?"AUDIO_ONLY":"VIDEO",playerLayout:isPlayerLayout(settings.player_layout)?settings.player_layout:"VERTICAL_CARD",volume:settings.volume})},[settings]);
  useEffect(()=>{const refresh=()=>void qc.invalidateQueries({queryKey:["media-requests"]});const channel=supabase.channel(`media:${user.id}`).on("postgres_changes",{event:"*",schema:"public",table:"media_requests",filter:`user_id=eq.${user.id}`},refresh).on("postgres_changes",{event:"*",schema:"public",table:"media_playback_state",filter:`user_id=eq.${user.id}`},refresh).subscribe(status=>{console.log("Media Requests Realtime Status:",status);if(status==="SUBSCRIBED")refresh()});const fallback=window.setInterval(refresh,5000);return()=>{window.clearInterval(fallback);void supabase.removeChannel(channel)}},[qc,user.id]);
- const save=useMutation({mutationFn:()=>saveMediaRequestSettings({data:form}),onSuccess:()=>void qc.invalidateQueries({queryKey:["media-requests"]})});const act=useMutation({mutationFn:(v:Parameters<typeof mediaRequestAction>[0]["data"])=>mediaRequestAction({data:v}),onSuccess:()=>void qc.invalidateQueries({queryKey:["media-requests"]})});
- const requests=d?.requests??[];const current=requests.find(r=>r.id===d?.playback?.current_request_id)??null;const pending=requests.filter(r=>r.status==="PENDING");const queue=requests.filter(r=>r.status==="QUEUED").sort((a,b)=>Number(a.position??0)-Number(b.position??0));const obs=typeof location!=="undefined"&&settings?`${location.origin}/overlay/media-request?token=${settings.overlay_token}`:"";const mod=typeof location!=="undefined"&&settings?`${location.origin}/mod-queue?token=${settings.mod_token}`:"";
+ const save=useMutation({mutationFn:()=>saveMediaRequestSettings({data:form}),onSuccess:()=>{toast.success("Setup saved");void qc.invalidateQueries({queryKey:["media-requests"]})},onError:(err:Error)=>toast.error(err.message||"Could not save setup")});const act=useMutation({mutationFn:(v:Parameters<typeof mediaRequestAction>[0]["data"])=>mediaRequestAction({data:v}),onSuccess:()=>void qc.invalidateQueries({queryKey:["media-requests"]}),onError:(err:Error)=>toast.error(err.message||"Queue action failed")});
+ const requests=d?.requests??[];const current=requests.find(r=>r.id===d?.playback?.current_request_id)??null;const pending=requests.filter(r=>r.status==="PENDING");const queue=requests.filter(r=>r.status==="QUEUED").sort((a,b)=>Number(a.position??0)-Number(b.position??0));const obs=d?.overlayUrl??"";const mod=d?.modUrl??"";
  const hasScopes=useMemo(()=>["channel:rewards:read","channel:rewards:write","events:subscribe"].every(s=>d?.kickScopes.includes(s)),[d?.kickScopes]);
  useChatMediaRequests(Boolean(settings));
  const player=useRef<HTMLIFrameElement>(null);
@@ -117,7 +118,7 @@ function Field({label,children}:{label:string;children:React.ReactNode}){return 
 const rewardError=(code:string)=>code==="kick_not_connected"?"Connect your Kick account in Settings to load rewards.":code==="kick_token_expired"?"Kick session expired — reconnect Kick in Settings.":"Couldn't load rewards from Kick. Try again.";
 function RewardPicker({value,onChange}:{value:string;onChange:(v:string)=>void}){
   const rewards=useQuery({queryKey:["kick-rewards"],queryFn:()=>listKickRewardsFn(),staleTime:60_000});
-  const create=useMutation({mutationFn:()=>createKickMediaRewardFn({data:{title:"Media Request",cost:5000}}),onSuccess:r=>{if("reward" in r){onChange(r.reward.id);void rewards.refetch()}}});
+  const create=useMutation({mutationFn:()=>createKickMediaRewardFn({data:{title:"Media Request",cost:5000}}),onSuccess:r=>{if("reward" in r){onChange(r.reward.id);void rewards.refetch();toast.success("Reward created")}else if("error" in r)toast.error(rewardError(r.error))},onError:(err:Error)=>toast.error(err.message||"Could not create reward")});
   const data=rewards.data;
   const list="rewards" in (data??{})?(data as {rewards:{id:string;title:string;cost:number}[]}).rewards:[];
   const errCode=data&&"error" in data?data.error:rewards.isError?"kick_api_error":create.data&&"error" in create.data?create.data.error:null;
@@ -140,7 +141,7 @@ function QueueRow({r,index,act}:{r:Req;index:number;act:(v:Parameters<typeof med
 
 function ManualTestBox(){
   const qc=useQueryClient();const[url,setUrl]=useState("");
-  const add=useMutation({mutationFn:()=>addManualMediaRequest({data:{url}}),onSuccess:r=>{if(r.ok){setUrl("");void qc.invalidateQueries({queryKey:["media-requests"]})}}});
+  const add=useMutation({mutationFn:()=>addManualMediaRequest({data:{url}}),onSuccess:r=>{if(r.ok){setUrl("");void qc.invalidateQueries({queryKey:["media-requests"]});toast.success(`Queued: ${r.title}`)}else toast.error(r.error||"Could not queue track")},onError:(err:Error)=>toast.error(err.message||"Could not queue track")});
   const result=add.data;
   return <div className="space-y-2 rounded-xl border border-white/10 bg-black/15 p-3">
     <p className="text-xs font-semibold text-muted-foreground">Queue test track</p>

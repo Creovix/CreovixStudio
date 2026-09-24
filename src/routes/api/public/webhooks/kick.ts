@@ -89,7 +89,7 @@ export const Route = createFileRoute("/api/public/webhooks/kick")({
           signature: request.headers.get("kick-event-signature"),
           rawBody,
         });
-        if (!ok) return new Response("Invalid signature", { status: 403 });
+        if (!ok) return jsonResponse({ error: "invalid_signature" }, 403);
 
         let body: KickPayload;
         try {

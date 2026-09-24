@@ -45,55 +45,8 @@ function pickStartedAt(value: unknown): string | null {
 }
 
 async function kickAccessToken(userId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("platform_connections")
-    .select("id, access_token, refresh_token, token_expires_at")
-    .eq("user_id", userId)
-    .eq("platform", "KICK")
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!data?.access_token) return null;
-
-  const expiresAt = data.token_expires_at ? new Date(data.token_expires_at).getTime() : 0;
-  if (!expiresAt || expiresAt > Date.now() + 5 * 60 * 1000) return data.access_token;
-  if (!data.refresh_token) return data.access_token;
-
-  const clientId = process.env["KICK_CLIENT_ID"];
-  const clientSecret = process.env["KICK_CLIENT_SECRET"];
-  if (!clientId || !clientSecret) return data.access_token;
-
-  try {
-    const response = await fetch("https://id.kick.com/oauth/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: data.refresh_token,
-        client_id: clientId,
-        client_secret: clientSecret,
-      }),
-    });
-    if (!response.ok) return data.access_token;
-    const refreshed = (await response.json()) as {
-      access_token?: string;
-      refresh_token?: string;
-      expires_in?: number;
-    };
-    if (!refreshed.access_token) return data.access_token;
-    await supabaseAdmin
-      .from("platform_connections")
-      .update({
-        access_token: refreshed.access_token,
-        refresh_token: refreshed.refresh_token ?? data.refresh_token,
-        token_expires_at: refreshed.expires_in
-          ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
-          : data.token_expires_at,
-      })
-      .eq("id", data.id);
-    return refreshed.access_token;
-  } catch {
-    return data.access_token;
-  }
+  const { getKickAccessToken } = await import("@/lib/platformTokens.server");
+  return getKickAccessToken(userId);
 }
 
 async function kickSlug(userId: string): Promise<string | null> {

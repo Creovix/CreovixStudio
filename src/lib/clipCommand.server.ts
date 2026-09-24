@@ -44,70 +44,8 @@ function isAllowed(settings: ClipCommandSettings, badges: string[]): boolean {
 }
 
 async function kickToken(userId: string): Promise<string | null> {
-  const { data } = await supabaseAdmin
-    .from("platform_connections")
-    .select("id, access_token, refresh_token, token_expires_at, scopes")
-    .eq("user_id", userId)
-    .eq("platform", "KICK")
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!data?.access_token) return null;
-
-  const scopes = data.scopes ?? [];
-  if (!scopes.includes("chat:write")) {
-    console.warn("[clip-command] Kick connection is missing chat:write", { userId });
-    return null;
-  }
-
-  const expiresAt = data.token_expires_at ? new Date(data.token_expires_at).getTime() : 0;
-  if (!expiresAt || expiresAt > Date.now() + 5 * 60 * 1000) return data.access_token;
-  if (!data.refresh_token) return null;
-
-  const clientId = process.env["KICK_CLIENT_ID"];
-  const clientSecret = process.env["KICK_CLIENT_SECRET"];
-  if (!clientId || !clientSecret) return null;
-
-  try {
-    const response = await fetch("https://id.kick.com/oauth/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: data.refresh_token,
-        client_id: clientId,
-        client_secret: clientSecret,
-      }),
-    });
-    if (!response.ok) {
-      console.warn("[clip-command] Kick token refresh failed", response.status);
-      return null;
-    }
-    const refreshed = (await response.json()) as {
-      access_token: string;
-      refresh_token?: string;
-      expires_in?: number;
-      scope?: string | string[];
-    };
-    const refreshedScopes = Array.isArray(refreshed.scope)
-      ? refreshed.scope
-      : (refreshed.scope ?? scopes.join(" ")).split(" ").filter(Boolean);
-    await supabaseAdmin
-      .from("platform_connections")
-      .update({
-        access_token: refreshed.access_token,
-        refresh_token: refreshed.refresh_token ?? data.refresh_token,
-        token_expires_at: refreshed.expires_in
-          ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
-          : null,
-        scopes: refreshedScopes,
-      })
-      .eq("id", data.id);
-    console.log("[clip-command] refreshed Kick access token", { userId });
-    return refreshed.access_token;
-  } catch (error) {
-    console.error("[clip-command] Kick token refresh error", error);
-    return null;
-  }
+  const { getKickAccessToken } = await import("@/lib/platformTokens.server");
+  return getKickAccessToken(userId, { requireScopes: ["chat:write"] });
 }
 
 export const BOT_NAME = "CylixStudio";
