@@ -85,7 +85,20 @@ export async function ensureUserProfile(userId: string): Promise<void> {
     },
     { onConflict: "id" },
   );
-  if (error) throw error;
+  if (error) {
+    const message = error.message?.toLowerCase() ?? "";
+    if (
+      message.includes("schema cache") ||
+      message.includes("could not find the table") ||
+      error.code === "PGRST205" ||
+      error.code === "42P01"
+    ) {
+      throw new Error(
+        "public.users is missing in Supabase. Run migration 20260925010000_ensure_public_users_profile.sql (SQL Editor or supabase db push), then retry.",
+      );
+    }
+    throw error;
+  }
 }
 
 /**

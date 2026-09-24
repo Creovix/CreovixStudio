@@ -8,10 +8,52 @@ export type Subathon = {
   title: string;
   slug: string;
   is_active: boolean;
-  initial_seconds: number;
   max_duration_seconds: number | null;
+  initial_seconds: number;
   overlays: { public_token: string; is_public: boolean }[];
 };
+
+function isMissingRelationError(error: { message?: string; code?: string } | null): boolean {
+  if (!error?.message) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("schema cache") ||
+    message.includes("could not find the table") ||
+    message.includes("does not exist") ||
+    error.code === "42P01" ||
+    error.code === "PGRST205"
+  );
+}
+
+async function profileFromAuth(userId: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) {
+    return {
+      name: null as string | null,
+      email: null as string | null,
+      image: null as string | null,
+      timezone: null as string | null,
+    };
+  }
+  const meta = user.user_metadata ?? {};
+  return {
+    name:
+      (typeof meta.name === "string" && meta.name) ||
+      (typeof meta.full_name === "string" && meta.full_name) ||
+      (typeof meta.preferred_username === "string" && meta.preferred_username) ||
+      (typeof meta.username === "string" && meta.username) ||
+      null,
+    email: user.email ?? null,
+    image:
+      (typeof meta.avatar_url === "string" && meta.avatar_url) ||
+      (typeof meta.picture === "string" && meta.picture) ||
+      (typeof meta.image === "string" && meta.image) ||
+      null,
+    timezone: null as string | null,
+  };
+}
 
 /** Profile + subathons + connections — the data every dashboard screen needs. */
 export function useWorkspace(userId: string) {
@@ -30,6 +72,7 @@ export function useWorkspace(userId: string) {
           subathons: [] as Subathon[],
         };
       }
+
       const [profile, connections, subathons] = await Promise.all([
         supabase.from("users").select("name, email, image, timezone").eq("id", userId).maybeSingle(),
         supabase
@@ -46,13 +89,31 @@ export function useWorkspace(userId: string) {
           .order("is_active", { ascending: false })
           .order("created_at", { ascending: true }),
       ]);
-      if (profile.error) throw profile.error;
-      if (connections.error) throw connections.error;
-      if (subathons.error) throw subathons.error;
+
+      let resolvedProfile = profile.data;
+      if (profile.error) {
+        if (isMissingRelationError(profile.error)) {
+          console.warn(
+            "[workspace] public.users missing from schema cache — falling back to auth.getUser(). Apply migration 20260925010000_ensure_public_users_profile.sql",
+            profile.error.message,
+          );
+          resolvedProfile = await profileFromAuth(userId);
+        } else {
+          throw profile.error;
+        }
+      }
+
+      if (connections.error && !isMissingRelationError(connections.error)) {
+        throw connections.error;
+      }
+      if (subathons.error && !isMissingRelationError(subathons.error)) {
+        throw subathons.error;
+      }
+
       return {
-        profile: profile.data,
-        connections: connections.data ?? [],
-        subathons: (subathons.data ?? []) as Subathon[],
+        profile: resolvedProfile,
+        connections: connections.error ? [] : (connections.data ?? []),
+        subathons: (subathons.error ? [] : (subathons.data ?? [])) as Subathon[],
       };
     },
   });
