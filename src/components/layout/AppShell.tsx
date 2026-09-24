@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
@@ -101,6 +101,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const [collapsed, setCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -141,11 +142,11 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
 
   const navBtn = (active: boolean) =>
     cn(
-      "group relative flex w-full items-center rounded-xl border border-transparent text-[0.82rem] transition-colors",
+      "group relative flex w-full items-center rounded-xl border text-[0.82rem] transition-colors",
       collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
       active
-        ? "border-[color-mix(in_oklab,var(--primary)_45%,transparent)] bg-[color-mix(in_oklab,var(--primary)_16%,transparent)] text-foreground"
-        : "text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground",
+        ? "border-[#bee1fc]/50 bg-[#bee1fc]/20 text-foreground"
+        : "border-transparent text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground",
     );
 
   return (
@@ -220,13 +221,10 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
             {NAV.map((item) => {
               const Icon = item.icon;
+              const active = pathname === item.to;
               return (
                 <IconTip key={item.to} label={item.label} collapsed={collapsed}>
-                  <Link
-                    to={item.to}
-                    className={navBtn(false)}
-                    activeProps={{ className: navBtn(true) }}
-                  >
+                  <Link to={item.to} className={navBtn(active)} aria-current={active ? "page" : undefined}>
                     <Icon className="size-4 shrink-0" aria-hidden />
                     {collapsed ? null : <span className="truncate">{item.label}</span>}
                   </Link>

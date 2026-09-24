@@ -51,6 +51,8 @@ const COPY = {
   loading: "Loading clips…",
   empty: "No clips yet. Clips created on your channel will appear here.",
   noneMatch: "No clips match that search.",
+  loadError: "Could not load clips. Try again.",
+  retry: "Retry",
   clippedBy: "Clipped by",
   views: (n: number) => `${n} views`,
   copy: "Copy link",
@@ -81,7 +83,9 @@ function formatDuration(seconds: number) {
 }
 
 function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
+  const parsed = Date.parse(iso);
+  if (!Number.isFinite(parsed)) return "";
+  const diff = Date.now() - parsed;
   const mins = Math.round(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
@@ -89,7 +93,28 @@ function timeAgo(iso: string) {
   if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
   const days = Math.round(hours / 24);
   if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
-  return new Date(iso).toLocaleDateString();
+  return new Date(parsed).toLocaleDateString();
+}
+
+function normalizeClip(raw: unknown): Clip | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const id = typeof row.id === "string" ? row.id : "";
+  const url = typeof row.url === "string" ? row.url.trim() : "";
+  if (!id || !url) return null;
+  return {
+    id,
+    title: typeof row.title === "string" && row.title.trim() ? row.title.trim() : "Clip",
+    url,
+    shareUrl: typeof row.shareUrl === "string" && row.shareUrl ? row.shareUrl : null,
+    thumbnail: typeof row.thumbnail === "string" && row.thumbnail ? row.thumbnail : null,
+    duration: typeof row.duration === "number" && Number.isFinite(row.duration) ? row.duration : 0,
+    views: typeof row.views === "number" && Number.isFinite(row.views) ? row.views : 0,
+    clippedBy:
+      typeof row.clippedBy === "string" && row.clippedBy.trim() ? row.clippedBy.trim() : "viewer",
+    createdAt: typeof row.createdAt === "string" && row.createdAt ? row.createdAt : new Date(0).toISOString(),
+    platform: typeof row.platform === "string" && row.platform ? row.platform : "KICK",
+  };
 }
 
 function ClipsPage() {
@@ -105,9 +130,24 @@ function ClipsPage() {
   const [active, setActive] = useState<Clip | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { data: clips = [], isLoading } = useQuery({
+  const {
+    data: clips = [],
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["channel-clips"],
-    queryFn: () => fetchClips() as Promise<Clip[]>,
+    queryFn: async (): Promise<Clip[]> => {
+      try {
+        const result = await fetchClips();
+        const rows = Array.isArray(result) ? result : [];
+        return rows.map(normalizeClip).filter((clip): clip is Clip => clip != null);
+      } catch (error) {
+        throw error instanceof Error ? error : new Error("Could not load clips");
+      }
+    },
+    retry: 1,
   });
 
   const del = useMutation({
@@ -130,11 +170,14 @@ function ClipsPage() {
     );
     if (sort === "today") {
       const since = Date.now() - 24 * 60 * 60 * 1000;
-      list = list.filter((clip) => new Date(clip.createdAt).getTime() >= since);
+      list = list.filter((clip) => {
+        const created = Date.parse(clip.createdAt);
+        return Number.isFinite(created) && created >= since;
+      });
     }
     const sorted = [...list];
     if (sort === "recent") {
-      sorted.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+      sorted.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     } else {
       sorted.sort((a, b) => b.views - a.views);
     }
@@ -142,9 +185,13 @@ function ClipsPage() {
   }, [clips, search, sort]);
 
   const copy = async (clip: Clip) => {
-    await navigator.clipboard.writeText(clip.shareUrl ?? clip.url);
-    setCopied(clip.id);
-    setTimeout(() => setCopied((current) => (current === clip.id ? null : current)), 1600);
+    try {
+      await navigator.clipboard.writeText(clip.shareUrl ?? clip.url);
+      setCopied(clip.id);
+      setTimeout(() => setCopied((current) => (current === clip.id ? null : current)), 1600);
+    } catch {
+      toast.error("Could not copy link");
+    }
   };
 
   const share = async (clip: Clip) => {
@@ -205,8 +252,8 @@ function ClipsPage() {
                   {active.title}
                 </h2>
                 <p className="mt-1.5 text-[0.78rem] text-muted-foreground">
-                  {c.clippedBy} <span dir="auto">@{active.clippedBy}</span> · {c.views(active.views)} · {timeAgo(active.createdAt)} ·{" "}
-                  {active.platform}
+                  {c.clippedBy} <span dir="auto">@{active.clippedBy}</span> · {c.views(active.views)}
+                  {active.createdAt ? ` · ${timeAgo(active.createdAt)}` : ""} · {active.platform}
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
                   <button type="button" onClick={() => void copy(active)} className={textAction}>
@@ -245,6 +292,18 @@ function ClipsPage() {
           <div className="min-w-0">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">{c.loading}</p>
+            ) : isError ? (
+              <div className="space-y-3">
+                <p className="text-sm leading-relaxed text-muted-foreground">{c.loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  disabled={isFetching}
+                  className="rounded-full bg-[#bee1fc] px-4 py-1.5 text-sm font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-60"
+                >
+                  {c.retry}
+                </button>
+              </div>
             ) : clips.length === 0 ? (
               <p className="text-sm leading-relaxed text-muted-foreground">{c.empty}</p>
             ) : visible.length === 0 ? (

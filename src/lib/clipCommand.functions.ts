@@ -97,23 +97,41 @@ export const deleteClip = createServerFn({ method: "POST" })
 export const listChannelClips = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
+    const { data, error } = await context.supabase
       .from("clips")
       .select("id, title, url, share_url, thumbnail_url, duration_seconds, view_count, clipped_by, created_at, platform")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(200);
 
-    return (data ?? []).map((clip) => ({
-      id: clip.id,
-      title: clip.title,
-      url: clip.url,
-      shareUrl: clip.share_url,
-      thumbnail: clip.thumbnail_url,
-      duration: clip.duration_seconds,
-      views: clip.view_count,
-      clippedBy: clip.clipped_by,
-      createdAt: clip.created_at,
-      platform: clip.platform,
-    }));
+    if (error) {
+      console.error("[listChannelClips]", error.message);
+      return [] as Array<{
+        id: string;
+        title: string;
+        url: string;
+        shareUrl: string | null;
+        thumbnail: string | null;
+        duration: number;
+        views: number;
+        clippedBy: string;
+        createdAt: string;
+        platform: string;
+      }>;
+    }
+
+    return (data ?? [])
+      .filter((clip) => typeof clip.url === "string" && clip.url.length > 0)
+      .map((clip) => ({
+        id: clip.id,
+        title: clip.title?.trim() || "Clip",
+        url: clip.url,
+        shareUrl: clip.share_url ?? null,
+        thumbnail: clip.thumbnail_url ?? null,
+        duration: Number.isFinite(clip.duration_seconds) ? clip.duration_seconds : 0,
+        views: Number.isFinite(clip.view_count) ? clip.view_count : 0,
+        clippedBy: clip.clipped_by?.trim() || "viewer",
+        createdAt: clip.created_at || new Date(0).toISOString(),
+        platform: clip.platform || "KICK",
+      }));
   });

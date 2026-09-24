@@ -293,11 +293,11 @@ function ClipCommandPage() {
             <button
               type="button"
               onClick={save}
-              className="rounded-full bg-primary px-5 py-2 text-[0.82rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              className="rounded-full bg-[#bee1fc] px-5 py-2 text-[0.82rem] font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90"
             >
               Save Changes
             </button>
-            {saved ? <span className="text-[0.78rem] text-emerald-400">Saved</span> : null}
+            {saved ? <span className="text-[0.78rem] text-[#bee1fc]">Saved</span> : null}
           </div>
         </section>
 
@@ -309,7 +309,7 @@ function ClipCommandPage() {
             </span>
             <Link
               to="/clips"
-              className="ms-auto text-[0.78rem] font-medium text-emerald-400 hover:underline"
+              className="ms-auto text-[0.78rem] font-medium text-[#bee1fc] hover:underline"
             >
               View all clips
             </Link>
