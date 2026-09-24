@@ -47,7 +47,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
           )}
         >
           <div className="shrink-0 pb-4">
-            <p className="text-xs tabular-nums text-violet-300/50">0{step}</p>
+            <p className="text-xs tabular-nums text-[#bee1fc]/55">0{step}</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-[1.75rem]">{meta?.title}</h1>
             <p className="mt-1 text-sm text-white/45">{meta?.hint}</p>
           </div>
@@ -115,7 +115,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                   key={item.title}
                   className={cn(
                     "h-1 flex-1 rounded-full",
-                    index + 1 <= step ? "bg-gradient-to-r from-violet-500 to-violet-700" : "bg-white/10",
+                    index + 1 <= step ? "bg-[#bee1fc]" : "bg-white/10",
                   )}
                 />
               ))}

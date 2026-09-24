@@ -194,7 +194,7 @@ export function AtmosphereStep() {
                   className={cn(
                     "rounded-xl border px-2.5 py-2.5 text-start transition-colors",
                     active
-                      ? "border-violet-400/45 bg-violet-500/[0.1]"
+                      ? "border-[#bee1fc]/50 bg-[#bee1fc]/10"
                       : "border-[rgba(255,255,255,0.08)] bg-white/[0.03] hover:border-white/12",
                   )}
                   onClick={() => onPatch({ bentoColorMode: mode.id })}
@@ -345,7 +345,7 @@ export function AtmosphereStep() {
                 className={cn(
                   "flex h-[5.75rem] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 text-center",
                   active
-                    ? "border-violet-400/45 bg-violet-500/[0.1]"
+                    ? "border-[#bee1fc]/50 bg-[#bee1fc]/10"
                     : "border-[rgba(255,255,255,0.08)] bg-white/[0.03] hover:border-white/12",
                 )}
                 onClick={() => onPatch({ fontFamily: font.id })}

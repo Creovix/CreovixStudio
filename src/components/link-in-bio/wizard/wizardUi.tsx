@@ -7,7 +7,7 @@ export function optionTileClass(active: boolean) {
   return cn(
     "rounded-2xl border p-4 text-start transition-colors",
     active
-      ? "border-violet-400/45 bg-violet-500/[0.1] shadow-[inset_0_0_0_1px_rgba(167,139,250,0.25)]"
+      ? "border-[#bee1fc]/50 bg-[#bee1fc]/10 shadow-[inset_0_0_0_1px_rgba(190,225,252,0.28)]"
       : "border-[rgba(255,255,255,0.08)] bg-white/[0.03] hover:border-white/12",
   );
 }
