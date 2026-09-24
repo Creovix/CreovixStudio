@@ -772,7 +772,7 @@ export function ChatSpotlightView({
           id: "demo",
           platform: "TWITCH",
           author: "CylixFan",
-          color: "#A78BFA",
+          color: "#bee1fc",
           text: "This message is featured on stream ✨",
           badges: ["broadcaster", "subscriber"],
           badgeImages: [],

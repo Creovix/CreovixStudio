@@ -84,7 +84,7 @@ export const sendTestChatMessage = createServerFn({ method: "POST" })
       id: `test-${crypto.randomUUID()}`,
       platform: "twitch",
       author: data.author?.slice(0, 40) || "TestViewer",
-      color: "#A78BFA",
+      color: "#bee1fc",
       badges: ["broadcaster"],
       text: data.text?.slice(0, 200) || "Hello from the CylixStudio test suite! 🎉",
     });

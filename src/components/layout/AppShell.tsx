@@ -59,7 +59,7 @@ const NAV = [
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";
 const menuSurfaceStyle = {
-  background: "rgba(10, 10, 10, 0.95)",
+  background: "rgba(43, 43, 43, 0.95)",
   backdropFilter: "blur(12px)",
   borderColor: "rgba(255, 255, 255, 0.1)",
   boxShadow: "0 16px 40px rgba(0, 0, 0, 0.55)",
@@ -162,7 +162,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           className="fixed inset-y-0 start-0 z-40 flex flex-col border-e border-[rgba(255,255,255,0.1)] transition-[width] duration-200 ease-out"
           style={{
             width: sidebarW,
-            background: "rgba(10, 10, 10, 0.92)",
+            background: "rgba(43, 43, 43, 0.92)",
             backdropFilter: "blur(16px)",
             boxShadow: "0 10px 30px rgba(0, 0, 0, 0.45)",
           }}
