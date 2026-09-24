@@ -109,12 +109,12 @@ function LoginPage() {
             role="status"
             className="mt-6 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
           >
-            Copy <code className="text-foreground">.env.example</code> to{" "}
-            <code className="text-foreground">.env</code> and set{" "}
+            Supabase is not configured for this build. In Vercel/Cloudflare set{" "}
             <code className="text-foreground">VITE_SUPABASE_URL</code> and{" "}
-            <code className="text-foreground">VITE_SUPABASE_PUBLISHABLE_KEY</code> (plus the matching{" "}
-            <code className="text-foreground">SUPABASE_*</code> server keys), then restart{" "}
-            <code className="text-foreground">npm run dev</code>.
+            <code className="text-foreground">VITE_SUPABASE_PUBLISHABLE_KEY</code>{" "}
+            (or <code className="text-foreground">SUPABASE_URL</code> +{" "}
+            <code className="text-foreground">SUPABASE_PUBLISHABLE_KEY</code>) for{" "}
+            <span className="text-foreground">Production and Build</span>, then redeploy.
           </div>
         ) : null}
 

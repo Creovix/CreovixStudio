@@ -1,13 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 import { createSupabaseFetch } from "./fetch";
 import { getPublicSupabaseEnv } from "./env";
 
-function createSupabaseClient() {
+type AppSupabaseClient = SupabaseClient<Database>;
+
+function createSupabaseClient(): AppSupabaseClient {
   const env = getPublicSupabaseEnv();
   if (!env) {
     const message =
-      "Missing Supabase environment variable(s): VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY (and matching SUPABASE_* on the server). Set them in .env (see .env.example).";
+      "Missing Supabase public env. Set VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY (or SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY) for Production + Build on your host, then redeploy.";
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }
@@ -24,11 +26,12 @@ function createSupabaseClient() {
   });
 }
 
-let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
+let _supabase: AppSupabaseClient | undefined;
 
-export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
+/** Lazy client — only constructed when credentials resolve. */
+export const supabase = new Proxy({} as AppSupabaseClient, {
   get(_, prop, receiver) {
     if (!_supabase) _supabase = createSupabaseClient();
-    return Reflect.get(_supabase, prop, receiver);
+    return Reflect.get(_supabase as object, prop, receiver);
   },
 });
