@@ -205,7 +205,7 @@ function ProPlanCard({
   const Icon: LucideIcon = Crown;
 
   return (
-    <article className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-primary/45 bg-gradient-to-b from-primary/[0.16] via-zinc-950 to-zinc-950 p-4 pt-5 shadow-[0_0_40px_-12px_color-mix(in_oklab,var(--primary)_45%,transparent)] sm:p-5">
+    <article className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-primary/45 bg-gradient-to-b from-primary/[0.16] via-zinc-950 to-zinc-950 p-4 pt-5 shadow-[0_0_40px_-12px_oklch(0.541_0.247_293_/_0.45)] sm:p-5">
       <div className="absolute inset-x-0 top-0 flex justify-center">
         <span className="inline-flex items-center gap-1 rounded-b-lg border border-t-0 border-primary/35 bg-primary/15 px-3 py-1 text-[0.62rem] font-semibold tracking-wide text-primary">
           <Sparkles className="size-2.5" aria-hidden />
@@ -246,7 +246,7 @@ function ProPlanCard({
         type="button"
         variant="default"
         onClick={onUnlock}
-        className="mt-4 h-9 w-full text-[0.82rem] font-semibold shadow-[0_14px_36px_-16px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
+        className="mt-4 h-9 w-full text-[0.82rem] font-semibold shadow-[0_14px_36px_-16px_oklch(0.541_0.247_293_/_0.8)]"
         data-tier="pro"
         data-billing-interval={option.id}
         data-amount={option.amount}

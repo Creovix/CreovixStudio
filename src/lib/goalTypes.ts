@@ -33,7 +33,7 @@ export const GOAL_TYPES: GoalTypePreset[] = [
     unit: "USD",
     target: 500,
     previewCurrent: 360,
-    accentColor: "#bee1fc",
+    accentColor: "#7C3AED",
     triggers: ["DONATION", "BITS"],
   },
   {

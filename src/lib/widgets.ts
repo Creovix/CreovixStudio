@@ -129,9 +129,9 @@ export const DEFAULT_STYLE: BaseStyle = {
   fontFamily: DEFAULT_OVERLAY_THEME.fontFamily,
   fontSize: 40,
   textColor: "#FFFFFF",
-  backgroundColor: "#2b2b2b",
+  backgroundColor: "#1A1B23",
   backgroundOpacity: 80,
-  accentColor: "#bee1fc",
+  accentColor: "#7C3AED",
 };
 
 function parseStyle(source: Record<string, unknown>, defaults: BaseStyle): BaseStyle {
