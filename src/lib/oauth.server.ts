@@ -363,7 +363,7 @@ function oauthCookieDomain(request: Request): string | null {
 
 export type CookieOptions = {
   /**
-   * Host-only cookie (no Domain=). Use for one-shot handoffs like oauth_magic_hash
+   * Host-only cookie (no Domain=). Use for one-shot handoffs like oauth_session_handoff
    * so apex/www Domain rules cannot drop the cookie on the next same-host hop.
    */
   hostOnly?: boolean;
@@ -520,6 +520,123 @@ export const verifyLinkState = (state: string): string | null => {
   if (Number(expRaw) < Date.now()) return null;
   return userId;
 };
+
+/**
+ * One-time OAuth → /auth/callback handoff. Carries only the Supabase user id
+ * (HMAC-signed). The actual session is minted in /api/auth/session/finish so
+ * we never store a magic-link token_hash in a cookie (those expire / truncate).
+ */
+export function signSessionHandoff(userId: string, ttlSeconds = 300): string {
+  const exp = Date.now() + ttlSeconds * 1000;
+  const payload = `${userId}.${exp}`;
+  const mac = base64Url(
+    createHmac("sha256", linkSecret()).update(`oauth_session:${payload}`).digest(),
+  );
+  return encodeCookiePayload(`v1.${payload}.${mac}`);
+}
+
+export function verifySessionHandoff(raw: string): string | null {
+  const decoded = decodeCookiePayload(raw).trim();
+  const parts = decoded.split(".");
+  // v1.<uuid>.<exp>.<mac>
+  if (parts.length !== 4 || parts[0] !== "v1") return null;
+  const [, userId, expRaw, mac] = parts;
+  if (!userId || !expRaw || !mac) return null;
+  let expected: string;
+  try {
+    expected = base64Url(
+      createHmac("sha256", linkSecret())
+        .update(`oauth_session:${userId}.${expRaw}`)
+        .digest(),
+    );
+  } catch {
+    return null;
+  }
+  if (mac.length !== expected.length) return null;
+  if (!timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
+  if (Number(expRaw) < Date.now()) return null;
+  return userId;
+}
+
+/**
+ * Mint a real Supabase access/refresh session for an existing auth user.
+ * generateLink + verifyOtp run in the same request (no cookie round-trip for OTPs).
+ */
+export async function mintSupabaseSessionForUser(userId: string): Promise<{
+  access_token: string;
+  refresh_token: string;
+}> {
+  const { supabaseAdmin } = await import("@/lib/supabase/client.server");
+  const { createClient } = await import("@supabase/supabase-js");
+
+  const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+  if (userError || !userData.user?.email) {
+    throw new Error(userError?.message ?? "auth_user_not_found");
+  }
+  const email = userData.user.email;
+
+  const { data: link, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+  if (linkError || !link?.properties) {
+    throw new Error(linkError?.message ?? "generate_link_failed");
+  }
+
+  const emailOtp = link.properties.email_otp;
+  const hashedToken = link.properties.hashed_token;
+
+  const url =
+    readOAuthEnv("SUPABASE_URL") ?? readOAuthEnv("VITE_SUPABASE_URL");
+  const anonKey =
+    readOAuthEnv("SUPABASE_PUBLISHABLE_KEY") ??
+    readOAuthEnv("VITE_SUPABASE_PUBLISHABLE_KEY") ??
+    readOAuthEnv("SUPABASE_ANON_KEY") ??
+    readOAuthEnv("VITE_SUPABASE_ANON_KEY");
+  if (!url || !anonKey) throw new Error("supabase_not_configured");
+
+  const anon = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+
+  // Prefer email OTP — shorter and avoids token_hash cookie encoding issues.
+  if (emailOtp) {
+    const { data, error } = await anon.auth.verifyOtp({
+      email,
+      token: emailOtp,
+      type: "email",
+    });
+    if (!error && data.session?.access_token && data.session.refresh_token) {
+      return {
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      };
+    }
+    console.warn("[oauth:mintSession] email_otp verify failed, trying token_hash", {
+      message: error?.message ?? null,
+    });
+  }
+
+  if (hashedToken) {
+    for (const type of ["email", "magiclink"] as const) {
+      const { data, error } = await anon.auth.verifyOtp({
+        type,
+        token_hash: hashedToken,
+      });
+      if (!error && data.session?.access_token && data.session.refresh_token) {
+        return {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        };
+      }
+      console.warn(`[oauth:mintSession] token_hash verify failed (type=${type})`, {
+        message: error?.message ?? null,
+      });
+    }
+  }
+
+  throw new Error("session_mint_failed");
+}
 
 /** Streamlabs socket token — required for realtime donation alerts. */
 export const fetchStreamlabsSocketToken = async (accessToken: string): Promise<string | null> => {

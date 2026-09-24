@@ -5,13 +5,13 @@ import {
   cookie,
   createState,
   createVerifier,
-  encodeCookiePayload,
   exchangeCode,
   fetchStreamlabsSocketToken,
   isOAuthProvider,
   readCookie,
   readOAuthEnv,
   redirectUriFor,
+  signSessionHandoff,
   verifyLinkState,
   type OAuthProvider,
 } from "@/lib/oauth.server";
@@ -276,58 +276,48 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     );
     assertSupabaseAdminConfigured();
 
-    const { data: link, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
+    // Resolve / create the Supabase auth user. We only need the user id here —
+    // the access/refresh session is minted later in /api/auth/session/finish so
+    // we never put a magic-link token_hash in a cookie (expire / encoding issues).
+    const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
+      email_confirm: true,
+      user_metadata: {
+        provider,
+        provider_user_id: profile.id,
+        username: profile.username,
+        avatar_url: profile.image,
+      },
     });
 
-    let authUserId = link?.user?.id ?? null;
-    let hashedToken = link?.properties?.hashed_token ?? null;
-
-    if (linkError || !authUserId || !hashedToken) {
-      console.info(`[oauth:${provider}] generateLink first attempt incomplete`, {
-        linkError: linkError?.message ?? null,
-        hasUserId: Boolean(authUserId),
-        hasHashedToken: Boolean(hashedToken),
+    let authUserId = created?.user?.id ?? null;
+    if (createError && !/already/i.test(createError.message)) {
+      console.error(`[oauth:${provider}] createUser failed`, {
+        ...formatOAuthError(createError),
+        status: (createError as { status?: number }).status,
+        code: (createError as { code?: string }).code,
+        hint:
+          /unregistered api key/i.test(createError.message)
+            ? "SUPABASE_SERVICE_ROLE_KEY is wrong for this project, or is a publishable/anon key. Use Dashboard → API Keys → service_role (eyJ…) or sb_secret_… matching SUPABASE_URL."
+            : undefined,
       });
-      const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          provider,
-          provider_user_id: profile.id,
-          username: profile.username,
-          avatar_url: profile.image,
-        },
-      });
-      if (createError && !/already/i.test(createError.message)) {
-        console.error(`[oauth:${provider}] createUser failed`, {
-          ...formatOAuthError(createError),
-          status: (createError as { status?: number }).status,
-          code: (createError as { code?: string }).code,
-          hint:
-            /unregistered api key/i.test(createError.message)
-              ? "SUPABASE_SERVICE_ROLE_KEY is wrong for this project, or is a publishable/anon key. Use Dashboard → API Keys → service_role (eyJ…) or sb_secret_… matching SUPABASE_URL."
-              : undefined,
-        });
-        throw createError;
-      }
-
-      const retry = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
-      if (retry.error) {
-        console.error(`[oauth:${provider}] generateLink retry failed`, formatOAuthError(retry.error));
-        throw retry.error;
-      }
-      authUserId = retry.data.user?.id ?? null;
-      hashedToken = retry.data.properties?.hashed_token ?? null;
+      throw createError;
     }
-    if (!authUserId || !hashedToken) {
-      console.error(`[oauth:${provider}] session mint failed`, {
-        hasUserId: Boolean(authUserId),
-        hasHashedToken: Boolean(hashedToken),
+
+    if (!authUserId) {
+      // Existing user — generateLink returns the user object (OTP discarded).
+      const { data: link, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
         email,
       });
-      throw new Error("Could not establish a session");
+      if (linkError || !link?.user?.id) {
+        console.error(`[oauth:${provider}] resolve existing user failed`, {
+          linkError: linkError?.message ?? null,
+          email,
+        });
+        throw linkError ?? new Error("Could not resolve auth user");
+      }
+      authUserId = link.user.id;
     }
 
     const expiresAt = tokens.expires_in
@@ -412,20 +402,23 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     });
 
     const target = new URL(`${origin}/auth/callback`);
-    console.info(`[oauth:${provider}] callback ok → /auth/callback (magic hash cookie)`, {
+    const handoff = signSessionHandoff(authUserId, 300);
+    console.info(`[oauth:${provider}] callback ok → /auth/callback (session handoff)`, {
       origin,
       target: target.toString(),
-      hashedTokenLength: hashedToken.length,
       authUserId,
+      handoffLength: handoff.length,
     });
     const headers = new Headers({ Location: target.toString() });
-    // Host-only + base64url payload — avoids Domain/Secure mismatches on the
-    // immediate same-host handoff to /auth/callback → /api/auth/session/finish.
+    // Host-only HMAC handoff (user id only). Session tokens are minted in finish.
     headers.append(
       "Set-Cookie",
-      cookie(request, "oauth_magic_hash", encodeCookiePayload(hashedToken), 300, {
-        hostOnly: true,
-      }),
+      cookie(request, "oauth_session_handoff", handoff, 300, { hostOnly: true }),
+    );
+    // Clear legacy magic-hash cookie if a prior attempt left one behind.
+    headers.append(
+      "Set-Cookie",
+      cookie(request, "oauth_magic_hash", "", 0, { hostOnly: true }),
     );
     headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, "", 0));
     headers.append("Set-Cookie", cookie(request, `oauth_verifier_${provider}`, "", 0));
