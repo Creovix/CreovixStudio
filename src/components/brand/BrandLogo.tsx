@@ -1,6 +1,7 @@
 import type { ImgHTMLAttributes } from "react";
 
-import logoUrl from "@/assets/Logo/cylix-studio.png";
+import logoMarkUrl from "@/assets/Logo/cylix-studio.png";
+import logoFullUrl from "@/assets/Logo/cylix-studio-full.png";
 import { cn } from "@/lib/utils";
 
 const MARK_SIZE = {
@@ -17,10 +18,22 @@ const WORDMARK_SIZE = {
   xl: "text-2xl",
 } as const;
 
+const FULL_HEIGHT = {
+  sm: "h-8",
+  md: "h-10",
+  lg: "h-12",
+  xl: "h-14",
+} as const;
+
 export type BrandLogoProps = {
-  /** Mark size (square). */
+  /** Mark / full-logo height tier. */
   size?: keyof typeof MARK_SIZE;
-  /** Show “CylixStudio” next to the mark. */
+  /**
+   * `mark` — icon only (or icon + CSS wordmark).
+   * `full` — official horizontal CylixStudio lockup (icon + wordmark art).
+   */
+  variant?: "mark" | "full";
+  /** Show CSS “CylixStudio” next to the mark (ignored for `full`). */
   showWordmark?: boolean;
   /** Compact mark-only (e.g. collapsed sidebar). */
   markOnly?: boolean;
@@ -29,20 +42,39 @@ export type BrandLogoProps = {
 } & Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt" | "width" | "height">;
 
 /**
- * Official CylixStudio mark from `src/assets/Logo`.
- * Use `markOnly` in tight chrome; pair with wordmark on login / expanded nav.
+ * Official CylixStudio branding from `src/assets/Logo`.
+ * Prefer `variant="full"` on marketing / login headers; `mark` in tight chrome.
  */
 export function BrandLogo({
   size = "md",
+  variant = "mark",
   showWordmark = false,
   markOnly = false,
   className,
   imgClassName,
   ...imgProps
 }: BrandLogoProps) {
+  if (variant === "full") {
+    return (
+      <span className={cn("inline-flex w-full items-center justify-center", className)}>
+        <img
+          src={logoFullUrl}
+          alt="CylixStudio"
+          decoding="async"
+          className={cn(
+            FULL_HEIGHT[size],
+            "w-auto max-w-full object-contain object-center",
+            imgClassName,
+          )}
+          {...imgProps}
+        />
+      </span>
+    );
+  }
+
   const mark = (
     <img
-      src={logoUrl}
+      src={logoMarkUrl}
       alt={markOnly || !showWordmark ? "CylixStudio" : ""}
       width={size === "xl" ? 64 : size === "lg" ? 48 : size === "md" ? 36 : 28}
       height={size === "xl" ? 64 : size === "lg" ? 48 : size === "md" ? 36 : 28}
@@ -77,4 +109,4 @@ export function BrandLogo({
   );
 }
 
-export { logoUrl as brandLogoUrl };
+export { logoMarkUrl as brandLogoUrl, logoFullUrl as brandLogoFullUrl };

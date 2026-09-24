@@ -107,15 +107,15 @@ function LoginPage() {
         aria-hidden="true"
       />
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <BrandLogo markOnly size="lg" className="sm:hidden" />
-          <BrandLogo markOnly size="xl" className="hidden sm:inline-flex" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">CylixStudio</p>
-            <p className="mt-0.5 truncate text-[0.72rem] text-muted-foreground">Streaming control room</p>
-          </div>
+        <div className="flex justify-center px-2">
+          <BrandLogo
+            variant="full"
+            size="lg"
+            className="max-w-[13.5rem] sm:max-w-[15.5rem]"
+            imgClassName="h-11 sm:h-12"
+          />
         </div>
-        <h1 className="mt-5 text-3xl font-bold tracking-tight">Sign in to your control room</h1>
+        <h1 className="mt-6 text-3xl font-bold tracking-tight">Sign in to your control room</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Connect a streaming account. Your tokens are stored securely and used to track follows,
           subs, gifts, bits and donations.
