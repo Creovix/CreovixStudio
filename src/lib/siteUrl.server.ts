@@ -1,6 +1,10 @@
 /**
- * Canonical public origin. Production must be https://creovixstudio.org
+ * Canonical public origin. Production must be https://cylixstudio.com
  * (no trailing slash). Used for OAuth redirect_uri, EventSub callbacks, and clip links.
+ *
+ * Always set PUBLIC_SITE_URL on Vercel/Cloudflare so Twitch/Kick redirect_uri
+ * matches the exact URLs registered in each developer console — do not rely on
+ * preview hosts or www/apex mismatches from request headers alone.
  */
 export function publicSiteUrl(request?: Request): string {
   const configured = (process.env["PUBLIC_SITE_URL"] ?? process.env["SITE_URL"] ?? "")
