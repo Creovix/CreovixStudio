@@ -198,7 +198,7 @@
   --cyan: oklch(0.893 0.052 241.4);
   --gradient-glow: radial-gradient(
     circle at 50% 0%,
-    oklch(0.893 0.052 241.4 / 0.16),
+    color-mix(in oklab, #bee1fc 22%, transparent),
     transparent 62%
   );
   --shadow-elevated: 0 24px 60px -32px oklch(0 0 0 / 0.9);
@@ -260,7 +260,7 @@
   --cyan: oklch(0.893 0.052 241.4);
   --gradient-glow: radial-gradient(
     circle at 50% 0%,
-    oklch(0.893 0.052 241.4 / 0.16),
+    color-mix(in oklab, #bee1fc 22%, transparent),
     transparent 62%
   );
 }

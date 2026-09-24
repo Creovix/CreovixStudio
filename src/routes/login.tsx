@@ -99,26 +99,11 @@ function LoginPage() {
   };
 
   return (
-    <main
-      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-16"
-      style={{
-        backgroundColor: "#9ecff5",
-        backgroundImage: [
-          "radial-gradient(ellipse 90% 70% at 12% 18%, rgba(255,255,255,0.55) 0%, transparent 55%)",
-          "radial-gradient(ellipse 75% 60% at 88% 12%, rgba(190,225,252,0.95) 0%, transparent 50%)",
-          "radial-gradient(ellipse 80% 55% at 70% 88%, rgba(14,22,34,0.28) 0%, transparent 58%)",
-          "radial-gradient(ellipse 55% 45% at 8% 92%, rgba(20,28,42,0.22) 0%, transparent 52%)",
-          "linear-gradient(155deg, #d7efff 0%, #bee1fc 32%, #8ec4ef 68%, #6ba8d9 100%)",
-        ].join(", "),
-      }}
-    >
+    <main className="relative flex min-h-screen items-center justify-center bg-charcoal px-6 py-16">
       <div
-        aria-hidden
         className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 38%, rgba(10,14,22,0.18) 100%)",
-        }}
+        style={{ backgroundImage: "var(--gradient-glow)" }}
+        aria-hidden="true"
       />
       <div className="relative w-full max-w-md rounded-2xl border border-black/10 bg-[#0a0a0a] p-8 shadow-xl">
         <div className="flex justify-center px-2">
