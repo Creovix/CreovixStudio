@@ -49,13 +49,30 @@ export const DEFAULT_COMMAND_SETTINGS: CustomChatCommandSettings = {
 
 const TEST_KEY = "creovix:custom-chat-commands";
 
+/** Invisible / formatting characters that break chat matching and some DB checks. */
+const NAME_INVISIBLE = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF\u2060\u061C]/g;
+
+/**
+ * Normalizes a command name for storage + matching.
+ * Supports Latin and Arabic (and other scripts), optional internal spaces
+ * (e.g. "سلام عليكم"), and strips trigger punctuation from the edges only.
+ */
 export function sanitizeCommandName(raw: string): string {
-  return raw
+  const normalized = raw.normalize("NFC").replace(NAME_INVISIBLE, "");
+  const withoutEdgeMarkers = normalized
     .trim()
-    .replace(/^[-!?#./\\]+/, "")
-    .replace(/[?؟]+$/g, "")
-    .replace(/\s+/g, "")
-    .slice(0, 32);
+    .replace(/^[-!?#./\\]+/u, "")
+    .replace(/[?؟]+$/gu, "")
+    .trim();
+  // Drop ASCII punctuation/symbols that break triggers; keep letters/numbers from
+  // any script plus space, underscore, and hyphen.
+  const cleaned = [...withoutEdgeMarkers]
+    .filter((char) => char === " " || char === "_" || char === "-" || !/[\x21-\x2F\x3A-\x40\x5B-\x5E\x60\x7B-\x7E]/.test(char))
+    .join("")
+    .replace(/\s+/gu, " ")
+    .trim();
+  // char_length limit in Postgres is 32 characters (not UTF-16 units).
+  return [...cleaned].slice(0, 32).join("");
 }
 
 const RESERVED_CUSTOM_NAMES = new Set(["clip", "commands", "followage", "lurk", "so", "welcome"]);
@@ -65,7 +82,7 @@ export function isReservedCustomCommandName(name: string): boolean {
 }
 
 export function sanitizePrefix(raw: string): string {
-  return raw.replace(/\s+/g, "").slice(0, 8);
+  return raw.normalize("NFC").replace(/\s+/gu, "").slice(0, 8);
 }
 
 export function isAllowedPrefixMarker(marker: string): boolean {
@@ -128,15 +145,17 @@ function matchesTrigger(text: string, name: string, marker: string): boolean {
   if (!name) return false;
   const word = escapeRegExp(name);
   const placement = markerPlacement(marker);
+  // `u` keeps Arabic / multi-code-point names safe; `i` only matters for Latin.
+  const flags = "iu";
   if (placement === "none") {
     if (/^[!#./]/.test(text)) return false;
-    return new RegExp(`^${word}(?![?؟])(?:\\s|$)`, "i").test(text);
+    return new RegExp(`^${word}(?![?؟])(?:\\s|$)`, flags).test(text);
   }
   if (placement === "suffix") {
-    return new RegExp(`(?:^|\\s)${word}[?؟]\\s*$`, "i").test(text);
+    return new RegExp(`(?:^|\\s)${word}[?؟]\\s*$`, flags).test(text);
   }
   if (!isAllowedPrefixMarker(marker)) return false;
-  return new RegExp(`^${escapeRegExp(marker)}${word}(?:\\s|$)`, "i").test(text);
+  return new RegExp(`^${escapeRegExp(marker)}${word}(?:\\s|$)`, flags).test(text);
 }
 
 export function matchCustomCommand(
@@ -217,7 +236,10 @@ export function upsertTestCommand(input: CustomChatCommandInput): CustomChatComm
   const state = loadTestCommandState();
   const now = new Date().toISOString();
   const name = sanitizeCommandName(input.name);
+  if (!name) throw new Error("name_required");
   if (isReservedCustomCommandName(name)) throw new Error("reserved_name");
+  const response = input.response.normalize("NFC").trim().slice(0, 480);
+  if (!response) throw new Error("response_required");
   const existing = input.id
     ? state.commands.find((command) => command.id === input.id)
     : state.commands.find((command) => command.name.toLowerCase() === name.toLowerCase());
@@ -225,11 +247,11 @@ export function upsertTestCommand(input: CustomChatCommandInput): CustomChatComm
     id: existing?.id ?? crypto.randomUUID(),
     name,
     prefix: resolveStoredMarker(input.prefix, name),
-    response: input.response.trim().slice(0, 480),
+    response,
     enabled: Boolean(input.enabled),
     platforms: input.platforms.length ? input.platforms : ["KICK"],
     roles: input.roles.length ? input.roles : ["Everyone"],
-    cooldownSeconds: Math.min(Math.max(Math.round(input.cooldownSeconds) || 0, 0), 3600),
+    cooldownSeconds: Math.min(Math.max(Math.round(Number(input.cooldownSeconds)) || 0, 0), 3600),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

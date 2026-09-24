@@ -395,18 +395,21 @@ function CustomCommandsPage() {
       void invalidate();
     },
     onError: (error: Error) => {
+      const code = error.message;
       toast.error(
-        error.message === "name_required"
+        code === "name_required"
           ? c.errName
-          : error.message === "response_required"
+          : code === "response_required"
             ? c.errReply
-            : error.message === "duplicate_name"
+            : code === "duplicate_name"
               ? c.errDup
-              : error.message === "reserved_name"
+              : code === "reserved_name"
                 ? c.errReserved
-                : error.message === "free_limit_commands"
+                : code === "free_limit_commands"
                   ? c.errFreeCommands
-                  : c.errSave,
+                  : code && code !== "Could not save the command."
+                    ? code
+                    : c.errSave,
       );
     },
   });

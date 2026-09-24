@@ -51,7 +51,7 @@ function normalizeInput(input: CustomChatCommandInput): CustomChatCommandInput |
   if (["clip", "commands", "followage", "lurk", "so", "welcome"].includes(name.toLowerCase())) {
     return { error: "reserved_name" };
   }
-  const response = input.response.trim().slice(0, 480);
+  const response = input.response.normalize("NFC").trim().slice(0, 480);
   if (!response) return { error: "response_required" };
   const platforms = input.platforms.filter((platform) => PLATFORMS.includes(platform));
   const normalized: CustomChatCommandInput = {
@@ -61,7 +61,7 @@ function normalizeInput(input: CustomChatCommandInput): CustomChatCommandInput |
     enabled: Boolean(input.enabled),
     platforms: platforms.length ? platforms : ["KICK"],
     roles: input.roles.length ? input.roles : ["Everyone"],
-    cooldownSeconds: Math.min(Math.max(Math.round(input.cooldownSeconds) || 0, 0), 3600),
+    cooldownSeconds: Math.min(Math.max(Math.round(Number(input.cooldownSeconds)) || 0, 0), 3600),
   };
   if (input.id) normalized.id = input.id;
   return normalized;
@@ -114,47 +114,63 @@ export const upsertCustomCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CustomChatCommandInput) => input)
   .handler(async ({ data, context }) => {
-    const normalized = normalizeInput(data);
-    if ("error" in normalized) return { ok: false as const, error: normalized.error };
+    try {
+      const normalized = normalizeInput(data);
+      if ("error" in normalized) return { ok: false as const, error: normalized.error };
 
-    // Free plan: block creating beyond the soft cap (edits of existing rows still allowed).
-    if (!normalized.id) {
-      const isPro = await userHasActivePro(context.supabase, context.userId);
-      if (!isPro) {
-        const { count, error: countError } = await context.supabase
-          .from("custom_chat_commands")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", context.userId);
-        if (countError) return { ok: false as const, error: countError.message };
-        if ((count ?? 0) >= FREE_PLAN_LIMITS.customCommands) {
-          return { ok: false as const, error: "free_limit_commands" };
+      // Free plan: block creating beyond the soft cap (edits of existing rows still allowed).
+      if (!normalized.id) {
+        const isPro = await userHasActivePro(context.supabase, context.userId);
+        if (!isPro) {
+          const { count, error: countError } = await context.supabase
+            .from("custom_chat_commands")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", context.userId);
+          if (countError) return { ok: false as const, error: countError.message };
+          if ((count ?? 0) >= FREE_PLAN_LIMITS.customCommands) {
+            return { ok: false as const, error: "free_limit_commands" };
+          }
         }
       }
-    }
 
-    const payload = {
-      user_id: context.userId,
-      name: normalized.name,
-      prefix: normalized.prefix,
-      response: normalized.response,
-      enabled: normalized.enabled,
-      platforms: normalized.platforms,
-      roles: normalized.roles,
-      cooldown_seconds: normalized.cooldownSeconds,
-    };
-    const query = normalized.id
-      ? context.supabase
+      const payload = {
+        user_id: context.userId,
+        name: normalized.name,
+        prefix: normalized.prefix,
+        response: normalized.response,
+        enabled: normalized.enabled,
+        platforms: normalized.platforms,
+        roles: normalized.roles,
+        cooldown_seconds: normalized.cooldownSeconds,
+      };
+
+      if (normalized.id) {
+        const { error } = await context.supabase
           .from("custom_chat_commands")
           .update(payload)
           .eq("id", normalized.id)
-          .eq("user_id", context.userId)
-      : context.supabase.from("custom_chat_commands").insert(payload);
-    const { error } = await query;
-    if (error) {
-      if (error.code === "23505") return { ok: false as const, error: "duplicate_name" };
-      return { ok: false as const, error: error.message };
+          .eq("user_id", context.userId);
+        if (error) {
+          if (error.code === "23505") return { ok: false as const, error: "duplicate_name" };
+          return { ok: false as const, error: error.message };
+        }
+        return { ok: true as const };
+      }
+
+      const { error } = await context.supabase.from("custom_chat_commands").insert(payload);
+      if (error) {
+        if (error.code === "23505") return { ok: false as const, error: "duplicate_name" };
+        // Schema / check-constraint failures used to surface as a generic toast.
+        if (error.code === "23514" || error.code === "PGRST204" || error.code === "PGRST205") {
+          return { ok: false as const, error: error.message };
+        }
+        return { ok: false as const, error: error.message };
+      }
+      return { ok: true as const };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save the command.";
+      return { ok: false as const, error: message };
     }
-    return { ok: true as const };
   });
 
 export const setCustomCommandEnabled = createServerFn({ method: "POST" })
