@@ -5,6 +5,7 @@ import {
   cookie,
   createState,
   createVerifier,
+  encodeCookiePayload,
   exchangeCode,
   fetchStreamlabsSocketToken,
   isOAuthProvider,
@@ -15,6 +16,22 @@ import {
   type OAuthProvider,
 } from "@/lib/oauth.server";
 import { publicSiteUrl } from "@/lib/siteUrl.server";
+
+function formatOAuthError(error: unknown): { message: string; stack?: string; name?: string } {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      ...(error.stack ? { stack: error.stack } : {}),
+      ...(error.name ? { name: error.name } : {}),
+    };
+  }
+  if (typeof error === "string") return { message: error };
+  try {
+    return { message: JSON.stringify(error) };
+  } catch {
+    return { message: String(error) };
+  }
+}
 
 export async function handleOAuthStart(request: Request, providerRaw: string): Promise<Response> {
   if (!isOAuthProvider(providerRaw)) {
@@ -142,6 +159,11 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
   const expectedState = readCookie(request, `oauth_state_${provider}`);
   if (!code) return fail(provider, "missing_code");
   if (!state || !expectedState || state !== expectedState) {
+    console.error(`[oauth:${provider}] state mismatch`, {
+      hasState: Boolean(state),
+      hasExpectedState: Boolean(expectedState),
+      cookieHeaderPresent: Boolean(request.headers.get("cookie")),
+    });
     return fail(
       provider,
       "state_mismatch",
@@ -155,6 +177,16 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
   if (!clientId || !clientSecret) return fail(provider, `${provider}_not_configured`);
 
   const verifier = readCookie(request, `oauth_verifier_${provider}`);
+  console.info(`[oauth:${provider}] callback begin`, {
+    origin,
+    requestUrl: request.url,
+    hasCode: Boolean(code),
+    hasState: Boolean(state),
+    hasExpectedState: Boolean(expectedState),
+    hasVerifier: Boolean(verifier),
+    usesPkce: config.usesPkce,
+    redirectUri: redirectUriFor(request, provider),
+  });
   if (config.usesPkce && !verifier) {
     return fail(provider, "pkce_verifier_missing", "oauth_verifier_cookie_missing");
   }
@@ -169,7 +201,12 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       verifier,
     });
 
+    console.info(`[oauth:${provider}] profile fetch start`);
     const profile = await config.fetchProfile(tokens.access_token, clientId);
+    console.info(`[oauth:${provider}] profile fetch ok`, {
+      id: profile.id,
+      username: profile.username,
+    });
 
     const expiresAtIso = tokens.expires_in
       ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
@@ -234,7 +271,10 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
 
     const email = profile.email ?? `${provider}_${profile.id}@users.${new URL(origin).hostname}`;
 
-    const { supabaseAdmin } = await import("@/lib/supabase/client.server");
+    const { supabaseAdmin, assertSupabaseAdminConfigured } = await import(
+      "@/lib/supabase/client.server"
+    );
+    assertSupabaseAdminConfigured();
 
     const { data: link, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
@@ -245,6 +285,11 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     let hashedToken = link?.properties?.hashed_token ?? null;
 
     if (linkError || !authUserId || !hashedToken) {
+      console.info(`[oauth:${provider}] generateLink first attempt incomplete`, {
+        linkError: linkError?.message ?? null,
+        hasUserId: Boolean(authUserId),
+        hasHashedToken: Boolean(hashedToken),
+      });
       const { error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         email_confirm: true,
@@ -255,14 +300,35 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
           avatar_url: profile.image,
         },
       });
-      if (createError && !/already/i.test(createError.message)) throw createError;
+      if (createError && !/already/i.test(createError.message)) {
+        console.error(`[oauth:${provider}] createUser failed`, {
+          ...formatOAuthError(createError),
+          status: (createError as { status?: number }).status,
+          code: (createError as { code?: string }).code,
+          hint:
+            /unregistered api key/i.test(createError.message)
+              ? "SUPABASE_SERVICE_ROLE_KEY is wrong for this project, or is a publishable/anon key. Use Dashboard → API Keys → service_role (eyJ…) or sb_secret_… matching SUPABASE_URL."
+              : undefined,
+        });
+        throw createError;
+      }
 
       const retry = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
-      if (retry.error) throw retry.error;
+      if (retry.error) {
+        console.error(`[oauth:${provider}] generateLink retry failed`, formatOAuthError(retry.error));
+        throw retry.error;
+      }
       authUserId = retry.data.user?.id ?? null;
       hashedToken = retry.data.properties?.hashed_token ?? null;
     }
-    if (!authUserId || !hashedToken) throw new Error("Could not establish a session");
+    if (!authUserId || !hashedToken) {
+      console.error(`[oauth:${provider}] session mint failed`, {
+        hasUserId: Boolean(authUserId),
+        hasHashedToken: Boolean(hashedToken),
+        email,
+      });
+      throw new Error("Could not establish a session");
+    }
 
     const expiresAt = tokens.expires_in
       ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
@@ -346,17 +412,27 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     });
 
     const target = new URL(`${origin}/auth/callback`);
-    console.info(`[oauth:${provider}] callback ok → /auth/callback (magic hash cookie)`, { origin });
+    console.info(`[oauth:${provider}] callback ok → /auth/callback (magic hash cookie)`, {
+      origin,
+      target: target.toString(),
+      hashedTokenLength: hashedToken.length,
+      authUserId,
+    });
     const headers = new Headers({ Location: target.toString() });
+    // Host-only + base64url payload — avoids Domain/Secure mismatches on the
+    // immediate same-host handoff to /auth/callback → /api/auth/session/finish.
     headers.append(
       "Set-Cookie",
-      cookie(request, "oauth_magic_hash", encodeURIComponent(hashedToken), 300),
+      cookie(request, "oauth_magic_hash", encodeCookiePayload(hashedToken), 300, {
+        hostOnly: true,
+      }),
     );
     headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, "", 0));
     headers.append("Set-Cookie", cookie(request, `oauth_verifier_${provider}`, "", 0));
     return new Response(null, { status: 302, headers });
   } catch (error) {
-    console.error(`[oauth:${provider}] callback exception`, error);
-    return fail(provider, "oauth_failed");
+    const formatted = formatOAuthError(error);
+    console.error(`[oauth:${provider}] callback exception`, formatted);
+    return fail(provider, "oauth_failed", formatted.message);
   }
 }

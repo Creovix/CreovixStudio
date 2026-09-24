@@ -312,7 +312,29 @@ export function buildAuthorizeUrl(args: {
   return location;
 }
 
+function requestHostnameForCookie(request: Request): string {
+  const url = new URL(request.url);
+  const host = (request.headers.get("x-forwarded-host") ?? url.host)
+    .split(",")[0]
+    ?.trim()
+    .split(":")[0]
+    ?.toLowerCase();
+  return host || url.hostname.toLowerCase();
+}
+
+function isLocalRequestHost(request: Request): boolean {
+  const host = requestHostnameForCookie(request);
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "[::1]" ||
+    host.endsWith(".local")
+  );
+}
+
 function requestIsHttps(request: Request): boolean {
+  // Never mark cookies Secure on localhost — even if a proxy header lies.
+  if (isLocalRequestHost(request)) return false;
   const url = new URL(request.url);
   const proto = request.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "");
   return proto === "https";
@@ -320,8 +342,10 @@ function requestIsHttps(request: Request): boolean {
 
 /**
  * Share OAuth state/verifier across apex ↔ www so a 308 hop cannot drop the cookie.
+ * Never applies on localhost.
  */
 function oauthCookieDomain(request: Request): string | null {
+  if (isLocalRequestHost(request)) return null;
   try {
     const hostname = new URL(publicSiteUrl(request)).hostname.toLowerCase();
     if (hostname === "cylixstudio.com" || hostname === "www.cylixstudio.com") {
@@ -330,23 +354,40 @@ function oauthCookieDomain(request: Request): string | null {
   } catch {
     /* ignore */
   }
-  const url = new URL(request.url);
-  const host = (request.headers.get("x-forwarded-host") ?? url.host)
-    .split(",")[0]
-    ?.trim()
-    .split(":")[0]
-    ?.toLowerCase();
+  const host = requestHostnameForCookie(request);
   if (host === "cylixstudio.com" || host === "www.cylixstudio.com") {
     return ".cylixstudio.com";
   }
   return null;
 }
 
-export const cookie = (request: Request, name: string, value: string, maxAge: number) => {
+export type CookieOptions = {
+  /**
+   * Host-only cookie (no Domain=). Use for one-shot handoffs like oauth_magic_hash
+   * so apex/www Domain rules cannot drop the cookie on the next same-host hop.
+   */
+  hostOnly?: boolean;
+};
+
+export const cookie = (
+  request: Request,
+  name: string,
+  value: string,
+  maxAge: number,
+  opts?: CookieOptions,
+) => {
   const secure = requestIsHttps(request) ? "; Secure" : "";
-  const domain = oauthCookieDomain(request);
+  const domain = opts?.hostOnly ? null : oauthCookieDomain(request);
   const domainPart = domain ? `; Domain=${domain}` : "";
-  return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax${secure}${domainPart}; Max-Age=${maxAge}`;
+  const line = `${name}=${value}; Path=/; HttpOnly; SameSite=Lax${secure}${domainPart}; Max-Age=${maxAge}`;
+  console.info(`[oauth:cookie] set ${name}`, {
+    maxAge,
+    secure: Boolean(secure),
+    domain: domain ?? "(host-only)",
+    host: requestHostnameForCookie(request),
+    valueLength: value.length,
+  });
+  return line;
 };
 
 export const readCookie = (request: Request, name: string) => {
@@ -358,6 +399,23 @@ export const readCookie = (request: Request, name: string) => {
   }
   return null;
 };
+
+/** Encode opaque secrets for Set-Cookie (avoids `;`, `,`, spaces, etc.). */
+export function encodeCookiePayload(value: string): string {
+  return `b64.${Buffer.from(value, "utf8").toString("base64url")}`;
+}
+
+export function decodeCookiePayload(value: string): string {
+  if (value.startsWith("b64.")) {
+    return Buffer.from(value.slice(4), "base64url").toString("utf8");
+  }
+  // Legacy handoff used encodeURIComponent — keep reading those during rollout.
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 
 export type TokenResponse = {
   access_token: string;
@@ -387,10 +445,18 @@ export const exchangeCode = async (args: {
   // PKCE providers must always send code_verifier — never skip it.
   if (config.usesPkce) {
     if (!args.verifier) {
+      console.error(`[oauth:${args.provider}] token exchange aborted — missing PKCE code_verifier`);
       throw new Error(`${args.provider}_pkce_verifier_missing`);
     }
     body.set("code_verifier", args.verifier);
   }
+
+  console.info(`[oauth:${args.provider}] token exchange start`, {
+    tokenUrl: config.tokenUrl,
+    redirectUri: args.redirectUri,
+    hasVerifier: Boolean(args.verifier),
+    codeLength: args.code.length,
+  });
 
   const res = await fetch(config.tokenUrl, {
     method: "POST",
@@ -398,8 +464,16 @@ export const exchangeCode = async (args: {
     body,
   });
   if (!res.ok) {
-    throw new Error(`${args.provider} token exchange failed: ${res.status} ${await res.text()}`);
+    const responseText = await res.text();
+    console.error(`[oauth:${args.provider}] token exchange failed`, {
+      status: res.status,
+      statusText: res.statusText,
+      redirectUri: args.redirectUri,
+      body: responseText.slice(0, 800),
+    });
+    throw new Error(`${args.provider} token exchange failed: ${res.status} ${responseText}`);
   }
+  console.info(`[oauth:${args.provider}] token exchange ok`, { status: res.status });
   return (await res.json()) as TokenResponse;
 };
 

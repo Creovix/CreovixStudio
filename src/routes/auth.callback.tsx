@@ -61,11 +61,16 @@ function AuthCallback() {
       });
       const payload = (await response.json().catch(() => null)) as {
         ok?: boolean;
+        error?: string;
         access_token?: string;
         refresh_token?: string;
       } | null;
       if (!active) return;
       if (!response.ok || !payload?.ok || !payload.access_token || !payload.refresh_token) {
+        console.error("[auth/callback] session/finish failed", {
+          status: response.status,
+          error: payload?.error ?? null,
+        });
         setFailed(true);
         navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
         return;
@@ -75,6 +80,7 @@ function AuthCallback() {
         refresh_token: payload.refresh_token,
       });
       if (error) {
+        console.error("[auth/callback] setSession failed", error.message);
         setFailed(true);
         navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
         return;
