@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # CylixStudio
+=======
+# Creovix Studio
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
 Standalone TanStack Start (Vite + Nitro) app. Run it on Node.js with `npm run dev` in development and `npm run build` then `npm start` in production.
 

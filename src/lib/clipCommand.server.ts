@@ -110,7 +110,11 @@ async function kickToken(userId: string): Promise<string | null> {
   }
 }
 
+<<<<<<< HEAD
 export const BOT_NAME = "CylixStudio";
+=======
+export const BOT_NAME = "CreovixStudio";
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
 /** Posts a bot message back to the creator's Kick chat feed. */
 export async function sendKickChatMessage(

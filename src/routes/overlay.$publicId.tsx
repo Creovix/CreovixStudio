@@ -8,13 +8,21 @@ import { OVERLAY_FONT_STYLESHEET } from "@/lib/overlayTheme";
 export const Route = createFileRoute("/overlay/$publicId")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Stream Widget (OBS)" },
+=======
+      { title: "Stream Widget — OBS Browser Source" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Transparent OBS browser source rendering live subathon timers, goals, alerts and activity over Server-Sent Events.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Stream Widget (OBS)" },
+=======
+      { property: "og:title", content: "Stream Widget — OBS Browser Source" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Transparent live widget for OBS and Streamlabs Desktop.",

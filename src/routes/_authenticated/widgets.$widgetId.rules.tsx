@@ -65,13 +65,21 @@ function formatSeconds(seconds: number) {
 export const Route = createFileRoute("/_authenticated/widgets/$widgetId/rules")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Widget Rules" },
+=======
+      { title: "Widget Rules — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Route Twitch, Kick, StreamElements and Streamlabs events into seconds added or goal progress for this widget.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Widget Rules" },
+=======
+      { property: "og:title", content: "Widget Rules — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Per-widget rules engine: platform + event → seconds and goal increments.",

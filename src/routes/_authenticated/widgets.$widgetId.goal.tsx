@@ -10,13 +10,21 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 export const Route = createFileRoute("/_authenticated/widgets/$widgetId/goal")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Goal Control" },
+=======
+      { title: "Goal Control — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Live goal control centre: raise the target, log contributions and watch the OBS progress bar update instantly.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Goal Control" },
+=======
+      { property: "og:title", content: "Goal Control — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Track and adjust your live stream goal in real time.",

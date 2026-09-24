@@ -30,13 +30,21 @@ import {
 export const Route = createFileRoute("/_authenticated/giveaway")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Giveaway Wheel" },
+=======
+      { title: "Giveaway Wheel — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Run keyword giveaways across Kick, Twitch, YouTube and TikTok chat, then spin the wheel to pick a winner live.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Giveaway Wheel" },
+=======
+      { property: "og:title", content: "Giveaway Wheel — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Collect chat entries with a custom keyword and draw a winner on stream.",

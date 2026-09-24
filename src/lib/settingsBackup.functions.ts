@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 
+<<<<<<< HEAD
 import { FREE_PLAN_LIMITS } from "@/lib/plans";
 import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 import { userHasActivePro } from "@/lib/subscription.server";
+=======
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 import {
   sanitizeBackupCommand,
   SETTINGS_BACKUP_PRODUCT,
@@ -136,6 +140,7 @@ export const importSettingsBackup = createServerFn({ method: "POST" })
       (existing ?? []).map((row) => [row.name.toLowerCase(), row.id] as const),
     );
 
+<<<<<<< HEAD
     // Free plan: importing must not push the account past the custom-command soft cap.
     const isPro = await userHasActivePro(supabase, userId);
     if (!isPro) {
@@ -153,6 +158,8 @@ export const importSettingsBackup = createServerFn({ method: "POST" })
       }
     }
 
+=======
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     for (const command of commands) {
       const payload = {
         user_id: userId,

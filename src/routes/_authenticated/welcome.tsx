@@ -9,6 +9,7 @@ export const Route = createFileRoute("/_authenticated/welcome")({
   ssr: false,
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Welcome" },
       {
         name: "description",
@@ -16,6 +17,15 @@ export const Route = createFileRoute("/_authenticated/welcome")({
           "Choose Free or Pro and start streaming with CylixStudio across Twitch, Kick, YouTube and TikTok.",
       },
       { property: "og:title", content: "CylixStudio — Welcome" },
+=======
+      { title: "Welcome — Creovix Studio" },
+      {
+        name: "description",
+        content:
+          "Choose Free or Pro and start streaming with Creovix Studio across Twitch, Kick, YouTube and TikTok.",
+      },
+      { property: "og:title", content: "Welcome — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Multi-platform streaming tools. Pick Free or Pro, or redeem a prepaid code.",

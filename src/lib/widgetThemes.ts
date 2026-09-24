@@ -70,7 +70,11 @@ export const WIDGET_THEMES: WidgetThemePreset[] = [
 ];
 
 export function parseWidgetThemeId(_raw: unknown): WidgetThemeId {
+<<<<<<< HEAD
   // CylixStudio Modern Dark Glass is the permanent, enforced overlay aesthetic.
+=======
+  // Creovix Modern Dark Glass is the permanent, enforced overlay aesthetic.
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   return "dark-glass";
 }
 

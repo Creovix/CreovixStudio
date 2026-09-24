@@ -21,13 +21,21 @@ import {
 export const Route = createFileRoute("/_authenticated/live-counter")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Counter" },
+=======
+      { title: "Counter — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Track live follower counts for any Kick or Twitch channel, save social accounts, and sum public follower totals.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Counter" },
+=======
+      { property: "og:title", content: "Counter — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Real-time follower counters with saved channels and VS comparison mode.",

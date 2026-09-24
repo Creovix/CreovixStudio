@@ -19,7 +19,11 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
       <style>{MOTION_CSS}</style>
 
       <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-4 py-3 sm:px-5 md:px-8">
+<<<<<<< HEAD
         <p className="truncate text-[0.72rem] uppercase tracking-[0.2em] text-white/38">CylixStudio · Link in Bio</p>
+=======
+        <p className="truncate text-[0.72rem] uppercase tracking-[0.2em] text-white/38">Creovix · Link in Bio</p>
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-sm tabular-nums text-white/40">
             {step} / {total}

@@ -54,12 +54,20 @@ import { isTestMode } from "@/lib/testMode";
 export const Route = createFileRoute("/_authenticated/schedule")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Stream Schedule" },
+=======
+      { title: "Stream Schedule — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content: "Monthly go-live calendar with game, title and a shareable viewer schedule plus ICS export.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Stream Schedule" },
+=======
+      { property: "og:title", content: "Stream Schedule — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

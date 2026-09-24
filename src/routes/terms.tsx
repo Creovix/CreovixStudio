@@ -32,7 +32,11 @@ const TOC: LegalTocItem[] = [
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Terms of Service" },
+=======
+      { title: "Terms of Service — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "tiktok-developers-site-verification",
         content: "FMGidZnFrpK7GvuJ8jmtExedcI6gVHIF",
@@ -40,12 +44,21 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
+<<<<<<< HEAD
           "Terms of Service for CylixStudio: accounts, overlays, media requests, redeem codes, platform policies and acceptable use.",
       },
       { property: "og:title", content: "CylixStudio — Terms of Service" },
       {
         property: "og:description",
         content: "Rules for using CylixStudio widgets, overlays, media queues and studio tools.",
+=======
+          "Terms of Service for Creovix Studio: accounts, overlays, media requests, redeem codes, platform policies and acceptable use.",
+      },
+      { property: "og:title", content: "Terms of Service — Creovix Studio" },
+      {
+        property: "og:description",
+        content: "Rules for using Creovix Studio widgets, overlays, media queues and studio tools.",
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -60,7 +73,11 @@ function TermsPage() {
       title="Terms of Service"
       lastUpdated={LEGAL_UPDATED}
       toc={TOC}
+<<<<<<< HEAD
       lede="These Terms of Service are the rules for using CylixStudio. They are the platform’s contract text, not legal advice about streaming, copyright, gambling, giveaways or privacy law in your country. You are responsible for your own compliance. If you need advice, consult qualified counsel."
+=======
+      lede="These Terms of Service are the rules for using Creovix Studio. They are the platform’s contract text, not legal advice about streaming, copyright, gambling, giveaways or privacy law in your country. You are responsible for your own compliance. If you need advice, consult qualified counsel."
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     >
       <LegalSection id="agreement" title="1. Agreement">
         <p>
@@ -83,7 +100,11 @@ function TermsPage() {
 
       <LegalSection id="service" title="2. The service">
         <p>
+<<<<<<< HEAD
           CylixStudio provides a control room and browser sources for live streams. Features
+=======
+          Creovix Studio provides a control room and browser sources for live streams. Features
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           include, without limitation:
         </p>
         <ul className="list-disc space-y-1 ps-5">
@@ -132,7 +153,11 @@ function TermsPage() {
       <LegalSection id="platforms" title="5. Connected platforms and third-party terms">
         <p>
           When you connect Twitch, Kick, optional TikTok, Streamlabs, StreamElements or media
+<<<<<<< HEAD
           platforms, you authorise CylixStudio to use tokens and events solely to operate
+=======
+          platforms, you authorise Creovix Studio to use tokens and events solely to operate
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           widgets. Those tokens are stored to keep overlays working; they are not sold.
         </p>
         <p>
@@ -232,7 +257,11 @@ function TermsPage() {
 
       <LegalSection id="ip" title="11. Intellectual property">
         <p>
+<<<<<<< HEAD
           CylixStudio’s software, design and documentation remain ours or our licensors’.
+=======
+          Creovix Studio’s software, design and documentation remain ours or our licensors’.
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           Platform logos and media you play remain those companies’ or the rights holders’.
           Your widget configs and UGC remain yours, subject to the licence in section 8.
         </p>
@@ -245,7 +274,11 @@ function TermsPage() {
           non-infringement.
         </p>
         <p>
+<<<<<<< HEAD
           This document is CylixStudio’s own policy and terms text. It is not legal advice
+=======
+          This document is Creovix Studio’s own policy and terms text. It is not legal advice
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
           to streamers about local law, tax, giveaways, music licensing, or platform enforcement.
           You should consult your own counsel for compliance in the places you stream.
         </p>

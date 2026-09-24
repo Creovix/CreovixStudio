@@ -140,9 +140,13 @@ const DICT = {
   "settings.backup.exportFail": "Could not export settings.",
   "settings.backup.importOk": "Settings imported.",
   "settings.backup.importFail": "Could not import settings.",
+<<<<<<< HEAD
   "settings.backup.freeLimit":
     "Free plan allows up to 10 custom commands. Remove some commands or upgrade to Pro before importing.",
   "settings.backup.invalid": "This file is not a CylixStudio settings backup.",
+=======
+  "settings.backup.invalid": "This file is not a Creovix settings backup.",
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   "settings.backup.unsupported": "This backup file version is not supported.",
   "settings.backup.confirmTitle": "Import these settings?",
   "settings.backup.confirmBody": "Review what the file contains before applying it to this account.",
@@ -236,19 +240,26 @@ const DICT = {
   "login.privacy": "Privacy Policy",
   "login.terms": "Terms of Service",
 
+<<<<<<< HEAD
   "gateway.welcome.title": "Welcome to CylixStudio",
+=======
+  "gateway.welcome.title": "Welcome to Creovix Studio",
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   "gateway.welcome.subtitle":
     "Multi-platform streaming tools for Twitch, Kick, YouTube and TikTok — pick Free or Pro to get started.",
   "gateway.welcome.platformsLabel": "Supported platforms",
   "gateway.welcome.multiPlatform": "Multi-platform",
   "gateway.plansLabel": "Choose your plan",
   "gateway.price.period": "/month",
+<<<<<<< HEAD
   "gateway.billing.monthly": "Monthly",
   "gateway.billing.sixMonths": "6 Months",
   "gateway.billing.yearly": "Yearly",
   "gateway.billing.save": "Save ~{percent}%",
   "gateway.billing.checkoutReady": "Pro checkout ready: {amount} — payment gateway coming soon.",
   "gateway.billing.selectorLabel": "Billing period",
+=======
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   "gateway.free.name": "Free",
   "gateway.free.description": "Core tools to get on stream, with clear limits as you grow.",
   "gateway.free.cta": "Continue with Free",
@@ -272,7 +283,11 @@ const DICT = {
   "gateway.pro.bullet.export": "Full data export",
   "gateway.compare.open": "View full feature comparison",
   "gateway.compare.title": "Full plan comparison",
+<<<<<<< HEAD
   "gateway.compare.subtitle": "Every CylixStudio capability, side by side.",
+=======
+  "gateway.compare.subtitle": "Every Creovix Studio capability, side by side.",
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
   "gateway.compare.feature": "Feature",
   "gateway.compare.note":
     "Pro is activated with a prepaid redeem code. Limits on Free apply to custom commands, timers and advanced tools.",

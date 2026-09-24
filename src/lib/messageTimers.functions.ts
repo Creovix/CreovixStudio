@@ -7,9 +7,13 @@ import {
   type MessageTimer,
   type MessageTimerInput,
 } from "@/lib/messageTimers";
+<<<<<<< HEAD
 import { FREE_PLAN_LIMITS } from "@/lib/plans";
 import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
 import { userHasActivePro } from "@/lib/subscription.server";
+=======
+import { requireSupabaseAuth } from "@/lib/supabase/auth-middleware";
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
 
 const PLATFORMS: ChatCommandPlatform[] = ["KICK", "TWITCH"];
 
@@ -69,6 +73,7 @@ export const upsertMessageTimer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const normalized = normalizeInput(data);
     if ("error" in normalized) return { ok: false as const, error: normalized.error };
+<<<<<<< HEAD
 
     // Free plan: block creating beyond the soft cap (edits of existing rows still allowed).
     if (!normalized.id) {
@@ -85,6 +90,8 @@ export const upsertMessageTimer = createServerFn({ method: "POST" })
       }
     }
 
+=======
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     const payload = {
       user_id: context.userId,
       message: normalized.message,

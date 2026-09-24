@@ -10,13 +10,21 @@ export const Route = createFileRoute("/overlay/tiktok-tappers")({
   }),
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — TikTok Top Tappers (OBS)" },
+=======
+      { title: "TikTok Top Tappers — OBS Browser Source" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Transparent OBS browser source showing the live TikTok top tappers leaderboard with animated ranks.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — TikTok Top Tappers (OBS)" },
+=======
+      { property: "og:title", content: "TikTok Top Tappers — OBS Browser Source" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Live TikTok tap leaderboard overlay for OBS and Streamlabs Desktop.",

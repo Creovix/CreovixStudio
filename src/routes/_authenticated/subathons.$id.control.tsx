@@ -10,12 +10,20 @@ import { formatDuration } from "@/lib/timer";
 export const Route = createFileRoute("/_authenticated/subathons/$id/control")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Timer Control" },
+=======
+      { title: "Timer Control — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content: "Live subathon timer control: start, pause, add or subtract time and undo actions.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Timer Control" },
+=======
+      { property: "og:title", content: "Timer Control — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Run your subathon timer live with instant overlay sync.",

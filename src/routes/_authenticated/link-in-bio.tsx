@@ -8,7 +8,11 @@ export const Route = createFileRoute("/_authenticated/link-in-bio")({
   validateSearch: (search: Record<string, unknown>) => parseLinkInBioSearch(search),
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Link in Bio" },
+=======
+      { title: "Link in Bio — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { name: "description", content: "Set up a public page for socials, streams, and custom links." },
     ],
   }),

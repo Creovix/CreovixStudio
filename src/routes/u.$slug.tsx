@@ -13,7 +13,11 @@ export const Route = createFileRoute("/u/$slug")({
   ssr: false,
   head: ({ params }) => ({
     meta: [
+<<<<<<< HEAD
       { title: `CylixStudio — ${params.slug}` },
+=======
+      { title: `${params.slug} — Creovix` },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { name: "description", content: "Creator links, streams, and socials." },
       { name: "robots", content: "index, follow" },
     ],

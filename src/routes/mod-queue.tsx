@@ -20,9 +20,15 @@ type Snapshot = {
 export const Route = createFileRoute("/mod-queue")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Mod Queue" },
       { name: "description", content: "Moderator controls for the CylixStudio media request queue: approve, skip, reject and pause incoming requests." },
       { property: "og:title", content: "CylixStudio — Mod Queue" },
+=======
+      { title: "Mod Queue — Creovix" },
+      { name: "description", content: "Moderator controls for the Creovix media request queue: approve, skip, reject and pause incoming requests." },
+      { property: "og:title", content: "Mod Queue — Creovix" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { property: "og:description", content: "Approve, skip, reject and pause incoming media requests." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

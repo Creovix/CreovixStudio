@@ -86,7 +86,11 @@ export const sendTestChatMessage = createServerFn({ method: "POST" })
       author: data.author?.slice(0, 40) || "TestViewer",
       color: "#A78BFA",
       badges: ["broadcaster"],
+<<<<<<< HEAD
       text: data.text?.slice(0, 200) || "Hello from the CylixStudio test suite! 🎉",
+=======
+      text: data.text?.slice(0, 200) || "Hello from the Creovix test suite! 🎉",
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
     });
 
     return { ok: true as const };

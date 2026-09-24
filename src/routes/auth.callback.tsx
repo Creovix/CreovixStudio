@@ -13,9 +13,15 @@ export const Route = createFileRoute("/auth/callback")({
   }),
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Finishing Sign-in" },
       { name: "description", content: "Completing your Twitch or Kick sign-in." },
       { property: "og:title", content: "CylixStudio — Finishing Sign-in" },
+=======
+      { title: "Finishing sign-in — Subathon Timer" },
+      { name: "description", content: "Completing your Twitch or Kick sign-in." },
+      { property: "og:title", content: "Finishing sign-in — Subathon Timer" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       { property: "og:description", content: "Completing your streaming platform sign-in." },
     ],
   }),

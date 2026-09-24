@@ -22,13 +22,21 @@ import {
 export const Route = createFileRoute("/_authenticated/subathons/$id/overlay")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Overlay Builder" },
+=======
+      { title: "Overlay Builder — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Design your OBS subathon overlay: layout, fonts, colors and animations with a live preview and copyable browser source URL.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Overlay Builder" },
+=======
+      { property: "og:title", content: "Overlay Builder — Subathon Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Customize the transparent OBS overlay for your subathon timer.",

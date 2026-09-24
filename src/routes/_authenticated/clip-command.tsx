@@ -15,13 +15,21 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/clip-command")({
   head: () => ({
     meta: [
+<<<<<<< HEAD
       { title: "CylixStudio — Clip Command" },
+=======
+      { title: "Clip Command — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         name: "description",
         content:
           "Let viewers create instant clips by typing !clip in chat. Configure permissions, clip length and the bot response.",
       },
+<<<<<<< HEAD
       { property: "og:title", content: "CylixStudio — Clip Command" },
+=======
+      { property: "og:title", content: "Clip Command — Creovix Studio" },
+>>>>>>> 970f687b11e70c3737c6875891a881ff305d6ca8
       {
         property: "og:description",
         content: "Viewer-triggered clipping with permissions, length limits and a custom chat reply.",
