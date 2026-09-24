@@ -91,7 +91,7 @@ export function MonthCalendar({
               className={cn(
                 "min-h-[11rem] rounded-2xl p-1.5 transition-colors sm:min-h-[13.5rem] sm:p-2",
                 !cell.inMonth && "opacity-35",
-                cell.isToday && "bg-white/[0.04]",
+                cell.isToday && "bg-[#bee1fc]/10 ring-1 ring-inset ring-[#bee1fc]/25",
                 onAdd && "cursor-pointer hover:bg-white/[0.05]",
               )}
               onClick={() => onAdd?.(cell.iso)}
@@ -100,7 +100,7 @@ export function MonthCalendar({
                 className={cn(
                   "mb-1 inline-flex size-7 items-center justify-center rounded-full text-[0.78rem] tabular-nums",
                   cell.isToday
-                    ? "bg-emerald-400/15 font-semibold text-emerald-300"
+                    ? "bg-[#bee1fc]/20 font-semibold text-[#bee1fc]"
                     : "font-medium text-muted-foreground",
                 )}
               >

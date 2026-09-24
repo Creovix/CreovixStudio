@@ -500,8 +500,8 @@ function MarkPointsPage() {
           )}
         </div>
 
-        <div className="space-y-10">
-          <div className="space-y-8">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)] lg:items-start lg:gap-12 xl:gap-16">
+          <div className="min-w-0 space-y-8">
             <section>
               <h2 className="text-[0.95rem] font-semibold">{c.testerTitle}</h2>
               <p className="mt-1 text-[0.78rem] text-muted-foreground">{c.testerHint}</p>
@@ -517,12 +517,12 @@ function MarkPointsPage() {
                   type="button"
                   onClick={applySample}
                   disabled={!sampleHit}
-                  className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground disabled:opacity-40"
+                  className="rounded-full bg-[#bee1fc] px-4 py-2 text-[0.82rem] font-semibold text-[#0a0a0a] disabled:opacity-40"
                 >
                   {c.testerApply}
                 </button>
               </div>
-              <div className="mt-3 rounded-[20px] border border-white/[0.06] bg-zinc-900 p-3 font-mono text-[0.78rem]">
+              <div className="mt-3 rounded-xl border border-white/[0.06] bg-zinc-950/60 p-3 font-mono text-[0.78rem]">
                 {sampleHit ? (
                   <p className="text-zinc-200">
                     {c.testerHit}{" "}
@@ -540,19 +540,16 @@ function MarkPointsPage() {
             <HowItWorks title={c.howTitle} steps={c.how} />
           </div>
 
-          <section className="max-w-xl overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/90 text-start shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)]">
-            <div className="space-y-4 p-5 sm:p-6">
-              <div>
-                <h2 className="text-[0.95rem] font-semibold tracking-tight">{c.whoTitle}</h2>
-                <p className="mt-2 text-[0.8rem] leading-relaxed text-muted-foreground">{c.who}</p>
-                <p className="mt-2 text-[0.72rem] leading-relaxed text-muted-foreground/85">{c.twitchNote}</p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
+          <section className="min-w-0 space-y-8 border-t border-white/[0.06] pt-8 lg:border-t-0 lg:border-s lg:ps-10 lg:pt-0 xl:ps-12">
+            <div>
+              <h2 className="text-[0.95rem] font-semibold tracking-tight">{c.whoTitle}</h2>
+              <p className="mt-2 max-w-prose text-[0.78rem] leading-relaxed text-muted-foreground">{c.who}</p>
+              <p className="mt-2 max-w-prose text-[0.72rem] leading-relaxed text-muted-foreground/85">{c.twitchNote}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
                 {["!mark", "/mark", "!emark", "/emark"].map((cmd) => (
                   <code
                     key={cmd}
-                    className="rounded-lg border border-[#bee1fc]/20 bg-[#bee1fc]/10 px-2.5 py-1 font-mono text-[0.72rem] font-medium text-[#bee1fc]"
+                    className="rounded-lg border border-[#bee1fc]/25 bg-[#bee1fc]/10 px-2.5 py-1 font-mono text-[0.72rem] font-medium text-[#bee1fc]"
                   >
                     {cmd}
                   </code>
@@ -560,18 +557,16 @@ function MarkPointsPage() {
               </div>
             </div>
 
-            <div className="space-y-3 border-t border-white/[0.06] px-5 py-5 sm:px-6">
-              <div>
-                <h3 className="text-[0.82rem] font-semibold tracking-tight">{c.shareTitle}</h3>
-                <p className="mt-1.5 text-[0.72rem] leading-relaxed text-muted-foreground">{c.shareHint}</p>
-              </div>
+            <div>
+              <h3 className="text-[0.82rem] font-semibold tracking-tight">{c.shareTitle}</h3>
+              <p className="mt-1.5 text-[0.72rem] leading-relaxed text-muted-foreground">{c.shareHint}</p>
               <input
                 readOnly
                 value={shareUrl}
-                className="h-10 w-full rounded-xl border border-white/[0.08] bg-zinc-950 px-3 font-mono text-[0.72rem] text-zinc-400 outline-none"
+                className="mt-3 h-10 w-full rounded-xl border border-white/10 bg-zinc-950 px-3 font-mono text-[0.72rem] text-zinc-400 outline-none focus:border-[#bee1fc]/40"
                 dir="ltr"
               />
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => void copyShare()}
@@ -584,20 +579,18 @@ function MarkPointsPage() {
                 <button
                   type="button"
                   onClick={() => rotateMutation.mutate()}
-                  className="inline-flex h-9 items-center rounded-full border border-white/[0.1] bg-transparent px-4 text-[0.75rem] font-medium text-zinc-300 transition-colors hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
+                  className="inline-flex h-9 items-center rounded-full border border-white/10 px-4 text-[0.75rem] font-medium text-zinc-300 transition-colors hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
                 >
                   {c.shareRotate}
                 </button>
               </div>
             </div>
 
-            <div className="space-y-3 border-t border-white/[0.06] px-5 py-5 sm:px-6">
-              <div>
-                <h3 className="text-[0.82rem] font-semibold tracking-tight">{c.allowTitle}</h3>
-                <p className="mt-1.5 text-[0.72rem] leading-relaxed text-muted-foreground">{c.allowHint}</p>
-              </div>
+            <div>
+              <h3 className="text-[0.82rem] font-semibold tracking-tight">{c.allowTitle}</h3>
+              <p className="mt-1.5 text-[0.72rem] leading-relaxed text-muted-foreground">{c.allowHint}</p>
               <form
-                className="flex items-stretch gap-2"
+                className="mt-3 flex items-stretch gap-2"
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (!allowName.trim()) {
@@ -611,7 +604,7 @@ function MarkPointsPage() {
                   value={allowName}
                   onChange={(event) => setAllowName(event.target.value)}
                   placeholder={c.allowPlaceholder}
-                  className="h-10 min-w-0 flex-1 rounded-xl border border-white/[0.1] bg-zinc-950 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-[#bee1fc]/45"
+                  className="h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-zinc-950 px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-[#bee1fc]/50 focus:ring-1 focus:ring-[#bee1fc]/35"
                   dir="auto"
                 />
                 <button
@@ -622,9 +615,9 @@ function MarkPointsPage() {
                 </button>
               </form>
               {allowlist.length === 0 ? (
-                <p className="text-[0.72rem] text-muted-foreground">{c.allowEmpty}</p>
+                <p className="mt-3 text-[0.72rem] text-muted-foreground">{c.allowEmpty}</p>
               ) : (
-                <ul className="flex flex-wrap gap-2">
+                <ul className="mt-3 flex flex-wrap gap-2">
                   {allowlist.map((name) => (
                     <li
                       key={name}
