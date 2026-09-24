@@ -94,7 +94,7 @@ export function useWorkspace(userId: string) {
       if (profile.error) {
         if (isMissingRelationError(profile.error)) {
           console.warn(
-            "[workspace] public.users missing from schema cache — falling back to auth.getUser(). Apply migration 20260925010000_ensure_public_users_profile.sql",
+            "[workspace] public.users missing from schema cache — falling back to auth.getUser(). Apply migration 20260925010000_secure_public_users_profile.sql",
             profile.error.message,
           );
           resolvedProfile = await profileFromAuth(userId);

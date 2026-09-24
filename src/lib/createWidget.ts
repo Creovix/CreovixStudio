@@ -94,7 +94,7 @@ export async function ensureUserProfile(userId: string): Promise<void> {
       error.code === "42P01"
     ) {
       throw new Error(
-        "public.users is missing in Supabase. Run migration 20260925010000_ensure_public_users_profile.sql (SQL Editor or supabase db push), then retry.",
+        "public.users is missing in Supabase. Run migration 20260925010000_secure_public_users_profile.sql (SQL Editor or node scripts/apply-users-migration.mjs with DATABASE_URL), then retry.",
       );
     }
     throw error;
