@@ -78,27 +78,22 @@ export function RedeemCodeSection({ onActivated, className }: RedeemCodeSectionP
     <section
       id="redeem"
       className={cn(
-        "rounded-2xl border border-white/[0.07] bg-zinc-950/70 p-6 sm:p-8",
+        "rounded-xl border border-white/[0.07] bg-zinc-950/80 px-3 py-2.5 sm:px-4 sm:py-3",
         className,
       )}
     >
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="inline-flex items-center gap-2 text-primary">
-            <Ticket className="size-4" aria-hidden />
-            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.22em]">
-              {t("gateway.redeem.eyebrow")}
-            </span>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:max-w-[11.5rem]">
+          <span className="grid size-7 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+            <Ticket className="size-3.5" aria-hidden />
+          </span>
+          <div className="min-w-0 leading-tight">
+            <p className="text-[0.78rem] font-semibold tracking-tight">{t("gateway.redeem.title")}</p>
+            <p className="truncate text-[0.68rem] text-muted-foreground">{t("gateway.redeem.hint")}</p>
           </div>
-          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-            {t("gateway.redeem.title")}
-          </h2>
-          <p className="max-w-md text-[0.88rem] leading-relaxed text-muted-foreground">
-            {t("gateway.redeem.body")}
-          </p>
         </div>
 
-        <div className="w-full max-w-md shrink-0 space-y-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
           <label className="sr-only" htmlFor="gateway-redeem-code">
             {t("gateway.redeem.label")}
           </label>
@@ -113,7 +108,7 @@ export function RedeemCodeSection({ onActivated, className }: RedeemCodeSectionP
             placeholder="XXXX - XXXX - XXXX - XXXX"
             aria-invalid={raw.length > 0 && !valid}
             className={cn(
-              "h-12 border-white/10 bg-white/[0.03] text-center font-mono text-base tracking-[0.2em]",
+              "h-9 flex-1 border-white/10 bg-white/[0.03] text-center font-mono text-sm tracking-[0.16em]",
               raw.length === 0
                 ? "focus-visible:border-primary/50"
                 : valid
@@ -121,37 +116,36 @@ export function RedeemCodeSection({ onActivated, className }: RedeemCodeSectionP
                   : "border-amber-500/40",
             )}
           />
-          <p className="text-center text-[0.7rem] text-muted-foreground">{raw.length}/16</p>
-
-          {feedback ? (
-            <div
-              role="status"
-              className={cn(
-                "flex items-start gap-2 rounded-xl border px-3.5 py-3 text-[0.8rem]",
-                feedback.kind === "success"
-                  ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-400"
-                  : "border-red-500/35 bg-red-500/10 text-red-400",
-              )}
-            >
-              {feedback.kind === "success" ? (
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
-              ) : (
-                <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
-              )}
-              <span>{feedback.message}</span>
-            </div>
-          ) : null}
-
           <Button
             type="button"
+            size="sm"
             disabled={!valid || pending}
             onClick={() => void activate()}
-            className="h-11 w-full text-sm font-semibold"
+            className="h-9 shrink-0 px-4 text-[0.78rem] font-semibold sm:min-w-[7.5rem]"
           >
             {pending ? t("gateway.redeem.activating") : t("gateway.redeem.cta")}
           </Button>
         </div>
       </div>
+
+      {feedback ? (
+        <div
+          role="status"
+          className={cn(
+            "mt-2 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.72rem]",
+            feedback.kind === "success"
+              ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-400"
+              : "border-red-500/35 bg-red-500/10 text-red-400",
+          )}
+        >
+          {feedback.kind === "success" ? (
+            <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
+          ) : (
+            <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+          )}
+          <span className="truncate">{feedback.message}</span>
+        </div>
+      ) : null}
     </section>
   );
 }
