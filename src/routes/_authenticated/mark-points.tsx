@@ -453,7 +453,7 @@ function MarkPointsPage() {
             <button
               type="button"
               onClick={() => setEditor({ note: "" })}
-              className="ms-auto inline-flex h-8 items-center gap-1.5 rounded-full bg-zinc-100 px-3 text-[0.78rem] font-semibold text-zinc-900 transition-opacity hover:opacity-90"
+              className="ms-auto inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3 text-[0.78rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
               <Plus className="size-3.5" aria-hidden />
               {c.add}
@@ -517,7 +517,7 @@ function MarkPointsPage() {
                   type="button"
                   onClick={applySample}
                   disabled={!sampleHit}
-                  className="rounded-full bg-zinc-100 px-4 py-2 text-[0.82rem] font-semibold text-zinc-900 disabled:opacity-40"
+                  className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground disabled:opacity-40"
                 >
                   {c.testerApply}
                 </button>
@@ -603,7 +603,7 @@ function MarkPointsPage() {
                 />
                 <button
                   type="submit"
-                  className="shrink-0 rounded-full bg-zinc-100 px-3 text-[0.72rem] font-semibold text-zinc-900"
+                  className="shrink-0 rounded-full bg-primary px-3 text-[0.72rem] font-semibold text-primary-foreground"
                 >
                   {c.allowAdd}
                 </button>
@@ -653,7 +653,7 @@ function MarkPointsPage() {
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel>{c.cancel}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
             >
               {c.delete}
@@ -824,7 +824,7 @@ function MarkEditor({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="rounded-full bg-zinc-100 px-4 py-2 text-[0.82rem] font-semibold text-zinc-900 disabled:opacity-60"
+            className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground disabled:opacity-60"
           >
             {copy.save}
           </button>
