@@ -235,7 +235,7 @@ function HomePage() {
 
   const visibleTools = TOOLS.filter(
     (tool) => platformFilter === "ALL" || tool.platforms.includes(platformFilter),
-  );
+  ).sort((a, b) => Number(Boolean(a.comingSoon)) - Number(Boolean(b.comingSoon)));
   const shownTools = visibleTools.slice(0, visibleCount);
 
   useEffect(() => {

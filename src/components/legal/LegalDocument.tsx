@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { cn } from "@/lib/utils";
 
 export const LEGAL_CONTACT_EMAIL = "store@creovix.com";
@@ -79,9 +80,10 @@ export function LegalDocument({
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
           <Link
             to="/login"
-            className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="CylixStudio"
           >
-            CylixStudio
+            <BrandLogo showWordmark size="sm" />
           </Link>
           <nav className="flex items-center gap-4 text-sm text-muted-foreground" aria-label="Legal documents">
             <Link to="/privacy" className="transition-colors hover:text-foreground">

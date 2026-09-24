@@ -19,6 +19,7 @@ import {
 
 import { StreamlabsBridge } from "@/components/layout/StreamlabsBridge";
 import { StreamElementsBridge } from "@/components/layout/StreamElementsBridge";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -170,17 +171,13 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
             <Link
               to="/dashboard"
               className={cn("flex min-w-0 items-center gap-2", collapsed && "justify-center")}
-              aria-label="CylixStudio"
+              aria-label="CylixStudio home"
             >
               {collapsed ? (
-                <span className="text-sm font-semibold tracking-tight text-foreground" title="CylixStudio">
-                  CS
-                </span>
+                <BrandLogo markOnly size="sm" title="CylixStudio" />
               ) : (
-                <span className="flex min-w-0 items-baseline gap-2">
-                  <span className="truncate text-sm font-semibold tracking-tight text-foreground">
-                    CylixStudio
-                  </span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <BrandLogo showWordmark size="sm" />
                   <span
                     className={cn(
                       "shrink-0 rounded-md border border-primary/35 bg-primary/10",

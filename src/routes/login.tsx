@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PlatformAsset } from "@/components/icons/platformAssets";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { navigateAfterLogin } from "@/lib/postLogin";
@@ -106,10 +107,15 @@ function LoginPage() {
         aria-hidden="true"
       />
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-          CylixStudio
-        </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight">Sign in to your control room</h1>
+        <div className="flex items-center gap-3">
+          <BrandLogo markOnly size="lg" className="sm:hidden" />
+          <BrandLogo markOnly size="xl" className="hidden sm:inline-flex" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">CylixStudio</p>
+            <p className="mt-0.5 truncate text-[0.72rem] text-muted-foreground">Streaming control room</p>
+          </div>
+        </div>
+        <h1 className="mt-5 text-3xl font-bold tracking-tight">Sign in to your control room</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Connect a streaming account. Your tokens are stored securely and used to track follows,
           subs, gifts, bits and donations.

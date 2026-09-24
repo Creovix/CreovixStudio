@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { PlanCompareDialog } from "@/components/onboarding/PlanCompareDialog";
 import { RedeemCodeSection } from "@/components/onboarding/RedeemCodeSection";
 import { PlatformAsset } from "@/components/icons/platformAssets";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import {
@@ -297,6 +298,10 @@ export function GatewayPage() {
 
       <div className="relative mx-auto flex h-full w-full max-w-[56rem] flex-col justify-center px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
         <header className="mx-auto w-full max-w-2xl shrink-0 text-center">
+          <div className="mb-3 flex justify-center">
+            <BrandLogo markOnly size="lg" className="sm:hidden" />
+            <BrandLogo markOnly size="xl" className="hidden sm:inline-flex" />
+          </div>
           <h1 className="text-balance text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl lg:text-[2.15rem] lg:leading-[1.15]">
             {t("gateway.welcome.title")}
           </h1>
