@@ -1,0 +1,243 @@
+/** Plan catalog for the onboarding gateway and comparison table. */
+
+export type PlanId = "free" | "pro";
+
+export type FeatureAvailability = boolean | string;
+
+export type PlanFeatureRow = {
+  id: string;
+  labelKey: string;
+  free: FeatureAvailability;
+  pro: FeatureAvailability;
+  /** Highlighted in the short Free / Pro cards. */
+  card?: "free" | "pro" | "both" | "free-missing" | "pro-highlight";
+};
+
+export const PLAN_PRICES = {
+  free: { amount: 0, label: "$0", period: "/month" },
+  /** Default Pro list price shown in comparison table (monthly). */
+  pro: { amount: 9.99, label: "$9.99", period: "/month" },
+} as const;
+
+/** Pro billing intervals for the welcome gateway + future Tuwaiq Pay checkout. */
+export type ProBillingInterval = "monthly" | "six_months" | "yearly";
+
+export type ProBillingOption = {
+  id: ProBillingInterval;
+  /** Total amount charged for this interval (USD). */
+  amount: number;
+  currency: "USD";
+  /** Display for the large price figure. */
+  label: string;
+  /** Covered months in this purchase. */
+  months: number;
+  /** Short period suffix next to the price (e.g. /month, /year). */
+  periodSuffix: string;
+  /** Effective monthly rate shown under the price. */
+  perMonthLabel: string;
+  /** Optional savings badge (e.g. yearly vs 12× monthly). */
+  savePercent: number | null;
+};
+
+export const PRO_BILLING_OPTIONS: Record<ProBillingInterval, ProBillingOption> = {
+  monthly: {
+    id: "monthly",
+    amount: 9.99,
+    currency: "USD",
+    label: "$9.99",
+    months: 1,
+    periodSuffix: "/month",
+    perMonthLabel: "$9.99/mo",
+    savePercent: null,
+  },
+  six_months: {
+    id: "six_months",
+    amount: 44.99,
+    currency: "USD",
+    label: "$44.99",
+    months: 6,
+    periodSuffix: "/6 months",
+    perMonthLabel: "~$7.50/mo",
+    savePercent: null,
+  },
+  yearly: {
+    id: "yearly",
+    amount: 71.99,
+    currency: "USD",
+    label: "$71.99",
+    months: 12,
+    periodSuffix: "/year",
+    perMonthLabel: "$6.00/mo",
+    /** vs 12 × $9.99 monthly (~$119.88). */
+    savePercent: 40,
+  },
+};
+
+export const PRO_BILLING_ORDER: ProBillingInterval[] = ["monthly", "six_months", "yearly"];
+
+export const DEFAULT_PRO_BILLING: ProBillingInterval = "monthly";
+
+/** Payload handed to Tuwaiq Pay (or any checkout adapter) when Unlock Pro is pressed. */
+export type ProCheckoutPayload = {
+  planId: "pro";
+  interval: ProBillingInterval;
+  amount: number;
+  currency: "USD";
+  months: number;
+  label: string;
+  productName: string;
+};
+
+export const PENDING_PRO_CHECKOUT_KEY = "cylix.pending-pro-checkout";
+
+export function buildProCheckoutPayload(interval: ProBillingInterval): ProCheckoutPayload {
+  const option = PRO_BILLING_OPTIONS[interval];
+  return {
+    planId: "pro",
+    interval: option.id,
+    amount: option.amount,
+    currency: option.currency,
+    months: option.months,
+    label: option.label,
+    productName: `CylixStudio Pro (${option.months === 1 ? "Monthly" : option.months === 6 ? "6 Months" : "Yearly"})`,
+  };
+}
+
+/**
+ * Persists the selected Pro checkout so a future Tuwaiq Pay redirect/handler
+ * can read the exact total. Returns the payload for immediate use.
+ */
+export function prepareProCheckout(interval: ProBillingInterval): ProCheckoutPayload {
+  const payload = buildProCheckoutPayload(interval);
+  if (typeof window !== "undefined") {
+    try {
+      window.sessionStorage.setItem(PENDING_PRO_CHECKOUT_KEY, JSON.stringify(payload));
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }
+  return payload;
+}
+
+/** Soft caps for Free accounts — enforced server-side on create. */
+export const FREE_PLAN_LIMITS = {
+  customCommands: 10,
+  messageTimers: 3,
+} as const;
+
+/** Full feature matrix — source of truth for cards + detailed table. */
+export const PLAN_FEATURES: PlanFeatureRow[] = [
+  {
+    id: "platforms",
+    labelKey: "gateway.feature.platforms",
+    free: true,
+    pro: true,
+    card: "both",
+  },
+  {
+    id: "commands",
+    labelKey: "gateway.feature.commands",
+    free: "Up to 10",
+    pro: "Unlimited",
+    card: "both",
+  },
+  {
+    id: "timers",
+    labelKey: "gateway.feature.timers",
+    free: "Up to 3",
+    pro: "Unlimited",
+    card: "both",
+  },
+  {
+    id: "basicWidgets",
+    labelKey: "gateway.feature.basicWidgets",
+    free: true,
+    pro: true,
+    card: "both",
+  },
+  {
+    id: "advancedWidgets",
+    labelKey: "gateway.feature.advancedWidgets",
+    free: false,
+    pro: true,
+    card: "pro-highlight",
+  },
+  {
+    id: "emoteRain",
+    labelKey: "gateway.feature.emoteRain",
+    free: false,
+    pro: true,
+    card: "pro-highlight",
+  },
+  {
+    id: "linkInBio",
+    labelKey: "gateway.feature.linkInBio",
+    free: false,
+    pro: true,
+    card: "free-missing",
+  },
+  {
+    id: "analytics",
+    labelKey: "gateway.feature.analytics",
+    free: false,
+    pro: true,
+    card: "free-missing",
+  },
+  {
+    id: "export",
+    labelKey: "gateway.feature.export",
+    free: false,
+    pro: true,
+    card: "pro-highlight",
+  },
+  {
+    id: "overlays",
+    labelKey: "gateway.feature.overlays",
+    free: true,
+    pro: true,
+  },
+  {
+    id: "activityFeed",
+    labelKey: "gateway.feature.activityFeed",
+    free: true,
+    pro: true,
+  },
+  {
+    id: "giveaways",
+    labelKey: "gateway.feature.giveaways",
+    free: "Basic",
+    pro: "Full suite",
+  },
+  {
+    id: "schedule",
+    labelKey: "gateway.feature.schedule",
+    free: true,
+    pro: true,
+  },
+  {
+    id: "priority",
+    labelKey: "gateway.feature.priority",
+    free: false,
+    pro: true,
+  },
+];
+
+export const GATEWAY_STORAGE_KEY = "creovix.gateway.completed";
+
+export function isGatewayCompleted(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(GATEWAY_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function markGatewayCompleted(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(GATEWAY_STORAGE_KEY, "1");
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
