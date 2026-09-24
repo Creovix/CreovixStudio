@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
-import { isGatewayCompleted } from "@/lib/plans";
+import { resolvePostLoginPath, type PostLoginServerNext } from "@/lib/postLogin";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -23,6 +23,21 @@ function AuthCallback() {
 
   useEffect(() => {
     let active = true;
+
+    const goNext = async (serverNext?: PostLoginServerNext | null) => {
+      const dest = await resolvePostLoginPath({ serverNext });
+      if (!active) return;
+      if (dest.to === "/settings") {
+        void navigate({
+          to: "/settings",
+          search: dest.search ?? { setup: "connections" },
+          replace: true,
+        });
+        return;
+      }
+      void navigate({ to: dest.to, replace: true });
+    };
+
     (async () => {
       // Prefer HttpOnly cookie handoff (no token_hash in the URL).
       // Fall back to legacy ?token_hash= / #token_hash= for in-flight redirects.
@@ -50,7 +65,7 @@ function AuthCallback() {
           navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
           return;
         }
-        navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+        await goNext(null);
         return;
       }
 
@@ -64,6 +79,7 @@ function AuthCallback() {
         error?: string;
         access_token?: string;
         refresh_token?: string;
+        next?: PostLoginServerNext;
       } | null;
       if (!active) return;
       if (!response.ok || !payload?.ok || !payload.access_token || !payload.refresh_token) {
@@ -85,7 +101,7 @@ function AuthCallback() {
         navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
         return;
       }
-      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+      await goNext(payload.next ?? null);
     })();
     return () => {
       active = false;

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { isGatewayCompleted } from "@/lib/plans";
+import { resolvePostLoginPath } from "@/lib/postLogin";
 import { isTestMode } from "@/lib/testMode";
 
 export const Route = createFileRoute("/")({
@@ -34,21 +34,45 @@ function AuthGate() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isTestMode()) {
-      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
-      return;
-    }
-    if (!isSupabaseConfigured()) {
-      navigate({ to: "/login", replace: true });
-      return;
-    }
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        navigate({ to: "/login", replace: true });
+    let active = true;
+
+    const goNext = async () => {
+      const dest = await resolvePostLoginPath();
+      if (!active) return;
+      if (dest.to === "/settings") {
+        void navigate({
+          to: "/settings",
+          search: dest.search ?? { setup: "connections" },
+          replace: true,
+        });
         return;
       }
-      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+      void navigate({ to: dest.to, replace: true });
+    };
+
+    if (isTestMode()) {
+      void goNext();
+      return () => {
+        active = false;
+      };
+    }
+    if (!isSupabaseConfigured()) {
+      void navigate({ to: "/login", replace: true });
+      return () => {
+        active = false;
+      };
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (!data.session) {
+        void navigate({ to: "/login", replace: true });
+        return;
+      }
+      void goNext();
     });
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   return (

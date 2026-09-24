@@ -69,12 +69,15 @@ export const Route = createFileRoute("/api/auth/session/finish")({
 
         try {
           const session = await mintSupabaseSessionForUser(userId);
-          console.info("[oauth:session/finish] ok", { userId });
+          const { resolvePostLoginNext } = await import("@/lib/postLogin.server");
+          const next = await resolvePostLoginNext(userId);
+          console.info("[oauth:session/finish] ok", { userId, next });
           return new Response(
             JSON.stringify({
               ok: true,
               access_token: session.access_token,
               refresh_token: session.refresh_token,
+              next,
             }),
             { status: 200, headers },
           );

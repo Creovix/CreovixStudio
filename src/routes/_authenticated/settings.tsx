@@ -11,7 +11,16 @@ import { useIsAdmin } from "@/hooks/useSubscription";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
 
+type SettingsSearch = {
+  connected?: string | undefined;
+  setup?: string | undefined;
+};
+
 export const Route = createFileRoute("/_authenticated/settings")({
+  validateSearch: (search: Record<string, unknown>): SettingsSearch => ({
+    connected: typeof search["connected"] === "string" ? search["connected"] : undefined,
+    setup: typeof search["setup"] === "string" ? search["setup"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "CylixStudio — Settings" },
@@ -43,12 +52,19 @@ const ADMIN_TABS = [
 
 type Tab = (typeof BASE_TABS)[number]["id"] | (typeof ADMIN_TABS)[number]["id"];
 
+function initialTab(search: SettingsSearch): Tab {
+  if (search.setup === "connections" || search.connected) return "Connections";
+  if (search.setup === "subscription") return "Profile";
+  return "Profile";
+}
+
 function SettingsPage() {
   const { user } = Route.useRouteContext();
+  const search = Route.useSearch();
   const { data } = useWorkspace(user.id);
   const isAdmin = useIsAdmin(user.id);
   const { t } = useLanguage();
-  const [tab, setTab] = useState<Tab>("Profile");
+  const [tab, setTab] = useState<Tab>(() => initialTab(search));
 
   const tabs = isAdmin.data ? [...BASE_TABS, ...ADMIN_TABS] : [...BASE_TABS];
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PlatformAsset } from "@/components/icons/platformAssets";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { isGatewayCompleted } from "@/lib/plans";
+import { resolvePostLoginPath } from "@/lib/postLogin";
 import { enableTestMode, isTestMode } from "@/lib/testMode";
 import { useLanguage } from "@/lib/i18n";
 
@@ -51,16 +51,38 @@ function LoginPage() {
   const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isTestMode()) {
-      navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
-      return;
-    }
-    if (!isSupabaseConfigured()) return;
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+    let active = true;
+    const goNext = async () => {
+      const dest = await resolvePostLoginPath();
+      if (!active) return;
+      if (dest.to === "/settings") {
+        void navigate({
+          to: "/settings",
+          search: dest.search ?? { setup: "connections" },
+          replace: true,
+        });
+        return;
       }
+      void navigate({ to: dest.to, replace: true });
+    };
+
+    if (isTestMode()) {
+      void goNext();
+      return () => {
+        active = false;
+      };
+    }
+    if (!isSupabaseConfigured()) {
+      return () => {
+        active = false;
+      };
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) void goNext();
     });
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   const signIn = (provider: "twitch" | "kick" | "tiktok") => {
@@ -69,10 +91,19 @@ function LoginPage() {
     window.location.href = `/api/auth/${provider}/start`;
   };
 
-  const continueAsGuest = () => {
+  const continueAsGuest = async () => {
     setPending("test");
     enableTestMode();
-    navigate({ to: isGatewayCompleted() ? "/dashboard" : "/welcome", replace: true });
+    const dest = await resolvePostLoginPath();
+    if (dest.to === "/settings") {
+      void navigate({
+        to: "/settings",
+        search: dest.search ?? { setup: "connections" },
+        replace: true,
+      });
+      return;
+    }
+    void navigate({ to: dest.to, replace: true });
   };
 
 
