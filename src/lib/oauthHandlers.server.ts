@@ -327,7 +327,7 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       ? tokens.scope
       : (tokens.scope ?? config.scopes).split(" ").filter(Boolean);
 
-    await supabaseAdmin.from("users").upsert(
+    const { error: userUpsertError } = await supabaseAdmin.from("users").upsert(
       {
         id: authUserId,
         email,
@@ -336,8 +336,12 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       },
       { onConflict: "id" },
     );
+    if (userUpsertError) {
+      console.error(`[oauth:${provider}] users upsert failed`, formatOAuthError(userUpsertError));
+      throw userUpsertError;
+    }
 
-    await supabaseAdmin.from("accounts").upsert(
+    const { error: accountUpsertError } = await supabaseAdmin.from("accounts").upsert(
       {
         user_id: authUserId,
         type: "oauth",
@@ -351,8 +355,12 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       },
       { onConflict: "provider,provider_account_id" },
     );
+    if (accountUpsertError) {
+      console.error(`[oauth:${provider}] accounts upsert failed`, formatOAuthError(accountUpsertError));
+      throw accountUpsertError;
+    }
 
-    await supabaseAdmin.from("platform_connections").upsert(
+    const { error: connectionUpsertError } = await supabaseAdmin.from("platform_connections").upsert(
       {
         user_id: authUserId,
         platform: config.platform,
@@ -364,13 +372,20 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
         token_expires_at: expiresAt,
         is_active: true,
         metadata: {
-            avatar_url: profile.image,
-            email,
-            ...(profile.extra ?? {}),
-          },
+          avatar_url: profile.image,
+          email,
+          ...(profile.extra ?? {}),
         },
-        { onConflict: "user_id,platform,platform_user_id" },
+      },
+      { onConflict: "user_id,platform,platform_user_id" },
+    );
+    if (connectionUpsertError) {
+      console.error(
+        `[oauth:${provider}] platform_connections upsert failed`,
+        formatOAuthError(connectionUpsertError),
       );
+      throw connectionUpsertError;
+    }
 
     if (provider === "kick") {
       const { ensureKickEventSubscriptions } = await import("@/lib/kickEvents.server");

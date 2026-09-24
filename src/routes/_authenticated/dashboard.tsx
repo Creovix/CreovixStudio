@@ -51,7 +51,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMediaRequestDashboard } from "@/lib/mediaRequests.functions";
 import { useWidgets } from "@/hooks/useWidgets";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { createWidget } from "@/lib/createWidget";
+import { createWidget, errorMessage } from "@/lib/createWidget";
 import type { WidgetType } from "@/lib/widgets";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { isTestMode } from "@/lib/testMode";
@@ -80,6 +80,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 const HUB_INITIAL_VISIBLE = 12;
 const HUB_LOAD_MORE = 8;
+
+/** Hub tools that require an active Pro subscription (matches PLAN_FEATURES). */
+const PRO_ONLY_TOOL_IDS = new Set(["emote-rain"]);
 
 type Tool = {
   id: string;
@@ -210,8 +213,14 @@ function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const locked = subscription.isSuccess && !subscription.data.isActive;
-  const lockLabel = "Subscription required";
+  const needsPro = subscription.isSuccess && !subscription.data.isActive;
+  const lockLabel = "Unlock Pro";
+
+  const toolLocked = (tool: Tool) => needsPro && PRO_ONLY_TOOL_IDS.has(tool.id);
+
+  const openWidget = async (widgetId: string) => {
+    await navigate({ to: "/widgets/$widgetId", params: { widgetId } });
+  };
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -248,7 +257,7 @@ function HomePage() {
       await queryClient.invalidateQueries({ queryKey: ["widgets"] });
       setRemovingId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete this widget.");
+      setError(errorMessage(err, "Could not delete this widget."));
       setPendingDelete(null);
     } finally {
       setDeleting(false);
@@ -281,9 +290,10 @@ function HomePage() {
       });
       await queryClient.invalidateQueries({ queryKey: ["widgets"] });
       setGoalModal(false);
-      navigate({ to: "/widgets/$widgetId", params: { widgetId: widget.id } });
+      await openWidget(widget.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create this goal.");
+      console.error("[dashboard] create goal failed", err);
+      setError(errorMessage(err, "Could not create this goal."));
     } finally {
       setBusy(null);
     }
@@ -291,7 +301,7 @@ function HomePage() {
 
   const open = async (tool: Tool) => {
     if (tool.comingSoon) return;
-    if (locked) {
+    if (toolLocked(tool)) {
       setRedeemModal(true);
       return;
     }
@@ -300,15 +310,28 @@ function HomePage() {
       return;
     }
     if (tool.id === "kick-media-requests") {
-      navigate({ to: "/media-requests" });
+      try {
+        await navigate({ to: "/media-requests" });
+      } catch (err) {
+        console.error("[dashboard] open media-requests failed", err);
+        setError(errorMessage(err, "Could not open this tool."));
+      }
       return;
     }
 
-    if (!tool.type) return;
+    if (!tool.type) {
+      setError("This tool has no openable route yet.");
+      return;
+    }
     setError(null);
     const existing = existingFor(tool);
     if (existing) {
-      navigate({ to: "/widgets/$widgetId", params: { widgetId: existing.id } });
+      try {
+        await openWidget(existing.id);
+      } catch (err) {
+        console.error("[dashboard] navigate to widget failed", err);
+        setError(errorMessage(err, "Could not open this tool."));
+      }
       return;
     }
     setBusy(tool.id);
@@ -320,9 +343,10 @@ function HomePage() {
         name: tool.name,
       });
       await queryClient.invalidateQueries({ queryKey: ["widgets"] });
-      navigate({ to: "/widgets/$widgetId", params: { widgetId: widget.id } });
+      await openWidget(widget.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not open this tool.");
+      console.error("[dashboard] open tool failed", { toolId: tool.id, err });
+      setError(errorMessage(err, "Could not open this tool."));
     } finally {
       setBusy(null);
     }
@@ -337,17 +361,17 @@ function HomePage() {
     >
       {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
 
-      {locked ? (
-        <div className="glass-3d mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-red-500/25 p-4">
-          <span className="grid size-9 place-items-center rounded-xl bg-red-500/15 text-red-400">
+      {needsPro ? (
+        <div className="glass-3d mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/25 p-4">
+          <span className="grid size-9 place-items-center rounded-xl bg-primary/15 text-primary">
             <Lock className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-[0.85rem] font-medium">
-              {"Subscription required"}
-            </p>
+            <p className="text-[0.85rem] font-medium">{"Free plan"}</p>
             <p className="text-[0.76rem] text-muted-foreground">
-              {"Enter your 16-character license code to unlock all widgets and OBS links."}
+              {
+                "Essential widgets are unlocked. Activate a Pro code for Emote Rain and other Pro tools."
+              }
             </p>
           </div>
           <button
@@ -355,7 +379,7 @@ function HomePage() {
             onClick={() => setRedeemModal(true)}
             className="ms-auto rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
-            {"Activate code"}
+            {"Unlock Pro"}
           </button>
         </div>
       ) : null}
@@ -407,6 +431,7 @@ function HomePage() {
             {shownTools.map((tool) => {
               const existing = existingFor(tool);
               const Preview = tool.preview;
+              const locked = toolLocked(tool);
               return (
                 <ToolCard
                   key={tool.id}

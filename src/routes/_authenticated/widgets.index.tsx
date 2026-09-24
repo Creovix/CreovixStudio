@@ -59,9 +59,10 @@ function WidgetHub() {
       }
       return createWidget({ userId: user.id, subathonId, type, name });
     },
-    onError: (err: Error) => {
-      setError(err.message);
-      toast.error(err.message);
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+      setError(message);
+      toast.error(message);
     },
     onSuccess: async (widget) => {
       setError(null);
@@ -79,9 +80,10 @@ function WidgetHub() {
         .eq("id", id);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => {
-      setError(err.message);
-      toast.error(err.message);
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+      setError(message);
+      toast.error(message);
     },
     onSuccess: () => void invalidate(),
   });
@@ -91,9 +93,10 @@ function WidgetHub() {
       const { error: writeError } = await supabase.from("widgets").delete().eq("id", id);
       if (writeError) throw writeError;
     },
-    onError: (err: Error) => {
-      setError(err.message);
-      toast.error(err.message);
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+      setError(message);
+      toast.error(message);
     },
     onSuccess: () => void invalidate(),
   });
