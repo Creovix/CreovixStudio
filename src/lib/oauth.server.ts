@@ -234,19 +234,15 @@ export const isOAuthProvider = (value: string): value is OAuthProvider =>
   value === "streamlabs" ||
   value === "tiktok";
 
+/** RFC 7636 base64url without padding. */
 export const base64Url = (input: Buffer) =>
   input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
-/** Base64url that keeps `=` padding (Kick swagger examples use padded challenges). */
-export const base64UrlPadded = (input: Buffer) =>
-  input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_");
-
 export const createVerifier = () => base64Url(randomBytes(32));
 export const createState = () => base64Url(randomBytes(24));
-export const challengeFor = (verifier: string, padded = false) => {
-  const digest = createHash("sha256").update(verifier).digest();
-  return padded ? base64UrlPadded(digest) : base64Url(digest);
-};
+/** PKCE S256 code_challenge — always unpadded base64url (RFC 7636). */
+export const challengeFor = (verifier: string) =>
+  base64Url(createHash("sha256").update(verifier).digest());
 
 export const oauthCallbackPath = (provider: OAuthProvider) => {
   if (provider === "tiktok") return "/api/auth/callback/tiktok";
@@ -280,11 +276,8 @@ export function buildAuthorizeUrl(args: {
   const authorizeBase = isKick ? KICK_AUTHORIZE_URL : config.authorizeUrl;
   const clientKey = args.provider === "tiktok" ? "client_key" : "client_id";
 
-  // Kick PKCE: keep base64 padding so the challenge matches Kick's swagger examples
-  // (`...Ahg8%3D` after encodeURIComponent).
-  const challenge = args.verifier
-    ? challengeFor(args.verifier, isKick)
-    : null;
+  // Kick + TikTok PKCE: RFC 7636 unpadded base64url (no `=` / `%3D`).
+  const challenge = args.verifier ? challengeFor(args.verifier) : null;
 
   const pairs: Array<[string, string]> = [
     ["response_type", "code"],
@@ -319,9 +312,35 @@ function requestIsHttps(request: Request): boolean {
   return proto === "https";
 }
 
+/**
+ * Share OAuth state/verifier across apex ↔ www so a 308 hop cannot drop the cookie.
+ */
+function oauthCookieDomain(request: Request): string | null {
+  try {
+    const hostname = new URL(publicSiteUrl(request)).hostname.toLowerCase();
+    if (hostname === "cylixstudio.com" || hostname === "www.cylixstudio.com") {
+      return ".cylixstudio.com";
+    }
+  } catch {
+    /* ignore */
+  }
+  const url = new URL(request.url);
+  const host = (request.headers.get("x-forwarded-host") ?? url.host)
+    .split(",")[0]
+    ?.trim()
+    .split(":")[0]
+    ?.toLowerCase();
+  if (host === "cylixstudio.com" || host === "www.cylixstudio.com") {
+    return ".cylixstudio.com";
+  }
+  return null;
+}
+
 export const cookie = (request: Request, name: string, value: string, maxAge: number) => {
   const secure = requestIsHttps(request) ? "; Secure" : "";
-  return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${maxAge}`;
+  const domain = oauthCookieDomain(request);
+  const domainPart = domain ? `; Domain=${domain}` : "";
+  return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax${secure}${domainPart}; Max-Age=${maxAge}`;
 };
 
 export const readCookie = (request: Request, name: string) => {

@@ -21,14 +21,19 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
     return new Response("Unknown provider", { status: 404 });
   }
   const provider: OAuthProvider = providerRaw;
-
+  const origin = publicSiteUrl(request);
   const config = PROVIDERS[provider];
   const clientId = readOAuthEnv(config.clientIdEnv);
+  const hasClientSecret = Boolean(readOAuthEnv(config.clientSecretEnv));
+
   if (!clientId) {
-    return Response.redirect(
-      new URL(`/login?error=${provider}_not_configured`, `${publicSiteUrl(request)}/`),
-      302,
-    );
+    console.info(`[oauth:${provider}] start not_configured`, {
+      requestUrl: request.url,
+      origin,
+      hasClientId: false,
+      hasClientSecret,
+    });
+    return Response.redirect(new URL(`/login?error=${provider}_not_configured`, `${origin}/`), 302);
   }
 
   const linkState = new URL(request.url).searchParams.get("link");
@@ -44,19 +49,34 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
     verifier,
   });
 
+  let authorizeHost = "(parse_failed)";
+  try {
+    authorizeHost = new URL(location).host;
+  } catch {
+    /* ignore */
+  }
+
+  console.info(`[oauth:${provider}] start`, {
+    requestUrl: request.url,
+    origin,
+    redirectUri,
+    authorizeHost,
+    scopes: config.scopes,
+    hasClientId: true,
+    hasClientSecret,
+    usesPkce: config.usesPkce,
+  });
+
   // Kick's consent UI may call api.kick.com under the hood for validation; the
   // 302 Location we send must still be https://id.kick.com/oauth/authorize.
   if (provider === "kick") {
     if (!location.startsWith(KICK_AUTHORIZE_URL)) {
       console.error(`[oauth:kick] refused non-id host Location=${location.slice(0, 120)}`);
       return Response.redirect(
-        new URL(`/login?error=oauth_failed&detail=bad_kick_authorize_host`, `${publicSiteUrl(request)}/`),
+        new URL(`/login?error=oauth_failed&detail=bad_kick_authorize_host`, `${origin}/`),
         302,
       );
     }
-    console.info(
-      `[oauth:kick] Location host=id.kick.com redirect_uri=${redirectUri} scopes=${config.scopes}`,
-    );
   }
 
   const headers = new Headers({ Location: location });
@@ -69,7 +89,13 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
 
 export async function handleOAuthCallback(request: Request, providerRaw: string): Promise<Response> {
   const origin = publicSiteUrl(request);
-  const fail = (reason: string, detail?: string) => {
+  const fail = (provider: string, reason: string, detail?: string) => {
+    console.info(`[oauth:${provider}] callback fail`, {
+      reason,
+      detail: detail?.slice(0, 300) ?? null,
+      origin,
+      requestUrl: request.url,
+    });
     const location = new URL(`${origin}/login`);
     location.searchParams.set("error", reason);
     if (detail) location.searchParams.set("detail", detail.slice(0, 300));
@@ -80,18 +106,26 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
   const provider: OAuthProvider = providerRaw;
 
   const url = new URL(request.url);
-  if (url.searchParams.get("error")) return fail(url.searchParams.get("error")!);
+  if (url.searchParams.get("error")) {
+    return fail(provider, url.searchParams.get("error")!);
+  }
 
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const expectedState = readCookie(request, `oauth_state_${provider}`);
-  if (!code) return fail("missing_code");
-  if (!state || !expectedState || state !== expectedState) return fail("state_mismatch");
+  if (!code) return fail(provider, "missing_code");
+  if (!state || !expectedState || state !== expectedState) {
+    return fail(
+      provider,
+      "state_mismatch",
+      !expectedState ? "oauth_state_cookie_missing" : "state_param_mismatch",
+    );
+  }
 
   const config = PROVIDERS[provider];
   const clientId = readOAuthEnv(config.clientIdEnv);
   const clientSecret = readOAuthEnv(config.clientSecretEnv);
-  if (!clientId || !clientSecret) return fail(`${provider}_not_configured`);
+  if (!clientId || !clientSecret) return fail(provider, `${provider}_not_configured`);
 
   try {
     const tokens = await exchangeCode({
@@ -251,12 +285,13 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
 
     const target = new URL(`${origin}/auth/callback`);
     target.searchParams.set("token_hash", hashedToken);
+    console.info(`[oauth:${provider}] callback ok → /auth/callback`, { origin });
     const headers = new Headers({ Location: target.toString() });
     headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, "", 0));
     headers.append("Set-Cookie", cookie(request, `oauth_verifier_${provider}`, "", 0));
     return new Response(null, { status: 302, headers });
   } catch (error) {
-    console.error(`[oauth:${provider}]`, error);
-    return fail("oauth_failed", error instanceof Error ? error.message : String(error));
+    console.error(`[oauth:${provider}] callback exception`, error);
+    return fail(provider, "oauth_failed", error instanceof Error ? error.message : String(error));
   }
 }

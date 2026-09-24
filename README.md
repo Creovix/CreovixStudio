@@ -31,16 +31,16 @@ npm run build
 npm start
 ```
 
-Nitro writes the Node server to `.output/server/index.mjs`. Set `PORT` (default `3000`) and `PUBLIC_SITE_URL=https://cylixstudio.com` in production (no trailing slash).
+Nitro writes the Node server to `.output/server/index.mjs`. Set `PORT` (default `3000`) and `PUBLIC_SITE_URL=https://www.cylixstudio.com` in production (no trailing slash). Canonical host is **www** because Vercel 308-redirects apex → www.
 
 OAuth redirect URIs (Kick / Twitch developer consoles) — these are the **provider** callbacks, not `/auth/callback`:
 
-- `https://cylixstudio.com/api/auth/kick/callback`
-- `https://cylixstudio.com/api/auth/twitch/callback`
+- `https://www.cylixstudio.com/api/auth/kick/callback`
+- `https://www.cylixstudio.com/api/auth/twitch/callback`
 
 After OAuth succeeds, the server redirects the browser to the **session** page:
 
-- `https://cylixstudio.com/auth/callback?token_hash=…`
+- `https://www.cylixstudio.com/auth/callback?token_hash=…`
 
 ## Netlify
 
@@ -48,13 +48,13 @@ Nitro uses the `netlify` preset when `NETLIFY=true` (set automatically on Netlif
 
 In the Netlify dashboard, **Publish directory must be `dist`**, not `.output/public` and not `dist/client`. Those folders are either the local Node build or a different Start adapter and cause `Page not found (404)` after a successful build.
 
-Copy `.env.example` keys into Netlify (including `VITE_SUPABASE_*` at build time). Production origin should be `https://cylixstudio.com`.
+Copy `.env.example` keys into Netlify (including `VITE_SUPABASE_*` at build time). Production origin should be `https://www.cylixstudio.com`.
 
 ## Vercel
 
 `vercel.json` sets the framework preset to **TanStack Start**. Leave **Output Directory** empty in the Vercel dashboard so Nitro can emit the Build Output API under `.vercel/output`. Setting it to `.output/public` deploys static files only and every SSR/API route returns `404: NOT_FOUND`. Do not add SPA `rewrites` to `index.html`.
 
-Copy `.env.example` keys into Vercel (including `VITE_SUPABASE_*` at build time). Set `PUBLIC_SITE_URL=https://cylixstudio.com` for Production. Production origin should be `https://cylixstudio.com`.
+Copy `.env.example` keys into Vercel (including `VITE_SUPABASE_*` at build time). Set `PUBLIC_SITE_URL=https://www.cylixstudio.com` for Production. Production origin should be `https://www.cylixstudio.com`.
 
 ## Scripts
 
