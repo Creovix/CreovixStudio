@@ -89,7 +89,7 @@ const field =
   "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-foreground outline-none focus:border-zinc-600";
 const label = "mb-1.5 block text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground";
 const primary =
-  "inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-40";
+  "inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40";
 const selectClass = "h-10 rounded-xl border-zinc-800 bg-zinc-900";
 
 const SPIN_DURATIONS = [3, 5, 8, 10, 15];

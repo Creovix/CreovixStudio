@@ -239,7 +239,7 @@ function SchedulePage() {
         <button
           type="button"
           onClick={() => openCreate()}
-          className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black hover:opacity-90"
+          className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground hover:opacity-90"
         >
           {c.add}
         </button>
@@ -277,7 +277,7 @@ function SchedulePage() {
             <button
               type="button"
               onClick={() => settingsMutation.mutate()}
-              className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black hover:opacity-90"
+              className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground hover:opacity-90"
             >
               {c.save}
             </button>
@@ -518,7 +518,7 @@ function SchedulePage() {
                 }
                 saveMutation.mutate({ ...editor, startMinutes: start });
               }}
-              className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black hover:opacity-90"
+              className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground hover:opacity-90"
             >
               {c.save}
             </button>

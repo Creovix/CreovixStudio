@@ -422,18 +422,13 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       target: target.toString(),
       authUserId,
       handoffLength: handoff.length,
+      publicSite: origin,
     });
     const headers = new Headers({ Location: target.toString() });
-    // Host-only HMAC handoff (user id only). Session tokens are minted in finish.
-    headers.append(
-      "Set-Cookie",
-      cookie(request, "oauth_session_handoff", handoff, 300, { hostOnly: true }),
-    );
-    // Clear legacy magic-hash cookie if a prior attempt left one behind.
-    headers.append(
-      "Set-Cookie",
-      cookie(request, "oauth_magic_hash", "", 0, { hostOnly: true }),
-    );
+    // Share Domain=.cylixstudio.com in prod (same as OAuth state) so a www/apex
+    // hop cannot drop the handoff before /auth/callback → session/finish.
+    headers.append("Set-Cookie", cookie(request, "oauth_session_handoff", handoff, 300));
+    headers.append("Set-Cookie", cookie(request, "oauth_magic_hash", "", 0));
     headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, "", 0));
     headers.append("Set-Cookie", cookie(request, `oauth_verifier_${provider}`, "", 0));
     return new Response(null, { status: 302, headers });

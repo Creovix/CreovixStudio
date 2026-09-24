@@ -643,7 +643,7 @@ function CustomCommandsPage() {
             <button
               type="button"
               onClick={openCreate}
-              className="ms-auto inline-flex h-8 items-center gap-1.5 rounded-full bg-emerald-500 px-3 text-[0.78rem] font-semibold text-black transition-opacity hover:opacity-90"
+              className="ms-auto inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3 text-[0.78rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
               <Plus className="size-3.5" aria-hidden />
               {c.add}
@@ -682,7 +682,7 @@ function CustomCommandsPage() {
             <button
               type="button"
               onClick={() => prefixMutation.mutate(prefixValue)}
-              className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black transition-opacity hover:opacity-90"
+              className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
               {c.savePrefix}
             </button>
@@ -694,7 +694,7 @@ function CustomCommandsPage() {
               className={cn(
                 pill,
                 prefixValue === ""
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                  ? "border-primary/50 bg-primary/15 text-foreground"
                   : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
               )}
             >
@@ -709,7 +709,7 @@ function CustomCommandsPage() {
                   pill,
                   "font-mono",
                   prefixValue === preset
-                    ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                    ? "border-primary/50 bg-primary/15 text-foreground"
                     : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -722,7 +722,7 @@ function CustomCommandsPage() {
               className={cn(
                 pill,
                 isSuffixMarker(prefixValue)
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                  ? "border-primary/50 bg-primary/15 text-foreground"
                   : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
               )}
             >
@@ -1088,7 +1088,7 @@ function DefaultCommandEditor({
                       pill,
                       "inline-flex items-center gap-2",
                       active
-                        ? "border-emerald-500/50 bg-emerald-500/15"
+                        ? "border-primary/50 bg-primary/15"
                         : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                     )}
                   >
@@ -1130,7 +1130,7 @@ function DefaultCommandEditor({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black disabled:opacity-60"
+            className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground disabled:opacity-60"
           >
             {copy.defaultSave}
           </button>
@@ -1163,7 +1163,7 @@ function MessageTimersPanel({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-emerald-500 px-3 text-[0.78rem] font-semibold text-black transition-opacity hover:opacity-90"
+          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3 text-[0.78rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
           <Plus className="size-3.5" aria-hidden />
           {copy.addTimer}
@@ -1287,7 +1287,7 @@ function TimerEditor({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black disabled:opacity-60"
+            className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground disabled:opacity-60"
           >
             {copy.timerSave}
           </button>
@@ -1554,7 +1554,7 @@ function CommandEditor({
                   className={cn(
                     pill,
                     prefixMode === "inherit"
-                      ? "border-emerald-500/50 bg-emerald-500/15"
+                      ? "border-primary/50 bg-primary/15"
                       : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                   )}
                 >
@@ -1569,7 +1569,7 @@ function CommandEditor({
                   className={cn(
                     pill,
                     prefixMode === "none"
-                      ? "border-emerald-500/50 bg-emerald-500/15"
+                      ? "border-primary/50 bg-primary/15"
                       : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                   )}
                 >
@@ -1584,7 +1584,7 @@ function CommandEditor({
                       pill,
                       "font-mono",
                       draft.prefix === preset
-                        ? "border-emerald-500/50 bg-emerald-500/15"
+                        ? "border-primary/50 bg-primary/15"
                         : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                     )}
                   >
@@ -1598,7 +1598,7 @@ function CommandEditor({
                   className={cn(
                     pill,
                     suffixSelected
-                      ? "border-emerald-500/50 bg-emerald-500/15"
+                      ? "border-primary/50 bg-primary/15"
                       : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                   )}
                 >
@@ -1651,7 +1651,7 @@ function CommandEditor({
                           pill,
                           "inline-flex items-center gap-2",
                           active
-                            ? "border-emerald-500/50 bg-emerald-500/15"
+                            ? "border-primary/50 bg-primary/15"
                             : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                         )}
                       >
@@ -1677,7 +1677,7 @@ function CommandEditor({
                         className={cn(
                           pill,
                           active
-                            ? "border-emerald-500/50 bg-emerald-500/15"
+                            ? "border-primary/50 bg-primary/15"
                             : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                         )}
                       >
@@ -1721,7 +1721,7 @@ function CommandEditor({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="rounded-full bg-emerald-500 px-4 py-2 text-[0.82rem] font-semibold text-black disabled:opacity-60"
+            className="rounded-full bg-primary px-4 py-2 text-[0.82rem] font-semibold text-primary-foreground disabled:opacity-60"
           >
             {copy.save}
           </button>

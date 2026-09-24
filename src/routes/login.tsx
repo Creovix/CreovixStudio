@@ -98,15 +98,12 @@ function LoginPage() {
     }
   };
 
-
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-charcoal px-6 py-16">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ backgroundImage: "var(--gradient-glow)" }}
-        aria-hidden="true"
-      />
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
+    <main
+      className="relative flex min-h-screen items-center justify-center px-6 py-16"
+      style={{ backgroundColor: "#bee1fc" }}
+    >
+      <div className="relative w-full max-w-md rounded-2xl border border-black/10 bg-[#0a0a0a] p-8 shadow-xl">
         <div className="flex justify-center px-2">
           <BrandLogo
             variant="full"
@@ -115,11 +112,9 @@ function LoginPage() {
             imgClassName="h-11 sm:h-12"
           />
         </div>
-        <h1 className="mt-6 text-3xl font-bold tracking-tight">Sign in to your control room</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Connect a streaming account. Your tokens are stored securely and used to track follows,
-          subs, gifts, bits and donations.
-        </p>
+        <h1 className="mt-6 text-center text-2xl font-bold tracking-tight text-zinc-50 sm:text-3xl">
+          Sign in to your control room
+        </h1>
 
         {error ? (
           <div
@@ -184,40 +179,30 @@ function LoginPage() {
               </span>
             </div>
           </div>
+
+          <p className="pt-1 text-center">
+            <button
+              type="button"
+              onClick={continueAsGuest}
+              disabled={pending !== null}
+              className="cursor-pointer border-0 bg-transparent p-0 text-sm font-normal text-zinc-400 transition-colors hover:text-zinc-200 hover:underline disabled:pointer-events-none disabled:opacity-50"
+            >
+              {pending === "test" ? t("login.testOpening") : t("login.testMode")}
+            </button>
+          </p>
         </div>
 
-        <p className="mt-8 text-xs text-muted-foreground">
+        <p className="mt-8 text-center text-[0.65rem] leading-relaxed text-zinc-500">
           {t("login.legalConsent")}{" "}
-          <Link to="/privacy" className="text-foreground underline-offset-4 hover:underline">
+          <Link to="/privacy" className="underline-offset-2 hover:text-zinc-400 hover:underline">
             {t("login.privacy")}
           </Link>{" "}
           and{" "}
-          <Link to="/terms" className="text-foreground underline-offset-4 hover:underline">
+          <Link to="/terms" className="underline-offset-2 hover:text-zinc-400 hover:underline">
             {t("login.terms")}
           </Link>
           .
         </p>
-
-        <p className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={continueAsGuest}
-            disabled={pending !== null}
-            className="cursor-pointer border-0 bg-transparent p-0 text-sm font-normal text-muted-foreground transition-colors hover:text-foreground/80 hover:underline disabled:pointer-events-none disabled:opacity-50"
-          >
-            {pending === "test" ? t("login.testOpening") : t("login.testMode")}
-          </button>
-        </p>
-
-        <footer className="mt-8 flex items-center justify-center gap-3 border-t border-border/70 pt-4 text-xs text-muted-foreground">
-          <Link to="/privacy" className="transition-colors hover:text-foreground">
-            {t("login.privacy")}
-          </Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/terms" className="transition-colors hover:text-foreground">
-            {t("login.terms")}
-          </Link>
-        </footer>
       </div>
     </main>
   );

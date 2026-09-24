@@ -105,6 +105,15 @@ function AuthCallback() {
         return;
       }
 
+      // Confirm the client session is readable before routing (storage write).
+      const { data: confirmed } = await supabase.auth.getSession();
+      if (!active) return;
+      if (!confirmed.session) {
+        console.error("[auth/callback] session missing after setSession");
+        failToLogin();
+        return;
+      }
+
       // Session is live. Destination routing is best-effort only.
       await goNextSafely();
     })().catch((err) => {

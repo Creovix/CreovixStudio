@@ -222,7 +222,7 @@ function ClipCommandPage() {
                     className={cn(
                       pill,
                       active
-                        ? "border-emerald-500/50 bg-emerald-500/15 text-foreground"
+                        ? "border-primary/50 bg-primary/15 text-foreground"
                         : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
                     )}
                   >
@@ -293,7 +293,7 @@ function ClipCommandPage() {
             <button
               type="button"
               onClick={save}
-              className="rounded-full bg-emerald-500 px-5 py-2 text-[0.82rem] font-semibold text-black transition-opacity hover:opacity-90"
+              className="rounded-full bg-primary px-5 py-2 text-[0.82rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
               Save Changes
             </button>

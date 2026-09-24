@@ -28,7 +28,15 @@ export const Route = createFileRoute("/api/auth/session/finish")({
         });
         headers.append(
           "Set-Cookie",
+          cookie(request, "oauth_session_handoff", "", 0),
+        );
+        headers.append(
+          "Set-Cookie",
           cookie(request, "oauth_session_handoff", "", 0, { hostOnly: true }),
+        );
+        headers.append(
+          "Set-Cookie",
+          cookie(request, "oauth_magic_hash", "", 0),
         );
         headers.append(
           "Set-Cookie",
