@@ -160,7 +160,7 @@ const MARKS_INITIAL = 12;
 const MARKS_STEP = 8;
 
 const field =
-  "w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(0.14_0.02_265/0.9)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-zinc-600";
+  "w-full rounded-xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/80 focus:border-[#bee1fc]/50 focus:ring-1 focus:ring-[#bee1fc]/35";
 
 function MarkPointsPage() {
   const { user } = Route.useRouteContext();
