@@ -49,7 +49,9 @@ export function RedeemCodeSection({ onActivated, className }: RedeemCodeSectionP
           kind: "success",
           message: result.is_lifetime
             ? t("gateway.redeem.successLifetime")
-            : t("gateway.redeem.successDays").replace("{days}", String(days)).replace("{until}", until),
+            : t("gateway.redeem.successDays")
+                .replace("{days}", String(days))
+                .replace("{until}", until),
         });
         markGatewayCompleted();
         await queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -78,72 +80,71 @@ export function RedeemCodeSection({ onActivated, className }: RedeemCodeSectionP
     <section
       id="redeem"
       className={cn(
-        "rounded-xl border border-white/[0.07] bg-zinc-950/80 px-3 py-2.5 sm:px-4 sm:py-3",
+        "rounded-2xl border border-zinc-800 bg-zinc-950/90 p-6 sm:p-7",
         className,
       )}
     >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:max-w-[11.5rem]">
-          <span className="grid size-7 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
-            <Ticket className="size-3.5" aria-hidden />
-          </span>
-          <div className="min-w-0 leading-tight">
-            <p className="text-[0.78rem] font-semibold tracking-tight">{t("gateway.redeem.title")}</p>
-            <p className="truncate text-[0.68rem] text-muted-foreground">{t("gateway.redeem.hint")}</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+          <Ticket className="size-4" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-50">
+            {t("gateway.redeem.title")}
+          </h2>
+          <p className="mt-0.5 text-[0.82rem] text-zinc-400">{t("gateway.redeem.body")}</p>
         </div>
+      </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-          <label className="sr-only" htmlFor="gateway-redeem-code">
-            {t("gateway.redeem.label")}
-          </label>
-          <Input
-            id="gateway-redeem-code"
-            dir="ltr"
-            value={formatCode(value)}
-            onChange={(event) => setValue(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") void activate();
-            }}
-            placeholder="XXXX - XXXX - XXXX - XXXX"
-            aria-invalid={raw.length > 0 && !valid}
-            className={cn(
-              "h-9 flex-1 border-white/10 bg-white/[0.03] text-center font-mono text-sm tracking-[0.16em]",
-              raw.length === 0
-                ? "focus-visible:border-primary/50"
-                : valid
-                  ? "border-emerald-500/50"
-                  : "border-amber-500/40",
-            )}
-          />
-          <Button
-            type="button"
-            size="sm"
-            disabled={!valid || pending}
-            onClick={() => void activate()}
-            className="h-9 shrink-0 px-4 text-[0.78rem] font-semibold sm:min-w-[7.5rem]"
-          >
-            {pending ? t("gateway.redeem.activating") : t("gateway.redeem.cta")}
-          </Button>
-        </div>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+        <label className="sr-only" htmlFor="gateway-redeem-code">
+          {t("gateway.redeem.label")}
+        </label>
+        <Input
+          id="gateway-redeem-code"
+          dir="ltr"
+          value={formatCode(value)}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void activate();
+          }}
+          placeholder="XXXX - XXXX - XXXX - XXXX"
+          aria-invalid={raw.length > 0 && !valid}
+          className={cn(
+            "h-11 flex-1 border-zinc-700 bg-zinc-900/60 text-center font-mono text-[0.95rem] tracking-[0.18em]",
+            raw.length === 0
+              ? "focus-visible:border-primary/50"
+              : valid
+                ? "border-emerald-500/55"
+                : "border-amber-500/45",
+          )}
+        />
+        <Button
+          type="button"
+          disabled={!valid || pending}
+          onClick={() => void activate()}
+          className="h-11 shrink-0 px-6 text-sm font-semibold sm:min-w-[9rem]"
+        >
+          {pending ? t("gateway.redeem.activating") : t("gateway.redeem.cta")}
+        </Button>
       </div>
 
       {feedback ? (
         <div
           role="status"
           className={cn(
-            "mt-2 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.72rem]",
+            "mt-4 flex items-start gap-2 rounded-xl border px-3.5 py-2.5 text-[0.8rem]",
             feedback.kind === "success"
               ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-400"
               : "border-red-500/35 bg-red-500/10 text-red-400",
           )}
         >
           {feedback.kind === "success" ? (
-            <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
           ) : (
-            <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
           )}
-          <span className="truncate">{feedback.message}</span>
+          <span>{feedback.message}</span>
         </div>
       ) : null}
     </section>
