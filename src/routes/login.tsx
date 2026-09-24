@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PlatformAsset } from "@/components/icons/platformAssets";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { resolvePostLoginPath } from "@/lib/postLogin";
+import { navigateAfterLogin } from "@/lib/postLogin";
 import { enableTestMode, isTestMode } from "@/lib/testMode";
 import { useLanguage } from "@/lib/i18n";
 
@@ -53,17 +53,12 @@ function LoginPage() {
   useEffect(() => {
     let active = true;
     const goNext = async () => {
-      const dest = await resolvePostLoginPath();
       if (!active) return;
-      if (dest.to === "/settings") {
-        void navigate({
-          to: "/settings",
-          search: dest.search ?? { setup: "connections" },
-          replace: true,
-        });
-        return;
+      try {
+        await navigateAfterLogin(navigate);
+      } catch (err) {
+        console.warn("[login] post-login routing failed", err);
       }
-      void navigate({ to: dest.to, replace: true });
     };
 
     if (isTestMode()) {
@@ -94,16 +89,12 @@ function LoginPage() {
   const continueAsGuest = async () => {
     setPending("test");
     enableTestMode();
-    const dest = await resolvePostLoginPath();
-    if (dest.to === "/settings") {
-      void navigate({
-        to: "/settings",
-        search: dest.search ?? { setup: "connections" },
-        replace: true,
-      });
-      return;
+    try {
+      await navigateAfterLogin(navigate);
+    } catch (err) {
+      console.warn("[login] test-mode routing failed", err);
+      void navigate({ to: "/welcome", replace: true });
     }
-    void navigate({ to: dest.to, replace: true });
   };
 
 

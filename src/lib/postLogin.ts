@@ -11,65 +11,83 @@ export type PostLoginDestination = {
   search?: { setup?: "connections"; connected?: string };
 };
 
-/** Hint from `/api/auth/session/finish` based on server-side connection state. */
-export type PostLoginServerNext = "dashboard" | "settings";
+type NavigateFn = (opts: {
+  to: PostLoginTo;
+  search?: { setup?: string; connected?: string };
+  replace?: boolean;
+}) => unknown;
 
 /**
- * Decide the post-login route:
+ * Decide the post-login route (client-only, after setSession):
  * 1. Gateway (plan / redeem) not finished → `/welcome`
  * 2. No active streaming connection with a token → `/settings` (Connections)
  * 3. Otherwise → `/dashboard`
  *
- * Prefer this over a bare `isGatewayCompleted() ? /dashboard : /welcome` so
- * returning users still get guided when tokens/links are missing.
+ * Never throws — callers use this only after the session already exists.
  */
-export async function resolvePostLoginPath(options?: {
-  serverNext?: PostLoginServerNext | null;
-}): Promise<PostLoginDestination> {
-  if (!isGatewayCompleted()) {
-    return { to: "/welcome" };
-  }
+export async function resolvePostLoginPath(): Promise<PostLoginDestination> {
+  try {
+    if (!isGatewayCompleted()) {
+      return { to: "/welcome" };
+    }
 
-  if (options?.serverNext === "settings") {
-    return { to: "/settings", search: { setup: "connections" } };
-  }
+    if (isTestMode()) {
+      return { to: "/dashboard" };
+    }
 
-  if (isTestMode()) {
+    if (!isSupabaseConfigured()) {
+      return { to: "/welcome" };
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { to: isGatewayCompleted() ? "/dashboard" : "/welcome" };
+    }
+
+    const hasConnection = await userHasActivePlatformConnection(user.id);
+    if (!hasConnection) {
+      return { to: "/settings", search: { setup: "connections" } };
+    }
+
     return { to: "/dashboard" };
+  } catch (err) {
+    console.warn("[postLogin] resolve failed; gateway fallback", err);
+    return { to: isGatewayCompleted() ? "/dashboard" : "/welcome" };
   }
-
-  if (!isSupabaseConfigured()) {
-    return { to: "/welcome" };
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { to: "/welcome" };
-  }
-
-  const hasConnection = await userHasActivePlatformConnection(user.id);
-  if (!hasConnection) {
-    return { to: "/settings", search: { setup: "connections" } };
-  }
-
-  return { to: "/dashboard" };
 }
 
 export async function userHasActivePlatformConnection(userId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("platform_connections")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .not("access_token", "is", null)
-    .limit(1);
-  if (error) {
-    console.warn("[postLogin] connection check failed", error.message);
-    // Fail open to dashboard only when gateway is already done — caller still
-    // prefers welcome when the gateway flag is unset.
+  try {
+    const { data, error } = await supabase
+      .from("platform_connections")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .not("access_token", "is", null)
+      .limit(1);
+    if (error) {
+      console.warn("[postLogin] connection check failed", error.message);
+      return true;
+    }
+    return (data?.length ?? 0) > 0;
+  } catch (err) {
+    console.warn("[postLogin] connection check threw", err);
     return true;
   }
-  return (data?.length ?? 0) > 0;
+}
+
+/** Navigate after session is established. Never used to signal auth failure. */
+export async function navigateAfterLogin(navigate: NavigateFn): Promise<void> {
+  const dest = await resolvePostLoginPath();
+  if (dest.to === "/settings") {
+    await navigate({
+      to: "/settings",
+      search: dest.search ?? { setup: "connections" },
+      replace: true,
+    });
+    return;
+  }
+  await navigate({ to: dest.to, replace: true });
 }

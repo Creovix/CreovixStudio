@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/lib/supabase/client";
-import { resolvePostLoginPath, type PostLoginServerNext } from "@/lib/postLogin";
+import { isGatewayCompleted } from "@/lib/plans";
+import { navigateAfterLogin } from "@/lib/postLogin";
 
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
@@ -24,18 +25,21 @@ function AuthCallback() {
   useEffect(() => {
     let active = true;
 
-    const goNext = async (serverNext?: PostLoginServerNext | null) => {
-      const dest = await resolvePostLoginPath({ serverNext });
+    const failToLogin = () => {
       if (!active) return;
-      if (dest.to === "/settings") {
-        void navigate({
-          to: "/settings",
-          search: dest.search ?? { setup: "connections" },
-          replace: true,
-        });
-        return;
+      setFailed(true);
+      void navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
+    };
+
+    /** Session is already established — routing must never send the user back to login. */
+    const goNextSafely = async () => {
+      try {
+        await navigateAfterLogin(navigate);
+      } catch (err) {
+        console.warn("[auth/callback] post-login routing failed; using gateway fallback", err);
+        const fallback = isGatewayCompleted() ? "/dashboard" : "/welcome";
+        if (active) void navigate({ to: fallback, replace: true });
       }
-      void navigate({ to: dest.to, replace: true });
     };
 
     (async () => {
@@ -61,11 +65,11 @@ function AuthCallback() {
         window.history.replaceState({}, "", "/auth/callback");
         if (!active) return;
         if (error) {
-          setFailed(true);
-          navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
+          console.error("[auth/callback] legacy verifyOtp failed", error.message);
+          failToLogin();
           return;
         }
-        await goNext(null);
+        await goNextSafely();
         return;
       }
 
@@ -79,7 +83,6 @@ function AuthCallback() {
         error?: string;
         access_token?: string;
         refresh_token?: string;
-        next?: PostLoginServerNext;
       } | null;
       if (!active) return;
       if (!response.ok || !payload?.ok || !payload.access_token || !payload.refresh_token) {
@@ -87,22 +90,28 @@ function AuthCallback() {
           status: response.status,
           error: payload?.error ?? null,
         });
-        setFailed(true);
-        navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
+        failToLogin();
         return;
       }
+
       const { error } = await supabase.auth.setSession({
         access_token: payload.access_token,
         refresh_token: payload.refresh_token,
       });
+      if (!active) return;
       if (error) {
         console.error("[auth/callback] setSession failed", error.message);
-        setFailed(true);
-        navigate({ to: "/login", search: { error: "oauth_failed" }, replace: true });
+        failToLogin();
         return;
       }
-      await goNext(payload.next ?? null);
-    })();
+
+      // Session is live. Destination routing is best-effort only.
+      await goNextSafely();
+    })().catch((err) => {
+      console.error("[auth/callback] unexpected failure", err);
+      failToLogin();
+    });
+
     return () => {
       active = false;
     };

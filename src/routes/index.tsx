@@ -3,7 +3,8 @@ import { useEffect } from "react";
 
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { resolvePostLoginPath } from "@/lib/postLogin";
+import { isGatewayCompleted } from "@/lib/plans";
+import { navigateAfterLogin } from "@/lib/postLogin";
 import { isTestMode } from "@/lib/testMode";
 
 export const Route = createFileRoute("/")({
@@ -37,17 +38,18 @@ function AuthGate() {
     let active = true;
 
     const goNext = async () => {
-      const dest = await resolvePostLoginPath();
       if (!active) return;
-      if (dest.to === "/settings") {
-        void navigate({
-          to: "/settings",
-          search: dest.search ?? { setup: "connections" },
-          replace: true,
-        });
-        return;
+      try {
+        await navigateAfterLogin(navigate);
+      } catch (err) {
+        console.warn("[/] post-login routing failed; gateway fallback", err);
+        if (active) {
+          void navigate({
+            to: isGatewayCompleted() ? "/dashboard" : "/welcome",
+            replace: true,
+          });
+        }
       }
-      void navigate({ to: dest.to, replace: true });
     };
 
     if (isTestMode()) {

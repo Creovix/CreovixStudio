@@ -5,7 +5,9 @@ import { createFileRoute } from "@tanstack/react-router";
  * Supabase user id), clears it immediately, mints a fresh access/refresh
  * session server-side, and returns tokens for the client to call setSession.
  *
- * Never puts token_hash in the URL or stores a magic-link OTP across redirects.
+ * Intentionally mint-only: post-login routing belongs on the client after
+ * setSession succeeds — never in this try/catch (a routing DB blip must not
+ * turn a successful mint into oauth_failed).
  */
 export const Route = createFileRoute("/api/auth/session/finish")({
   server: {
@@ -69,15 +71,12 @@ export const Route = createFileRoute("/api/auth/session/finish")({
 
         try {
           const session = await mintSupabaseSessionForUser(userId);
-          const { resolvePostLoginNext } = await import("@/lib/postLogin.server");
-          const next = await resolvePostLoginNext(userId);
-          console.info("[oauth:session/finish] ok", { userId, next });
+          console.info("[oauth:session/finish] ok", { userId });
           return new Response(
             JSON.stringify({
               ok: true,
               access_token: session.access_token,
               refresh_token: session.refresh_token,
-              next,
             }),
             { status: 200, headers },
           );

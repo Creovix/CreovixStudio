@@ -337,8 +337,9 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
       { onConflict: "id" },
     );
     if (userUpsertError) {
+      // Do not abort the OAuth handoff — session mint only needs authUserId.
+      // createWidget / ensureUserProfile can repair the public.users row later.
       console.error(`[oauth:${provider}] users upsert failed`, formatOAuthError(userUpsertError));
-      throw userUpsertError;
     }
 
     const { error: accountUpsertError } = await supabaseAdmin.from("accounts").upsert(
@@ -357,7 +358,6 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     );
     if (accountUpsertError) {
       console.error(`[oauth:${provider}] accounts upsert failed`, formatOAuthError(accountUpsertError));
-      throw accountUpsertError;
     }
 
     const { error: connectionUpsertError } = await supabaseAdmin.from("platform_connections").upsert(
@@ -384,7 +384,6 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
         `[oauth:${provider}] platform_connections upsert failed`,
         formatOAuthError(connectionUpsertError),
       );
-      throw connectionUpsertError;
     }
 
     if (provider === "kick") {
