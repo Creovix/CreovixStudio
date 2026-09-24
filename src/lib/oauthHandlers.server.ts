@@ -1,13 +1,14 @@
 import {
   PROVIDERS,
+  buildAuthorizeUrl,
   cookie,
-  challengeFor,
   createState,
   createVerifier,
   exchangeCode,
   fetchStreamlabsSocketToken,
   isOAuthProvider,
   readCookie,
+  readOAuthEnv,
   redirectUriFor,
   verifyLinkState,
   type OAuthProvider,
@@ -21,7 +22,7 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
   const provider: OAuthProvider = providerRaw;
 
   const config = PROVIDERS[provider];
-  const clientId = process.env[config.clientIdEnv];
+  const clientId = readOAuthEnv(config.clientIdEnv);
   if (!clientId) {
     return Response.redirect(
       new URL(`/login?error=${provider}_not_configured`, `${publicSiteUrl(request)}/`),
@@ -34,18 +35,20 @@ export async function handleOAuthStart(request: Request, providerRaw: string): P
   const verifier = config.usesPkce ? createVerifier() : null;
   const redirectUri = redirectUriFor(request, provider);
 
-  const authorizeUrl = new URL(config.authorizeUrl);
-  authorizeUrl.searchParams.set(provider === "tiktok" ? "client_key" : "client_id", clientId);
-  authorizeUrl.searchParams.set("redirect_uri", redirectUri);
-  authorizeUrl.searchParams.set("response_type", "code");
-  authorizeUrl.searchParams.set("scope", config.scopes);
-  authorizeUrl.searchParams.set("state", state);
-  if (verifier) {
-    authorizeUrl.searchParams.set("code_challenge", challengeFor(verifier));
-    authorizeUrl.searchParams.set("code_challenge_method", "S256");
+  // Kick rejects authorize if redirect_uri is not an exact console match.
+  if (provider === "kick") {
+    console.info(`[oauth:kick] authorize redirect_uri=${redirectUri} scopes=${config.scopes}`);
   }
 
-  const headers = new Headers({ Location: authorizeUrl.toString() });
+  const location = buildAuthorizeUrl({
+    provider,
+    clientId,
+    redirectUri,
+    state,
+    verifier,
+  });
+
+  const headers = new Headers({ Location: location });
   headers.append("Set-Cookie", cookie(request, `oauth_state_${provider}`, state, 600));
   if (verifier) {
     headers.append("Set-Cookie", cookie(request, `oauth_verifier_${provider}`, verifier, 600));
@@ -75,8 +78,8 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
   if (!state || !expectedState || state !== expectedState) return fail("state_mismatch");
 
   const config = PROVIDERS[provider];
-  const clientId = process.env[config.clientIdEnv];
-  const clientSecret = process.env[config.clientSecretEnv];
+  const clientId = readOAuthEnv(config.clientIdEnv);
+  const clientSecret = readOAuthEnv(config.clientSecretEnv);
   if (!clientId || !clientSecret) return fail(`${provider}_not_configured`);
 
   try {

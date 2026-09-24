@@ -24,6 +24,14 @@ type ProviderConfig = {
   fetchProfile: (accessToken: string, clientId: string) => Promise<ProviderProfile>;
 };
 
+/** Trim + strip wrapping quotes from dashboard-pasted secrets. */
+export function readOAuthEnv(name: string): string | undefined {
+  const raw = process.env[name];
+  if (!raw) return undefined;
+  const trimmed = raw.trim().replace(/^["']|["']$/g, "");
+  return trimmed || undefined;
+}
+
 export const PROVIDERS: Record<OAuthProvider, ProviderConfig> = {
   twitch: {
     platform: "TWITCH",
@@ -66,7 +74,22 @@ export const PROVIDERS: Record<OAuthProvider, ProviderConfig> = {
     platform: "KICK",
     authorizeUrl: "https://id.kick.com/oauth/authorize",
     tokenUrl: "https://id.kick.com/oauth/token",
-    scopes: ["user:read", "channel:read", "channel:write", "chat:write", "streamkey:read", "channel:rewards:read", "channel:rewards:write", "events:subscribe"].join(" "),
+    // Scopes must be enabled on the Kick Developer App. Prefer a login-safe
+    // default; override with KICK_OAUTH_SCOPES (space-separated) if needed.
+    get scopes() {
+      const override = readOAuthEnv("KICK_OAUTH_SCOPES");
+      if (override) return override;
+      return [
+        "user:read",
+        "channel:read",
+        "channel:write",
+        "chat:write",
+        "streamkey:read",
+        "channel:rewards:read",
+        "channel:rewards:write",
+        "events:subscribe",
+      ].join(" ");
+    },
     usesPkce: true,
     clientIdEnv: "KICK_CLIENT_ID",
     clientSecretEnv: "KICK_CLIENT_SECRET",
@@ -220,8 +243,52 @@ export const oauthCallbackPath = (provider: OAuthProvider) => {
   return `/api/auth/${provider}/callback`;
 };
 
+/**
+ * Exact redirect URI sent to the provider (no trailing slash on origin).
+ * Must match Kick/Twitch developer console entries character-for-character.
+ */
 export const redirectUriFor = (request: Request, provider: OAuthProvider) =>
   `${publicSiteUrl(request)}${oauthCallbackPath(provider)}`;
+
+/**
+ * Build the authorize URL.
+ *
+ * Kick is strict: `URLSearchParams` leaves `:`/`/` unencoded and turns spaces into
+ * `+`, which Kick rejects as `{"message":"invalid authorization request"}`.
+ * Encode every value with encodeURIComponent (spaces → `%20`, colons → `%3A`).
+ * Param order matches Kick docs: response_type → client_id → redirect_uri →
+ * scope → code_challenge → code_challenge_method → state.
+ */
+export function buildAuthorizeUrl(args: {
+  provider: OAuthProvider;
+  clientId: string;
+  redirectUri: string;
+  state: string;
+  verifier: string | null;
+}): string {
+  const config = PROVIDERS[args.provider];
+  const clientKey = args.provider === "tiktok" ? "client_key" : "client_id";
+
+  const pairs: Array<[string, string]> = [
+    ["response_type", "code"],
+    [clientKey, args.clientId],
+    ["redirect_uri", args.redirectUri],
+    ["scope", config.scopes],
+  ];
+
+  if (config.usesPkce && args.verifier) {
+    pairs.push(["code_challenge", challengeFor(args.verifier)]);
+    pairs.push(["code_challenge_method", "S256"]);
+  }
+
+  pairs.push(["state", args.state]);
+
+  const query = pairs
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join("&");
+
+  return `${config.authorizeUrl}?${query}`;
+}
 
 function requestIsHttps(request: Request): boolean {
   const url = new URL(request.url);
