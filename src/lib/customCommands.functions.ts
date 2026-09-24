@@ -160,11 +160,19 @@ export const upsertCustomCommand = createServerFn({ method: "POST" })
       const { error } = await context.supabase.from("custom_chat_commands").insert(payload);
       if (error) {
         if (error.code === "23505") return { ok: false as const, error: "duplicate_name" };
-        // Schema / check-constraint failures used to surface as a generic toast.
-        if (error.code === "23514" || error.code === "PGRST204" || error.code === "PGRST205") {
-          return { ok: false as const, error: error.message };
+        const message = error.message || "Could not save the command.";
+        if (
+          error.code === "PGRST205" ||
+          message.toLowerCase().includes("schema cache") ||
+          message.toLowerCase().includes("could not find the table")
+        ) {
+          return {
+            ok: false as const,
+            error:
+              "Chat commands table is missing from the database. Apply migration 20260925030000_custom_commands_unicode_names.sql (or run supabase db push), then retry.",
+          };
         }
-        return { ok: false as const, error: error.message };
+        return { ok: false as const, error: message };
       }
       return { ok: true as const };
     } catch (error) {
