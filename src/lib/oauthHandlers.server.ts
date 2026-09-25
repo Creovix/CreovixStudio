@@ -113,6 +113,7 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     "state_mismatch",
     "access_denied",
     "pkce_verifier_missing",
+    "supabase_admin_key",
     "twitch_not_configured",
     "kick_not_configured",
     "streamelements_not_configured",
@@ -274,7 +275,12 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
     const { supabaseAdmin, assertSupabaseAdminConfigured } = await import(
       "@/lib/supabase/client.server"
     );
-    assertSupabaseAdminConfigured();
+    try {
+      await assertSupabaseAdminConfigured();
+    } catch (adminConfigError) {
+      console.error(`[oauth:${provider}] admin key rejected`, formatOAuthError(adminConfigError));
+      return fail(provider, "supabase_admin_key", formatOAuthError(adminConfigError).message);
+    }
 
     // Resolve / create the Supabase auth user. We only need the user id here —
     // the access/refresh session is minted later in /api/auth/session/finish so
@@ -292,15 +298,22 @@ export async function handleOAuthCallback(request: Request, providerRaw: string)
 
     let authUserId = created?.user?.id ?? null;
     if (createError && !/already/i.test(createError.message)) {
+      const unregistered = /unregistered api key/i.test(createError.message);
       console.error(`[oauth:${provider}] createUser failed`, {
         ...formatOAuthError(createError),
         status: (createError as { status?: number }).status,
         code: (createError as { code?: string }).code,
-        hint:
-          /unregistered api key/i.test(createError.message)
-            ? "SUPABASE_SERVICE_ROLE_KEY is wrong for this project, or is a publishable/anon key. Use Dashboard → API Keys → service_role (eyJ…) or sb_secret_… matching SUPABASE_URL."
-            : undefined,
+        hint: unregistered
+          ? "SUPABASE_SERVICE_ROLE_KEY is wrong for this project, or is a publishable/anon key. Use Dashboard → API Keys → service_role (eyJ…) or sb_secret_… matching SUPABASE_URL."
+          : undefined,
       });
+      if (unregistered) {
+        return fail(
+          provider,
+          "supabase_admin_key",
+          "SUPABASE_SERVICE_ROLE_KEY was rejected by Auth (Unregistered API key). Use the service_role or sb_secret_ key from the same project as SUPABASE_URL.",
+        );
+      }
       throw createError;
     }
 

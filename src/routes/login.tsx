@@ -20,6 +20,8 @@ const ERRORS: Record<string, string> = {
   pkce_verifier_missing: "The sign-in attempt expired. Please try again.",
   oauth_failed: "Sign-in failed. Please try again.",
   access_denied: "You cancelled the sign-in request.",
+  supabase_admin_key:
+    "Server auth is misconfigured (Supabase service role key). Set SUPABASE_SERVICE_ROLE_KEY to the service_role or sb_secret_ key for the same project as SUPABASE_URL.",
 };
 
 export const Route = createFileRoute("/login")({
