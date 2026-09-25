@@ -1,5 +1,6 @@
-import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
+
+import { cn } from "@/lib/utils";
 
 const SEAL_SCRIPT_SRC =
   "https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js";
@@ -8,17 +9,20 @@ const SEAL_API_BASE =
 /** Official SBC token (متجر موثق) — must match Dashboard registration. */
 const SEAL_TOKEN = "NzNyMEZtczVDeE04SzI4WHN4bmpodz09";
 
-function removeFloatingFrames() {
-  document.querySelectorAll("iframe.sbc-seal-frame").forEach((node) => node.remove());
+function removeOrphanFloatingFrames() {
+  // seal.js with data-position pins iframes on document.body — strip leftovers.
+  document.querySelectorAll("body > iframe.sbc-seal-frame").forEach((node) => node.remove());
 }
 
 /**
- * Mirrors seal.js mount() so SPA remounts still work after the official
- * script has already run its one-shot DOMContentLoaded init.
+ * Always mount inline inside the host container (never fixed/absolute on body).
+ * Omitting data-position is what seal.js needs for non-floating placement;
+ * we still mount ourselves for SPA reliability.
  */
-function mountSealFrame(container: HTMLElement) {
-  const existing = document.querySelector("iframe.sbc-seal-frame");
-  if (existing) return;
+function mountSealInline(container: HTMLElement) {
+  removeOrphanFloatingFrames();
+
+  if (container.querySelector("iframe.sbc-seal-frame")) return;
 
   if (container.getAttribute("data-sbc-mounted") === "1") {
     container.removeAttribute("data-sbc-mounted");
@@ -30,13 +34,10 @@ function mountSealFrame(container: HTMLElement) {
   container.setAttribute("data-sbc-mounted", "1");
 
   const lang = (document.documentElement.getAttribute("lang") || "ar").substring(0, 2);
-  const pos = (container.getAttribute("data-position") || "").toLowerCase();
-  const floating = pos.includes("bottom") || pos.includes("top");
-  const vert = pos.includes("bottom") ? "bottom" : "top";
-
   const frame = document.createElement("iframe");
   frame.className = "sbc-seal-frame";
-  frame.src = `${SEAL_API_BASE}/seal?token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}&pos=${vert}`;
+  // pos=inline is ignored by their page but avoids "bottom/top" floating semantics
+  frame.src = `${SEAL_API_BASE}/seal?token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}&pos=inline`;
   frame.title = "SBC Verification";
   frame.setAttribute("loading", "eager");
   frame.setAttribute("scrolling", "no");
@@ -46,21 +47,11 @@ function mountSealFrame(container: HTMLElement) {
   frame.style.height = "44px";
   frame.style.maxWidth = "100%";
   frame.style.background = "transparent";
-  frame.style.colorScheme = "light";
+  frame.style.position = "relative";
+  frame.style.display = "block";
   frame.style.transition = "width .18s ease,height .18s ease";
 
-  if (floating) {
-    frame.style.position = "fixed";
-    frame.style.zIndex = "2147483000";
-    const margin = "18px";
-    if (vert === "top") frame.style.top = margin;
-    else frame.style.bottom = margin;
-    if (pos.includes("right")) frame.style.right = margin;
-    else frame.style.left = margin;
-    document.body.appendChild(frame);
-  } else {
-    container.appendChild(frame);
-  }
+  container.appendChild(frame);
 }
 
 function ensureSealScript(onReady: () => void) {
@@ -76,37 +67,38 @@ function ensureSealScript(onReady: () => void) {
   script.src = SEAL_SCRIPT_SRC;
   script.async = true;
   script.onload = () => onReady();
-  script.onerror = () => onReady(); // fall back to local mount if CDN blocked
+  script.onerror = () => onReady();
   document.body.appendChild(script);
 }
 
+type SaudiBusinessSealProps = {
+  className?: string;
+};
+
 /**
  * المركز السعودي للأعمال — شارة متجر موثق.
- * Official markup: `.sbc-verify-seal` + seal.js in `<body>`, bottom-left.
- * Hidden on OBS `/overlay/*` routes so the badge never appears in browser sources.
+ * Inline footer placement (no data-position → seal.js will not pin a corner).
  */
-export function SaudiBusinessSeal() {
-  const hide = useRouterState({
-    select: (s) => s.location.pathname.startsWith("/overlay"),
-  });
+export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (hide) {
-      removeFloatingFrames();
-      return;
-    }
-
     const container = containerRef.current;
     if (!container) return;
 
+    // Never allow corner floating — strip attribute if anything re-adds it.
+    container.removeAttribute("data-position");
+
     const tryMount = () => {
-      // Give the official script a beat to mount; if it no-ops (SPA), mount ourselves.
       window.setTimeout(() => {
-        if (!document.querySelector("iframe.sbc-seal-frame")) {
-          mountSealFrame(container);
+        removeOrphanFloatingFrames();
+        // If seal.js appended a fixed body frame, drop it and remount inline.
+        const floating = document.querySelector("body > iframe.sbc-seal-frame");
+        if (floating) floating.remove();
+        if (!container.querySelector("iframe.sbc-seal-frame")) {
+          mountSealInline(container);
         }
-      }, 50);
+      }, 80);
     };
 
     ensureSealScript(tryMount);
@@ -114,27 +106,34 @@ export function SaudiBusinessSeal() {
     const onMessage = (event: MessageEvent) => {
       const data = event.data as { sbcSeal?: boolean; width?: number; height?: number } | null;
       if (!data || data.sbcSeal !== true) return;
-      document.querySelectorAll<HTMLIFrameElement>("iframe.sbc-seal-frame").forEach((frame) => {
-        if (frame.contentWindow !== event.source) return;
-        if (data.width) frame.style.width = `${data.width}px`;
-        if (data.height) frame.style.height = `${data.height}px`;
-      });
+      const frame = container.querySelector<HTMLIFrameElement>("iframe.sbc-seal-frame");
+      if (!frame || frame.contentWindow !== event.source) return;
+      if (data.width) frame.style.width = `${data.width}px`;
+      if (data.height) frame.style.height = `${data.height}px`;
     };
     window.addEventListener("message", onMessage);
 
     return () => {
       window.removeEventListener("message", onMessage);
     };
-  }, [hide]);
-
-  if (hide) return null;
+  }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="sbc-verify-seal"
-      data-token={SEAL_TOKEN}
-      data-position="bottom-left"
-    />
+    <footer
+      className={cn(
+        "sbc-seal-slot mt-8 flex justify-start border-t border-[oklch(1_0_0/0.06)] pt-6",
+        className,
+      )}
+    >
+      {/*
+        Intentionally omit data-position. seal.js treats bottom/top as fixed
+        viewport anchors; without it the iframe stays inside this container.
+      */}
+      <div
+        ref={containerRef}
+        className="sbc-verify-seal"
+        data-token={SEAL_TOKEN}
+      />
+    </footer>
   );
 }

@@ -751,3 +751,46 @@ textarea::placeholder {
   .hub-eq-bar { transform: scaleY(0.55); }
   .hub-tappers-row { transition: none; }
 }
+
+/*
+ * SBC verification seal — keep inline under the dashboard widget grid and
+ * knock out the solid white iframe chrome against the dark studio UI.
+ * (Cross-origin seal page cannot be styled directly; blend + transparent host.)
+ */
+.sbc-seal-slot {
+  position: relative;
+  z-index: 1;
+}
+
+.sbc-seal-slot .sbc-verify-seal {
+  position: relative !important;
+  inset: auto !important;
+  display: inline-block;
+  width: auto;
+  height: auto;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.sbc-seal-slot .sbc-verify-seal iframe.sbc-seal-frame,
+.sbc-seal-slot iframe.sbc-seal-frame {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  display: block !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  /* White iframe page bg becomes invisible on dark surfaces; seal colors remain. */
+  mix-blend-mode: multiply;
+  color-scheme: light;
+}
