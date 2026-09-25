@@ -58,6 +58,22 @@
   font-display: swap;
 }
 
+/* Official Saudi typeface for local identity / verification footer */
+@font-face {
+  font-family: "Saudi";
+  src: url("./assets/Fonts/Saudi-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src: url("./assets/Fonts/Saudi-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /*
  * Design system definition.
  *
@@ -133,6 +149,7 @@
   --color-overlay-box-border: var(--overlay-box-border);
   --font-sans: "Tajawal", ui-sans-serif, system-ui, sans-serif;
   --font-arabic: "Tajawal", ui-sans-serif, sans-serif;
+  --font-saudi: "Saudi", "Tajawal", ui-sans-serif, sans-serif;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -750,49 +767,4 @@ textarea::placeholder {
   .hub-media-progress { width: 62%; opacity: 1; }
   .hub-eq-bar { transform: scaleY(0.55); }
   .hub-tappers-row { transition: none; }
-}
-
-/*
- * SBC verification seal — right-aligned under the dashboard widget grid.
- * Transparent host; certificate opens upward (pos=top + margin-top compensation).
- */
-.sbc-seal-slot {
-  position: relative;
-  z-index: 40;
-  overflow: visible;
-}
-
-.sbc-seal-slot .sbc-verify-seal {
-  position: relative !important;
-  inset: auto !important;
-  display: inline-block;
-  width: auto;
-  height: auto;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: visible !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: 0 !important;
-}
-
-.sbc-seal-slot .sbc-verify-seal iframe.sbc-seal-frame,
-.sbc-seal-slot iframe.sbc-seal-frame {
-  position: relative !important;
-  inset: auto !important;
-  top: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  display: block !important;
-  margin-inline: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-  /* White iframe page bg knocks out on dark surfaces; seal colors remain. */
-  mix-blend-mode: multiply;
-  color-scheme: light;
 }

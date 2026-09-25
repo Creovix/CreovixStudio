@@ -1,150 +1,71 @@
-import { useEffect, useRef } from "react";
-
 import { cn } from "@/lib/utils";
 
-const SEAL_SCRIPT_SRC =
-  "https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js";
-const SEAL_API_BASE =
-  "https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi";
-/** Official SBC token (متجر موثق) — must match Dashboard registration. */
-const SEAL_TOKEN = "NzNyMEZtczVDeE04SzI4WHN4bmpodz09";
-const SEAL_COLLAPSED_H = 44;
-
-function removeOrphanFloatingFrames() {
-  document.querySelectorAll("body > iframe.sbc-seal-frame").forEach((node) => node.remove());
-}
-
-function sealSrc(token: string, lang: string) {
-  // pos=top → certificate card opens upward (seal.js / seal page convention).
-  return `${SEAL_API_BASE}/seal?token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}&pos=top`;
-}
-
-/** Anchor iframe bottom edge so height growth expands upward, not off-screen. */
-function applyUpwardGrowth(frame: HTMLIFrameElement, height: number) {
-  frame.style.height = `${height}px`;
-  frame.style.marginTop = height > SEAL_COLLAPSED_H ? `${SEAL_COLLAPSED_H - height}px` : "0px";
-}
-
-/**
- * Inline mount on the right — never fixed to a viewport corner.
- * Uses pos=top so the SBC certificate panel opens upward.
- */
-function mountSealInline(container: HTMLElement) {
-  removeOrphanFloatingFrames();
-
-  const token = container.getAttribute("data-token");
-  if (!token) return;
-
-  const lang = (document.documentElement.getAttribute("lang") || "ar").substring(0, 2);
-  const src = sealSrc(token, lang);
-
-  let frame = container.querySelector<HTMLIFrameElement>("iframe.sbc-seal-frame");
-  if (frame) {
-    if (!/[?&]pos=top(?:&|$)/.test(frame.src)) {
-      frame.src = src;
-    }
-    return;
-  }
-
-  container.setAttribute("data-sbc-mounted", "1");
-
-  frame = document.createElement("iframe");
-  frame.className = "sbc-seal-frame";
-  frame.src = src;
-  frame.title = "SBC Verification";
-  frame.setAttribute("loading", "eager");
-  frame.setAttribute("scrolling", "no");
-  frame.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
-  frame.style.border = "0";
-  frame.style.width = "120px";
-  frame.style.height = `${SEAL_COLLAPSED_H}px`;
-  frame.style.maxWidth = "100%";
-  frame.style.background = "transparent";
-  frame.style.position = "relative";
-  frame.style.display = "block";
-  frame.style.marginTop = "0px";
-  frame.style.transition = "width .18s ease,height .18s ease,margin-top .18s ease";
-
-  container.appendChild(frame);
-}
-
-function ensureSealScript(onReady: () => void) {
-  const existing = document.querySelector<HTMLScriptElement>(
-    `script[src="${SEAL_SCRIPT_SRC}"]`,
-  );
-  if (existing) {
-    onReady();
-    return;
-  }
-
-  const script = document.createElement("script");
-  script.src = SEAL_SCRIPT_SRC;
-  script.async = true;
-  script.onload = () => onReady();
-  script.onerror = () => onReady();
-  document.body.appendChild(script);
-}
+/** Official SBC certificate page for CylixStudio (opens in a new tab). */
+const SBC_CERTIFICATE_URL =
+  "https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/certificate?token=NzNyMEZtczVDeE04SzI4WHN4bmpodz09";
 
 type SaudiBusinessSealProps = {
   className?: string;
 };
 
+/** Compact Saudi flag mark for the “صناعة سعودية” line. */
+function SaudiFlagMark({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 16"
+      aria-hidden
+      focusable="false"
+    >
+      <rect width="24" height="16" rx="2" fill="#006C35" />
+      <path
+        fill="#fff"
+        d="M5.2 5.1h13.6v1.15H5.2zm1.4 2.35h10.8c.2 1.55-.55 2.85-2.05 3.55-.7.35-1.55.55-2.55.55h-1.6c-1 0-1.85-.2-2.55-.55-1.5-.7-2.25-2-2.05-3.55zm4.2 4.05h2.4v1.35h-2.4z"
+      />
+      <path
+        fill="#fff"
+        d="M6.4 11.6h11.2c0 .55-.35.95-.85 1.15H7.25c-.5-.2-.85-.6-.85-1.15z"
+      />
+    </svg>
+  );
+}
+
 /**
- * المركز السعودي للأعمال — شارة متجر موثق.
- * Right-aligned dashboard footer; certificate popup opens upward (pos=top).
+ * Dashboard footer identity — centered SBC verification link + Saudi-made line.
+ * Uses the project Saudi font files; no iframe / floating seal chrome.
  */
 export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Avoid seal.js fixed corner logic (triggered by top/bottom in data-position).
-    container.removeAttribute("data-position");
-
-    const tryMount = () => {
-      window.setTimeout(() => {
-        removeOrphanFloatingFrames();
-        const floating = document.querySelector("body > iframe.sbc-seal-frame");
-        if (floating) floating.remove();
-        mountSealInline(container);
-      }, 80);
-    };
-
-    ensureSealScript(tryMount);
-
-    const onMessage = (event: MessageEvent) => {
-      const data = event.data as { sbcSeal?: boolean; width?: number; height?: number } | null;
-      if (!data || data.sbcSeal !== true) return;
-      const frame = container.querySelector<HTMLIFrameElement>("iframe.sbc-seal-frame");
-      if (!frame || frame.contentWindow !== event.source) return;
-      if (data.width) frame.style.width = `${data.width}px`;
-      if (typeof data.height === "number") applyUpwardGrowth(frame, data.height);
-    };
-    window.addEventListener("message", onMessage);
-
-    return () => {
-      window.removeEventListener("message", onMessage);
-    };
-  }, []);
-
   return (
     <footer
       className={cn(
-        "sbc-seal-slot mt-8 flex justify-end border-t border-[oklch(1_0_0/0.06)] pt-6",
+        "mt-8 flex justify-center border-t border-[oklch(1_0_0/0.06)] pt-6 pb-1",
         className,
       )}
     >
-      {/*
-        No data-position — keeps the iframe in-flow on the right.
-        Popup direction is controlled via iframe ?pos=top.
-      */}
       <div
-        ref={containerRef}
-        className="sbc-verify-seal"
-        data-token={SEAL_TOKEN}
-      />
+        dir="rtl"
+        lang="ar"
+        className="font-saudi flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 px-1 text-[0.8rem] leading-none text-muted-foreground"
+      >
+        <a
+          href={SBC_CERTIFICATE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-normal tracking-wide transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          موثّق لدى المركز السعودي للأعمال
+        </a>
+
+        <span
+          aria-hidden
+          className="size-1 shrink-0 rounded-full bg-[oklch(1_0_0/0.22)]"
+        />
+
+        <span className="inline-flex items-center gap-1.5 font-normal tracking-wide">
+          <SaudiFlagMark className="size-[0.95rem] shrink-0 opacity-90" />
+          صناعة سعودية
+        </span>
+      </div>
     </footer>
   );
 }
