@@ -3,7 +3,9 @@ import {
   commandTrigger,
   formatCommandReply,
   matchCustomCommand,
+  normalizeChatText,
   normalizeTriggerMarker,
+  sanitizeCommandName,
   type ChatCommandPlatform,
   type CustomChatCommand,
 } from "@/lib/customCommands";
@@ -37,37 +39,53 @@ async function loadCommands(userId: string): Promise<{
   defaultPrefix: string;
   commands: CustomChatCommand[];
 }> {
-  const [{ data: settings }, { data: rows }] = await Promise.all([
-    supabaseAdmin
-      .from("custom_chat_command_settings")
-      .select("default_prefix")
-      .eq("user_id", userId)
-      .maybeSingle(),
-    supabaseAdmin
-      .from("custom_chat_commands")
-      .select(
-        "id, name, prefix, response, enabled, platforms, roles, cooldown_seconds, created_at, updated_at",
-      )
-      .eq("user_id", userId)
-      .eq("enabled", true),
-  ]);
+  const [{ data: settings, error: settingsError }, { data: rows, error: rowsError }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("custom_chat_command_settings")
+        .select("default_prefix")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("custom_chat_commands")
+        .select(
+          "id, name, prefix, response, enabled, platforms, roles, cooldown_seconds, created_at, updated_at",
+        )
+        .eq("user_id", userId)
+        .eq("enabled", true),
+    ]);
+
+  if (settingsError) {
+    console.warn("[custom-commands] settings load failed", settingsError.message);
+  }
+  if (rowsError) {
+    console.warn("[custom-commands] commands load failed", rowsError.message);
+  }
 
   return {
     defaultPrefix: normalizeTriggerMarker(settings?.default_prefix ?? "!"),
-    commands: (rows ?? []).map((row) => ({
-      id: row.id,
-      name: row.name,
-      prefix: row.prefix === null ? null : normalizeTriggerMarker(row.prefix),
-      response: row.response,
-      enabled: row.enabled,
-      platforms: (row.platforms ?? []).filter(
-        (platform): platform is ChatCommandPlatform => platform === "KICK" || platform === "TWITCH",
-      ),
-      roles: row.roles?.length ? row.roles : ["Everyone"],
-      cooldownSeconds: row.cooldown_seconds,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    })),
+    commands: (rows ?? [])
+      .map((row) => {
+        const platforms = (row.platforms ?? []).filter(
+          (platform): platform is ChatCommandPlatform =>
+            platform === "KICK" || platform === "TWITCH",
+        );
+        const name = sanitizeCommandName(row.name ?? "");
+        if (!name) return null;
+        return {
+          id: row.id,
+          name,
+          prefix: row.prefix === null ? null : normalizeTriggerMarker(row.prefix),
+          response: typeof row.response === "string" ? row.response.normalize("NFC") : "",
+          enabled: row.enabled,
+          platforms: platforms.length ? platforms : (["KICK"] as ChatCommandPlatform[]),
+          roles: row.roles?.length ? row.roles : ["Everyone"],
+          cooldownSeconds: row.cooldown_seconds,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        } satisfies CustomChatCommand;
+      })
+      .filter((command): command is CustomChatCommand => command != null),
   };
 }
 
@@ -79,17 +97,28 @@ export async function handleCustomChatCommand(input: {
   sender: ChatSender;
 }): Promise<{ status: string; reason?: string; command?: string }> {
   const { defaultPrefix, commands } = await loadCommands(input.userId);
-  const matched = matchCustomCommand(input.text, commands, defaultPrefix, input.platform);
-  if (!matched) return { status: "ignored", reason: "no_match" };
+  const text = normalizeChatText(input.text);
+  if (!text) return { status: "ignored", reason: "empty_text" };
+
+  const matched = matchCustomCommand(text, commands, defaultPrefix, input.platform);
+  if (!matched) {
+    console.log("[custom-commands] no_match", {
+      platform: input.platform,
+      text,
+      commandCount: commands.length,
+      defaultPrefix,
+    });
+    return { status: "ignored", reason: "no_match" };
+  }
   if (!isAllowed(matched, input.sender.identityBadges)) {
-    return { status: "ignored", reason: "not_permitted" };
+    return { status: "ignored", reason: "not_permitted", command: matched.name };
   }
 
   if (matched.cooldownSeconds > 0) {
     const key = `${input.userId}:${matched.id}`;
     const last = cooldowns.get(key) ?? 0;
     if (Date.now() - last < matched.cooldownSeconds * 1000) {
-      return { status: "ignored", reason: "cooldown" };
+      return { status: "ignored", reason: "cooldown", command: matched.name };
     }
     cooldowns.set(key, Date.now());
   }
@@ -99,11 +128,18 @@ export async function handleCustomChatCommand(input: {
     user: input.sender.username,
     command: trigger,
   });
-  if (!reply) return { status: "ignored", reason: "empty_reply" };
+  if (!reply) return { status: "ignored", reason: "empty_reply", command: trigger };
 
   if (input.platform === "KICK") {
     const sent = await sendKickChatMessage(input.userId, input.broadcasterUserId, reply);
-    if (!sent) return { status: "error", reason: "send_failed", command: trigger };
+    if (!sent) {
+      console.warn("[custom-commands] kick send_failed", {
+        userId: input.userId,
+        trigger,
+        replyLength: reply.length,
+      });
+      return { status: "error", reason: "send_failed", command: trigger };
+    }
   }
 
   return { status: "replied", command: trigger };

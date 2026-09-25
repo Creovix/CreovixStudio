@@ -57,13 +57,18 @@ export async function sendKickChatMessage(
   content: string,
 ): Promise<boolean> {
   const token = await kickToken(userId);
-  if (!token) return false;
+  if (!token) {
+    console.warn("[chat-bot] kick send skipped — no access token", { userId, broadcasterUserId });
+    return false;
+  }
+  const body = content.normalize("NFC").trim().slice(0, 480);
+  if (!body) return false;
   const broadcasterId = Number(broadcasterUserId);
   const response = await fetch("https://api.kick.com/public/v1/chat", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      "Content-Type": "application/json; charset=utf-8",
       Accept: "application/json",
     },
     body: JSON.stringify({
@@ -71,13 +76,17 @@ export async function sendKickChatMessage(
       // to this broadcaster-authorized token. The broadcaster id is omitted
       // because Kick explicitly ignores it for bot messages.
       type: "bot",
-      content: content.slice(0, 480),
+      content: body,
     }),
   });
   if (!response.ok) {
-    console.warn("[clip-command] chat send failed", response.status, await response.text().catch(() => ""));
+    console.warn(
+      "[chat-bot] kick chat send failed",
+      response.status,
+      await response.text().catch(() => ""),
+    );
   } else {
-    console.log("[clip-command] chat response sent", { broadcasterId });
+    console.log("[chat-bot] kick chat response sent", { broadcasterId, chars: [...body].length });
   }
   return response.ok;
 }

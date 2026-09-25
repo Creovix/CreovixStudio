@@ -216,9 +216,11 @@ export const Route = createFileRoute("/api/public/webhooks/kick")({
                 text,
                 sender: { username, identityBadges },
               });
-              if (result.status !== "ignored") {
-                console.log("[kick-webhook] custom command", { messageId, ...result });
-              }
+              console.log("[kick-webhook] custom command", {
+                messageId,
+                text: text.slice(0, 80),
+                ...result,
+              });
             })().catch((error) => console.error("[kick-webhook] chat command failed", error)),
           );
 

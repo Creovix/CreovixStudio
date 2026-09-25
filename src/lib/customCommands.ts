@@ -49,8 +49,21 @@ export const DEFAULT_COMMAND_SETTINGS: CustomChatCommandSettings = {
 
 const TEST_KEY = "creovix:custom-chat-commands";
 
-/** Invisible / formatting characters that break chat matching and some DB checks. */
-const NAME_INVISIBLE = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF\u2060\u061C]/g;
+/** Invisible / bidi formatting characters that break chat matching. */
+const NAME_INVISIBLE = /[\u0000-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF\u061C]/g;
+
+/**
+ * Normalize viewer chat (and stored names) before trigger comparison.
+ * Collapses NBSP / odd spaces, strips RTL marks, NFC-normalizes Arabic.
+ */
+export function normalizeChatText(raw: string): string {
+  return raw
+    .normalize("NFC")
+    .replace(NAME_INVISIBLE, "")
+    .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, " ")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
 
 /**
  * Normalizes a command name for storage + matching.
@@ -58,16 +71,21 @@ const NAME_INVISIBLE = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF\u2060\u061C]/g;
  * (e.g. "سلام عليكم"), and strips trigger punctuation from the edges only.
  */
 export function sanitizeCommandName(raw: string): string {
-  const normalized = raw.normalize("NFC").replace(NAME_INVISIBLE, "");
+  const normalized = normalizeChatText(raw);
   const withoutEdgeMarkers = normalized
-    .trim()
     .replace(/^[-!?#./\\]+/u, "")
     .replace(/[?؟]+$/gu, "")
     .trim();
   // Drop ASCII punctuation/symbols that break triggers; keep letters/numbers from
   // any script plus space, underscore, and hyphen.
   const cleaned = [...withoutEdgeMarkers]
-    .filter((char) => char === " " || char === "_" || char === "-" || !/[\x21-\x2F\x3A-\x40\x5B-\x5E\x60\x7B-\x7E]/.test(char))
+    .filter(
+      (char) =>
+        char === " " ||
+        char === "_" ||
+        char === "-" ||
+        !/[\x21-\x2F\x3A-\x40\x5B-\x5E\x60\x7B-\x7E]/.test(char),
+    )
     .join("")
     .replace(/\s+/gu, " ")
     .trim();
@@ -141,21 +159,49 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Legacy rows may have stored names without spaces — accept both forms. */
+function nameMatchVariants(name: string): string[] {
+  const primary = sanitizeCommandName(name);
+  if (!primary) return [];
+  const variants = new Set<string>([primary]);
+  const compacted = primary.replace(/\s+/gu, "");
+  if (compacted && compacted !== primary) variants.add(compacted);
+  return [...variants];
+}
+
 function matchesTrigger(text: string, name: string, marker: string): boolean {
-  if (!name) return false;
-  const word = escapeRegExp(name);
+  const normalizedText = normalizeChatText(text);
+  if (!normalizedText) return false;
   const placement = markerPlacement(marker);
-  // `u` keeps Arabic / multi-code-point names safe; `i` only matters for Latin.
   const flags = "iu";
-  if (placement === "none") {
-    if (/^[!#./]/.test(text)) return false;
-    return new RegExp(`^${word}(?![?؟])(?:\\s|$)`, flags).test(text);
+
+  for (const variant of nameMatchVariants(name)) {
+    const word = escapeRegExp(variant);
+    if (placement === "none") {
+      if (/^[!#./]/.test(normalizedText)) continue;
+      if (new RegExp(`^${word}(?![?؟!#])(?:\\s|$)`, flags).test(normalizedText)) return true;
+      continue;
+    }
+    if (placement === "suffix") {
+      if (new RegExp(`(?:^|\\s)${word}[?؟]\\s*$`, flags).test(normalizedText)) return true;
+      continue;
+    }
+    if (!isAllowedPrefixMarker(marker)) continue;
+    const escapedMarker = escapeRegExp(marker);
+    // Logical order: !name  — and RTL-typed order: name!
+    if (new RegExp(`^${escapedMarker}${word}(?:\\s|$)`, flags).test(normalizedText)) return true;
+    if (new RegExp(`^${word}${escapedMarker}(?:\\s|$)`, flags).test(normalizedText)) return true;
+    // Arabic chat rarely leads with ASCII `!` — also accept the bare phrase at
+    // message start when the command name is Arabic-script.
+    if (
+      ARABIC_LETTER.test(variant) &&
+      !/^[!#./]/.test(normalizedText) &&
+      new RegExp(`^${word}(?![?؟!#])(?:\\s|$)`, flags).test(normalizedText)
+    ) {
+      return true;
+    }
   }
-  if (placement === "suffix") {
-    return new RegExp(`(?:^|\\s)${word}[?؟]\\s*$`, flags).test(text);
-  }
-  if (!isAllowedPrefixMarker(marker)) return false;
-  return new RegExp(`^${escapeRegExp(marker)}${word}(?:\\s|$)`, flags).test(text);
+  return false;
 }
 
 export function matchCustomCommand(
@@ -164,7 +210,7 @@ export function matchCustomCommand(
   defaultPrefix: string,
   platform: ChatCommandPlatform,
 ): CustomChatCommand | null {
-  const trimmed = text.trim();
+  const trimmed = normalizeChatText(text);
   if (!trimmed) return null;
   const candidates = commands
     .filter((command) => command.enabled && command.platforms.includes(platform) && command.name)
@@ -182,6 +228,7 @@ export function formatCommandReply(
   vars: { user: string; command: string },
 ): string {
   return template
+    .normalize("NFC")
     .replaceAll("{user}", vars.user)
     .replaceAll("{command}", vars.command)
     .trim()
