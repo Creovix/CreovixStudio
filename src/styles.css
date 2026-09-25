@@ -753,13 +753,13 @@ textarea::placeholder {
 }
 
 /*
- * SBC verification seal — keep inline under the dashboard widget grid and
- * knock out the solid white iframe chrome against the dark studio UI.
- * (Cross-origin seal page cannot be styled directly; blend + transparent host.)
+ * SBC verification seal — right-aligned under the dashboard widget grid.
+ * Transparent host; certificate opens upward (pos=top + margin-top compensation).
  */
 .sbc-seal-slot {
   position: relative;
-  z-index: 1;
+  z-index: 40;
+  overflow: visible;
 }
 
 .sbc-seal-slot .sbc-verify-seal {
@@ -770,6 +770,7 @@ textarea::placeholder {
   height: auto;
   margin: 0 !important;
   padding: 0 !important;
+  overflow: visible !important;
   background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
@@ -785,12 +786,13 @@ textarea::placeholder {
   bottom: auto !important;
   left: auto !important;
   display: block !important;
-  margin: 0 !important;
+  margin-inline: 0 !important;
   border: 0 !important;
   background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
-  /* White iframe page bg becomes invisible on dark surfaces; seal colors remain. */
+  overflow: visible !important;
+  /* White iframe page bg knocks out on dark surfaces; seal colors remain. */
   mix-blend-mode: multiply;
   color-scheme: light;
 }
