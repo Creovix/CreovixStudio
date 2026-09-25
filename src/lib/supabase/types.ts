@@ -76,6 +76,7 @@ export type Database = {
       activation_codes: {
         Row: {
           code: string
+          code_expires_at: string | null
           created_at: string
           created_by: string | null
           duration_days: number
@@ -84,13 +85,17 @@ export type Database = {
           is_revoked: boolean
           is_used: boolean
           notes: string | null
+          purchase_id: string | null
+          purchaser_user_id: string | null
           redeemed_at: string | null
           redeemed_by_email: string | null
           revoked_at: string | null
+          source: string
           used_by_user_id: string | null
         }
         Insert: {
           code: string
+          code_expires_at?: string | null
           created_at?: string
           created_by?: string | null
           duration_days?: number
@@ -99,13 +104,17 @@ export type Database = {
           is_revoked?: boolean
           is_used?: boolean
           notes?: string | null
+          purchase_id?: string | null
+          purchaser_user_id?: string | null
           redeemed_at?: string | null
           redeemed_by_email?: string | null
           revoked_at?: string | null
+          source?: string
           used_by_user_id?: string | null
         }
         Update: {
           code?: string
+          code_expires_at?: string | null
           created_at?: string
           created_by?: string | null
           duration_days?: number
@@ -114,9 +123,12 @@ export type Database = {
           is_revoked?: boolean
           is_used?: boolean
           notes?: string | null
+          purchase_id?: string | null
+          purchaser_user_id?: string | null
           redeemed_at?: string | null
           redeemed_by_email?: string | null
           revoked_at?: string | null
+          source?: string
           used_by_user_id?: string | null
         }
         Relationships: [
@@ -128,8 +140,77 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "activation_codes_purchaser_user_id_fkey"
+            columns: ["purchaser_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "activation_codes_used_by_user_id_fkey"
             columns: ["used_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pro_purchases: {
+        Row: {
+          activation_code_id: string | null
+          amount_cents: number | null
+          billing_interval: string
+          code_delivered_at: string | null
+          created_at: string
+          currency: string
+          duration_days: number
+          email: string
+          id: string
+          metadata: Json
+          provider: string
+          provider_payment_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          activation_code_id?: string | null
+          amount_cents?: number | null
+          billing_interval: string
+          code_delivered_at?: string | null
+          created_at?: string
+          currency?: string
+          duration_days: number
+          email: string
+          id?: string
+          metadata?: Json
+          provider?: string
+          provider_payment_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          activation_code_id?: string | null
+          amount_cents?: number | null
+          billing_interval?: string
+          code_delivered_at?: string | null
+          created_at?: string
+          currency?: string
+          duration_days?: number
+          email?: string
+          id?: string
+          metadata?: Json
+          provider?: string
+          provider_payment_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_purchases_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]

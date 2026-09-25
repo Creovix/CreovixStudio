@@ -33,7 +33,7 @@ export function SubscriptionPanel({ userId }: { userId: string }) {
   const data = subscription.data;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 py-4">
+    <div className="flex flex-col gap-3 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <div className="min-w-0 space-y-1.5">
         <p className="text-[0.8rem] text-muted-foreground">{t("settings.profile.subscription")}</p>
         <div className="flex flex-wrap items-center gap-2">
@@ -44,13 +44,16 @@ export function SubscriptionPanel({ userId }: { userId: string }) {
             </span>
           ) : null}
         </div>
+        <p className="max-w-md text-[0.72rem] leading-relaxed text-muted-foreground">
+          {t("settings.profile.redeemHint")}
+        </p>
       </div>
       <button
         type="button"
         onClick={() => setRedeem(true)}
-        className="ms-auto rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        className="w-fit shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:ms-auto"
       >
-        {t("settings.profile.renew")}
+        {t("settings.profile.enterCode")}
       </button>
       {redeem ? <RedeemCodeModal onClose={() => setRedeem(false)} /> : null}
     </div>

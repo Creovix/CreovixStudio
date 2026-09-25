@@ -91,6 +91,9 @@ const DICT = {
   "settings.profile.subscription": "Subscription",
   "settings.profile.expires": "Expires",
   "settings.profile.renew": "Renew subscription",
+  "settings.profile.enterCode": "Enter activation code",
+  "settings.profile.redeemHint":
+    "After a Pro purchase you’ll get a one-time code by email. Redeem it here to unlock Pro — checkout never activates Pro automatically.",
   "settings.profile.expired": "Expired",
   "settings.profile.inactive": "Inactive",
   "settings.connections.heading": "Platforms",
@@ -248,7 +251,7 @@ const DICT = {
   "gateway.billing.yearly": "Yearly",
   "gateway.billing.save": "Save ~{percent}%",
   "gateway.billing.checkoutReady":
-    "Card checkout for {amount} is coming soon — enter your license code below to unlock Pro now.",
+    "Payment for {amount} is confirmed by email with your activation code — redeem it below or in Settings. Pro stays off until you activate.",
   "gateway.billing.selectorLabel": "Billing period",
   "gateway.free.name": "Free",
   "gateway.free.description": "Core tools to get on stream, with clear limits as you grow.",

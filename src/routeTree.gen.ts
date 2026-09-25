@@ -57,6 +57,7 @@ import { Route as ApiAuthCallbackTiktokRouteImport } from './routes/api/auth/cal
 import { Route as ApiAuthSessionFinishRouteImport } from './routes/api/auth/session/finish'
 import { Route as ApiPublicClipIdRouteImport } from './routes/api/public/clip/$id'
 import { Route as ApiPublicWebhooksKickRouteImport } from './routes/api/public/webhooks/kick'
+import { Route as ApiPublicWebhooksProCheckoutRouteImport } from './routes/api/public/webhooks/pro-checkout'
 import { Route as ApiPublicWebhooksStreamelementsRouteImport } from './routes/api/public/webhooks/streamelements'
 import { Route as ApiPublicWebhooksStreamlabsRouteImport } from './routes/api/public/webhooks/streamlabs'
 import { Route as ApiPublicWebhooksTwitchRouteImport } from './routes/api/public/webhooks/twitch'
@@ -332,6 +333,12 @@ const ApiPublicWebhooksKickRoute = ApiPublicWebhooksKickRouteImport.update({
   path: '/api/public/webhooks/kick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksProCheckoutRoute =
+  ApiPublicWebhooksProCheckoutRouteImport.update({
+    id: '/api/public/webhooks/pro-checkout',
+    path: '/api/public/webhooks/pro-checkout',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksStreamelementsRoute =
   ApiPublicWebhooksStreamelementsRouteImport.update({
     id: '/api/public/webhooks/streamelements',
@@ -503,6 +510,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/session/finish': typeof ApiAuthSessionFinishRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
+  '/api/public/webhooks/pro-checkout': typeof ApiPublicWebhooksProCheckoutRoute
   '/api/public/webhooks/streamelements': typeof ApiPublicWebhooksStreamelementsRoute
   '/api/public/webhooks/streamlabs': typeof ApiPublicWebhooksStreamlabsRoute
   '/api/public/webhooks/twitch': typeof ApiPublicWebhooksTwitchRoute
@@ -572,6 +580,7 @@ export interface FileRoutesByTo {
   '/api/auth/session/finish': typeof ApiAuthSessionFinishRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
+  '/api/public/webhooks/pro-checkout': typeof ApiPublicWebhooksProCheckoutRoute
   '/api/public/webhooks/streamelements': typeof ApiPublicWebhooksStreamelementsRoute
   '/api/public/webhooks/streamlabs': typeof ApiPublicWebhooksStreamlabsRoute
   '/api/public/webhooks/twitch': typeof ApiPublicWebhooksTwitchRoute
@@ -644,6 +653,7 @@ export interface FileRoutesById {
   '/api/auth/session/finish': typeof ApiAuthSessionFinishRoute
   '/api/public/clip/$id': typeof ApiPublicClipIdRoute
   '/api/public/webhooks/kick': typeof ApiPublicWebhooksKickRoute
+  '/api/public/webhooks/pro-checkout': typeof ApiPublicWebhooksProCheckoutRoute
   '/api/public/webhooks/streamelements': typeof ApiPublicWebhooksStreamelementsRoute
   '/api/public/webhooks/streamlabs': typeof ApiPublicWebhooksStreamlabsRoute
   '/api/public/webhooks/twitch': typeof ApiPublicWebhooksTwitchRoute
@@ -716,6 +726,7 @@ export interface FileRouteTypes {
     | '/api/auth/session/finish'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
+    | '/api/public/webhooks/pro-checkout'
     | '/api/public/webhooks/streamelements'
     | '/api/public/webhooks/streamlabs'
     | '/api/public/webhooks/twitch'
@@ -785,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/auth/session/finish'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
+    | '/api/public/webhooks/pro-checkout'
     | '/api/public/webhooks/streamelements'
     | '/api/public/webhooks/streamlabs'
     | '/api/public/webhooks/twitch'
@@ -856,6 +868,7 @@ export interface FileRouteTypes {
     | '/api/auth/session/finish'
     | '/api/public/clip/$id'
     | '/api/public/webhooks/kick'
+    | '/api/public/webhooks/pro-checkout'
     | '/api/public/webhooks/streamelements'
     | '/api/public/webhooks/streamlabs'
     | '/api/public/webhooks/twitch'
@@ -905,6 +918,7 @@ export interface RootRouteChildren {
   ApiAuthSessionFinishRoute: typeof ApiAuthSessionFinishRoute
   ApiPublicClipIdRoute: typeof ApiPublicClipIdRoute
   ApiPublicWebhooksKickRoute: typeof ApiPublicWebhooksKickRoute
+  ApiPublicWebhooksProCheckoutRoute: typeof ApiPublicWebhooksProCheckoutRoute
   ApiPublicWebhooksStreamelementsRoute: typeof ApiPublicWebhooksStreamelementsRoute
   ApiPublicWebhooksStreamlabsRoute: typeof ApiPublicWebhooksStreamlabsRoute
   ApiPublicWebhooksTwitchRoute: typeof ApiPublicWebhooksTwitchRoute
@@ -1266,6 +1280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksKickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/pro-checkout': {
+      id: '/api/public/webhooks/pro-checkout'
+      path: '/api/public/webhooks/pro-checkout'
+      fullPath: '/api/public/webhooks/pro-checkout'
+      preLoaderRoute: typeof ApiPublicWebhooksProCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/streamelements': {
       id: '/api/public/webhooks/streamelements'
       path: '/api/public/webhooks/streamelements'
@@ -1525,6 +1546,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSessionFinishRoute: ApiAuthSessionFinishRoute,
   ApiPublicClipIdRoute: ApiPublicClipIdRoute,
   ApiPublicWebhooksKickRoute: ApiPublicWebhooksKickRoute,
+  ApiPublicWebhooksProCheckoutRoute: ApiPublicWebhooksProCheckoutRoute,
   ApiPublicWebhooksStreamelementsRoute: ApiPublicWebhooksStreamelementsRoute,
   ApiPublicWebhooksStreamlabsRoute: ApiPublicWebhooksStreamlabsRoute,
   ApiPublicWebhooksTwitchRoute: ApiPublicWebhooksTwitchRoute,
@@ -1551,13 +1573,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
