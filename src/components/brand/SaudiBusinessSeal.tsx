@@ -10,7 +10,7 @@ type SaudiBusinessSealProps = {
 
 /**
  * Dashboard footer identity — centered SBC verification link + Saudi-made line.
- * Both lines use Saudi-Bold (Ministry of Culture typeface).
+ * Uses SaudiWeb-Bold via font-family: Saudi; font-weight: bold.
  */
 export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
   return (
@@ -23,13 +23,15 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
       <div
         dir="rtl"
         lang="ar"
-        className="font-saudi flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 px-1 text-[0.82rem] font-bold leading-none tracking-wide text-muted-foreground"
+        className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 px-1 text-[0.82rem] leading-none tracking-wide text-muted-foreground"
+        style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}
       >
         <a
           href={SBC_CERTIFICATE_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}
         >
           موثّق لدى المركز السعودي للأعمال
         </a>
@@ -39,10 +41,7 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
           className="size-1 shrink-0 rounded-full bg-[oklch(1_0_0/0.22)]"
         />
 
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="select-none text-[0.95rem] leading-none">
-            🇸🇦
-          </span>
+        <span style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}>
           صناعة سعودية
         </span>
       </div>
