@@ -751,3 +751,20 @@ textarea::placeholder {
   .hub-eq-bar { transform: scaleY(0.55); }
   .hub-tappers-row { transition: none; }
 }
+
+/*
+ * Saudi Business Center verification seal — keep in document flow when
+ * rendered in the dashboard footer (seal.js may still apply fixed coords).
+ */
+.sbc-seal-slot .sbc-verify-seal,
+.sbc-seal-slot .sbc-verify-seal iframe,
+.sbc-seal-slot [class*="sbc-"] {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+  z-index: 1 !important;
+}
