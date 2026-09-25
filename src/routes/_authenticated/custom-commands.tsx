@@ -234,7 +234,53 @@ type CommandsCopy = typeof COPY;
 const field =
   "w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(0.14_0.02_265/0.9)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-[color-mix(in_oklab,var(--primary)_55%,transparent)]";
 const pill =
-  "rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transition-colors";
+  "inline-flex items-center rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transition-colors";
+
+const ARABIC_SCRIPT = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+/** Keep ASCII markers and Arabic names in a stable visual order inside pills. */
+function TriggerPreview({
+  name,
+  marker = "",
+  placement,
+  className,
+}: {
+  name: string;
+  marker?: string;
+  placement: "none" | "prefix" | "suffix";
+  className?: string;
+}) {
+  const rtlName = ARABIC_SCRIPT.test(name);
+  const nameDir = rtlName ? "rtl" : "auto";
+
+  if (placement === "none" || !marker) {
+    return (
+      <span className={cn("font-mono", className)} dir={nameDir}>
+        {name}
+      </span>
+    );
+  }
+
+  if (placement === "suffix") {
+    return (
+      <span className={cn("inline-flex items-center font-mono", className)} dir="ltr">
+        <span dir={nameDir}>{name}</span>
+        <span className="ps-0.5" dir="ltr">
+          {marker}
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span className={cn("inline-flex items-center font-mono", className)} dir="ltr">
+      <span className="pe-0.5" dir="ltr">
+        {marker}
+      </span>
+      <span dir={nameDir}>{name}</span>
+    </span>
+  );
+}
 
 const PLATFORMS: { id: ChatCommandPlatform; label: string }[] = [
   { id: "KICK", label: "Kick" },
@@ -710,13 +756,12 @@ function CustomCommandsPage() {
                 onClick={() => setDefaultPrefix(preset)}
                 className={cn(
                   pill,
-                  "font-mono",
                   prefixValue === preset
                     ? "border-primary/50 bg-primary/15 text-foreground"
                     : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
                 )}
               >
-                {preset}name
+                <TriggerPreview name="name" marker={preset} placement="prefix" />
               </button>
             ))}
             <button
@@ -724,16 +769,15 @@ function CustomCommandsPage() {
               onClick={() => setDefaultPrefix(QUESTION_SUFFIX)}
               className={cn(
                 pill,
+                "gap-1",
                 isSuffixMarker(prefixValue)
                   ? "border-primary/50 bg-primary/15 text-foreground"
                   : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
               )}
             >
-              <span className="font-mono" dir="ltr">
-                question?
-              </span>
-              <span className="mx-1 text-muted-foreground">/</span>
-              <span className="font-mono">سؤال؟</span>
+              <TriggerPreview name="question" marker="?" placement="suffix" />
+              <span className="text-muted-foreground">/</span>
+              <TriggerPreview name="سؤال" marker="؟" placement="suffix" />
             </button>
           </div>
           {isSuffixMarker(prefixValue) ? (
@@ -1439,11 +1483,26 @@ function CommandCard({
       editLabel={copy.edit}
       deleteLabel={copy.delete}
     >
-      <h3
-        className="max-w-full font-mono text-sm font-semibold tracking-tight text-zinc-100 [overflow-wrap:anywhere]"
-        dir="auto"
-      >
-        {commandTrigger(command, defaultPrefix)}
+      <h3 className="max-w-full text-sm font-semibold tracking-tight text-zinc-100 [overflow-wrap:anywhere]">
+        <TriggerPreview
+          name={command.name || "name"}
+          marker={
+            command.prefix === null
+              ? defaultPrefix
+              : isSuffixMarker(command.prefix)
+                ? questionSuffixForText(command.name)
+                : command.prefix
+          }
+          placement={
+            command.prefix === ""
+              ? "none"
+              : isSuffixMarker(command.prefix === null ? defaultPrefix : command.prefix)
+                ? "suffix"
+                : (command.prefix === null ? defaultPrefix : command.prefix)
+                  ? "prefix"
+                  : "none"
+          }
+        />
       </h3>
     </StudioFaceCard>
   );
@@ -1556,14 +1615,21 @@ function CommandEditor({
                   onClick={() => onChange({ ...draft, prefix: null })}
                   className={cn(
                     pill,
+                    "gap-1.5",
                     prefixMode === "inherit"
                       ? "border-primary/50 bg-primary/15"
                       : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                   )}
                 >
-                  {copy.inherit}{" "}
-                  <span className="font-mono" dir="ltr">
-                    ({commandTrigger({ name: liveName, prefix: null }, defaultPrefix)})
+                  <span>{copy.inherit}</span>
+                  <span className="inline-flex items-center gap-0.5 opacity-90" dir="ltr">
+                    <span>(</span>
+                    <TriggerPreview
+                      name={liveName}
+                      marker={defaultPrefix}
+                      placement={defaultPrefix ? (isSuffixMarker(defaultPrefix) ? "suffix" : "prefix") : "none"}
+                    />
+                    <span>)</span>
                   </span>
                 </button>
                 <button
@@ -1585,14 +1651,12 @@ function CommandEditor({
                     onClick={() => onChange({ ...draft, prefix: preset })}
                     className={cn(
                       pill,
-                      "font-mono",
                       draft.prefix === preset
                         ? "border-primary/50 bg-primary/15"
                         : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                     )}
                   >
-                    {preset}
-                    {liveName}
+                    <TriggerPreview name={liveName} marker={preset} placement="prefix" />
                   </button>
                 ))}
                 <button
@@ -1605,10 +1669,7 @@ function CommandEditor({
                       : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                   )}
                 >
-                  <span className="font-mono" dir="auto">
-                    {liveName}
-                    {liveSuffix}
-                  </span>
+                  <TriggerPreview name={liveName} marker={liveSuffix} placement="suffix" />
                 </button>
               </div>
             </div>
@@ -1621,7 +1682,7 @@ function CommandEditor({
                 <button
                   type="button"
                   onClick={() => setShowVars((open) => !open)}
-                  className="text-[0.72rem] font-medium text-emerald-400 hover:underline"
+                  className="text-[0.72rem] font-medium text-[#bee1fc] hover:underline"
                 >
                   {showVars ? copy.hideVariables : copy.showVariables}
                 </button>
