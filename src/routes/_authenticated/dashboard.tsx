@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
-import { SaudiBusinessSeal } from "@/components/brand/SaudiBusinessSeal";
 import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
 import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -498,8 +497,6 @@ function HomePage() {
           ) : null}
         </>
       )}
-
-      <SaudiBusinessSeal />
 
       {goalModal ? (
         <div

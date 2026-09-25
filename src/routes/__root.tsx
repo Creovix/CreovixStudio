@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { AppErrorBoundary } from "@/components/layout/AppErrorBoundary";
 import { ErrorFallback } from "@/components/layout/ErrorFallback";
+import { SaudiBusinessSeal } from "@/components/brand/SaudiBusinessSeal";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -124,6 +125,8 @@ function RootComponent() {
         <Outlet />
       </AppErrorBoundary>
       <Toaster position="top-center" />
+      {/* Official SBC متجر موثق seal — inside <body>; seal.js pins bottom-left. */}
+      <SaudiBusinessSeal />
     </QueryClientProvider>
   );
 }
