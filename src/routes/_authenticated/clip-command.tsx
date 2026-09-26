@@ -10,6 +10,7 @@ import { HowItWorks } from "@/components/layout/HowItWorks";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getClipCommandState, saveClipCommandSettings } from "@/lib/clipCommand.functions";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/clip-command")({
@@ -51,7 +52,12 @@ type Settings = {
   response: string;
 };
 
-const ROLES = ["Everyone", "Subs", "VIPs", "Mods"] as const;
+const ROLES = [
+  { id: "Everyone", labelKey: "clipCommand.role.everyone" },
+  { id: "Subs", labelKey: "clipCommand.role.subs" },
+  { id: "VIPs", labelKey: "clipCommand.role.vips" },
+  { id: "Mods", labelKey: "clipCommand.role.mods" },
+] as const satisfies ReadonlyArray<{ id: string; labelKey: TranslationKey }>;
 
 const DEFAULTS: Settings = {
   enabled: false,
@@ -66,6 +72,7 @@ const pill = "rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transit
 function ClipCommandPage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const loadState = useServerFn(getClipCommandState);
@@ -115,9 +122,9 @@ function ClipCommandPage() {
       setSaved(true);
       setDirty(false);
       void queryClient.invalidateQueries({ queryKey: ["clip-command", user.id] });
-      toast.success("Clip command settings saved");
+      toast.success(t("clipCommand.toast.saved"));
     },
-    onError: (error: Error) => toast.error(error.message || "Could not save clip settings"),
+    onError: (error: Error) => toast.error(error.message || t("clipCommand.toast.saveFail")),
   });
 
   const save = () => saveMutation.mutate();
@@ -138,11 +145,11 @@ function ClipCommandPage() {
       const response = await fetch("/api/public/webhooks/kick", { cache: "no-store" });
       const ok = response.ok;
       setBotOnline(ok);
-      if (ok) toast.success("Bot Status: Connected & Listening");
-      else toast.error(`Bot Status: Disconnected (${response.status})`);
+      if (ok) toast.success(t("clipCommand.toast.botOk"));
+      else toast.error(t("clipCommand.toast.botFail", { status: response.status }));
     } catch {
       setBotOnline(false);
-      toast.error("Bot Status: Disconnected");
+      toast.error(t("clipCommand.toast.botOffline"));
     } finally {
       setTesting(false);
     }
@@ -152,24 +159,22 @@ function ClipCommandPage() {
     <AppShell
       user={user}
       profile={data?.profile}
-      title="Clip Command"
-      subtitle="Let viewers instantly create clips by typing !clip in chat"
+      title={t("clipCommand.title")}
+      subtitle={t("clipCommand.subtitle")}
     >
       <div className="space-y-8">
         <HowItWorks
-          steps={[
-            "Enable the clip command",
-            "Viewers type !clip in chat",
-            "Optionally specify duration with !clip 45",
-          ]}
-          note="The clip command can take up to 5 minutes to initialise after enabling."
+          steps={[t("clipCommand.how1"), t("clipCommand.how2"), t("clipCommand.how3")]}
+          note={t("clipCommand.howNote")}
         />
 
         <section className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-[0.95rem] font-semibold">!clip</h2>
-              <p className="mt-0.5 text-[0.78rem] text-muted-foreground">Enable the chat command on your channel.</p>
+            <div className="min-w-0 text-start">
+              <h2 className="text-[0.95rem] font-semibold" dir="ltr">
+                !clip
+              </h2>
+              <p className="mt-0.5 text-[0.78rem] text-muted-foreground">{t("clipCommand.enableHint")}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 text-[0.74rem] text-muted-foreground">
@@ -177,22 +182,22 @@ function ClipCommandPage() {
                   className={cn("size-2 rounded-full", botOnline ? "bg-emerald-500" : "bg-rose-500")}
                   aria-hidden
                 />
-                {botOnline ? "Bot connected" : "Bot disconnected"}
+                {botOnline ? t("clipCommand.botConnected") : t("clipCommand.botDisconnected")}
               </span>
               <button
                 type="button"
-                onClick={testBot}
+                onClick={() => void testBot()}
                 disabled={testing}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[0.74rem] text-muted-foreground transition-colors hover:bg-zinc-800 hover:text-foreground disabled:opacity-60"
               >
                 <Plug className="size-3.5" aria-hidden />
-                {testing ? "Testing…" : "Test"}
+                {testing ? t("clipCommand.testing") : t("clipCommand.test")}
               </button>
               <button
                 type="button"
                 role="switch"
                 aria-checked={settings.enabled}
-                aria-label="Enable clip command"
+                aria-label={t("clipCommand.enableAria")}
                 onClick={() => update("enabled", !settings.enabled)}
                 className={cn(
                   "relative h-6 w-10 shrink-0 rounded-full transition-colors",
@@ -210,15 +215,17 @@ function ClipCommandPage() {
           </div>
 
           <div>
-            <p className="mb-2 text-[0.66rem] uppercase tracking-[0.18em] text-muted-foreground">Who can use</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="mb-2 text-start text-[0.66rem] font-medium tracking-[0.04em] text-muted-foreground">
+              {t("clipCommand.whoCanUse")}
+            </p>
+            <div className="flex flex-wrap justify-start gap-2">
               {ROLES.map((role) => {
-                const active = settings.roles.includes(role);
+                const active = settings.roles.includes(role.id);
                 return (
                   <button
-                    key={role}
+                    key={role.id}
                     type="button"
-                    onClick={() => toggleRole(role)}
+                    onClick={() => toggleRole(role.id)}
                     className={cn(
                       pill,
                       active
@@ -226,7 +233,7 @@ function ClipCommandPage() {
                         : "border-[oklch(1_0_0/0.1)] text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {role}
+                    {t(role.labelKey)}
                   </button>
                 );
               })}
@@ -235,7 +242,7 @@ function ClipCommandPage() {
 
           <Collapsible>
             <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/[0.06] px-3 py-2 text-start text-[0.82rem] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground">
-              Advanced settings
+              {t("clipCommand.advanced")}
               <ChevronDown
                 className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"
                 aria-hidden
@@ -244,9 +251,11 @@ function ClipCommandPage() {
             <CollapsibleContent>
               <div className="mt-3 space-y-4 px-1">
                 <label className="block">
-                  <span className="flex justify-between text-[0.8rem]">
-                    <span className="text-muted-foreground">Default length</span>
-                    <span className="font-mono">{settings.defaultLength}s</span>
+                  <span className="flex justify-between gap-3 text-start text-[0.8rem]">
+                    <span className="text-muted-foreground">{t("clipCommand.defaultLength")}</span>
+                    <span className="font-mono tabular-nums" dir="ltr">
+                      {settings.defaultLength}s
+                    </span>
                   </span>
                   <input
                     type="range"
@@ -259,9 +268,11 @@ function ClipCommandPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="flex justify-between text-[0.8rem]">
-                    <span className="text-muted-foreground">Maximum length</span>
-                    <span className="font-mono">{settings.maxLength}s</span>
+                  <span className="flex justify-between gap-3 text-start text-[0.8rem]">
+                    <span className="text-muted-foreground">{t("clipCommand.maxLength")}</span>
+                    <span className="font-mono tabular-nums" dir="ltr">
+                      {settings.maxLength}s
+                    </span>
                   </span>
                   <input
                     type="range"
@@ -273,16 +284,16 @@ function ClipCommandPage() {
                     className="mt-2 w-full accent-emerald-400"
                   />
                 </label>
-                <label className="block">
-                  <span className="text-[0.8rem] text-muted-foreground">Custom response</span>
+                <label className="block text-start">
+                  <span className="text-[0.8rem] text-muted-foreground">{t("clipCommand.customResponse")}</span>
                   <input
                     value={settings.response}
                     onChange={(e) => update("response", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm outline-none focus:border-primary"
-                    dir="auto"
+                    dir="ltr"
                   />
-                  <span className="mt-1.5 block text-[0.72rem] text-muted-foreground">
-                    Variables: {"{user}"}, {"{clip_url}"}
+                  <span className="mt-1.5 block text-[0.72rem] text-muted-foreground" dir="ltr">
+                    {t("clipCommand.variables")}
                   </span>
                 </label>
               </div>
@@ -295,15 +306,15 @@ function ClipCommandPage() {
               onClick={save}
               className="rounded-full bg-[#bee1fc] px-5 py-2 text-[0.82rem] font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90"
             >
-              Save Changes
+              {t("clipCommand.save")}
             </button>
-            {saved ? <span className="text-[0.78rem] text-[#bee1fc]">Saved</span> : null}
+            {saved ? <span className="text-[0.78rem] text-[#bee1fc]">{t("clipCommand.saved")}</span> : null}
           </div>
         </section>
 
         <section className="border-t border-white/5 pt-8">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[0.95rem] font-semibold">Created Clips</h2>
+            <h2 className="text-start text-[0.95rem] font-semibold">{t("clipCommand.createdClips")}</h2>
             <span className="rounded-full border border-[oklch(1_0_0/0.12)] px-2 py-0.5 text-[0.7rem] text-muted-foreground">
               {clips.length}
             </span>
@@ -311,16 +322,14 @@ function ClipCommandPage() {
               to="/clips"
               className="ms-auto text-[0.78rem] font-medium text-[#bee1fc] hover:underline"
             >
-              View all clips
+              {t("clipCommand.viewAll")}
             </Link>
           </div>
 
           {clips.length === 0 ? (
             <div className="mt-6 grid place-items-center gap-3 py-10 text-center">
               <Video className="size-8 text-muted-foreground" aria-hidden />
-              <p className="text-[0.82rem] text-muted-foreground">
-                No clips yet — clips created on your channel will appear here.
-              </p>
+              <p className="max-w-sm text-[0.82rem] text-muted-foreground">{t("clipCommand.empty")}</p>
             </div>
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -335,21 +344,23 @@ function ClipCommandPage() {
                         className="size-full object-cover"
                       />
                     ) : null}
-                    <span className="absolute bottom-2 end-2 rounded-md bg-black/80 px-1.5 py-0.5 font-mono text-[0.7rem]">
+                    <span className="absolute bottom-2 end-2 rounded-md bg-black/80 px-1.5 py-0.5 font-mono text-[0.7rem]" dir="ltr">
                       {clip.duration}s
                     </span>
                   </div>
-                  <div className="space-y-1 p-3">
-                    <p className="truncate text-[0.82rem] font-medium">{clip.title}</p>
-                    <p className="text-[0.72rem] text-muted-foreground">
-                      {clip.views} views · clipped by {clip.clippedBy}
+                  <div className="space-y-1 p-3 text-start">
+                    <p className="truncate text-[0.82rem] font-medium" dir="auto">
+                      {clip.title}
                     </p>
-                    <div className="flex gap-2 pt-2">
+                    <p className="text-[0.72rem] text-muted-foreground">
+                      {t("clipCommand.viewsBy", { views: clip.views, user: clip.clippedBy })}
+                    </p>
+                    <div className="flex justify-start gap-2 pt-2">
                       <a
                         href={clip.url}
                         target="_blank"
                         rel="noreferrer"
-                        aria-label="Play clip"
+                        aria-label={t("clipCommand.playAria")}
                         className="rounded-lg border border-[oklch(1_0_0/0.1)] p-1.5 hover:text-emerald-400"
                       >
                         <Play className="size-3.5" aria-hidden />
@@ -357,14 +368,14 @@ function ClipCommandPage() {
                       <a
                         href={clip.url}
                         download
-                        aria-label="Download clip"
+                        aria-label={t("clipCommand.downloadAria")}
                         className="rounded-lg border border-[oklch(1_0_0/0.1)] p-1.5 hover:text-emerald-400"
                       >
                         <Download className="size-3.5" aria-hidden />
                       </a>
                       <button
                         type="button"
-                        aria-label="Copy clip URL"
+                        aria-label={t("clipCommand.copyAria")}
                         onClick={() => void navigator.clipboard.writeText(clip.url)}
                         className="rounded-lg border border-[oklch(1_0_0/0.1)] p-1.5 hover:text-emerald-400"
                       >

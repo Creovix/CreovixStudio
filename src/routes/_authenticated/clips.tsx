@@ -9,6 +9,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ClipPlayer } from "@/components/clips/ClipPlayer";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { deleteClip, listChannelClips } from "@/lib/clipCommand.functions";
+import { useLanguage, type TranslationKey, t as translate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/clips")({
   head: () => ({
@@ -43,35 +44,15 @@ type Clip = {
   platform: string;
 };
 
-const COPY = {
-  title: "Channel clips",
-  subtitle: "Browse and watch clips created by the community.",
-  search: "Search by title or username",
-  pick: "Select a clip",
-  loading: "Loading clips…",
-  empty: "No clips yet. Clips created on your channel will appear here.",
-  noneMatch: "No clips match that search.",
-  loadError: "Could not load clips. Try again.",
-  retry: "Retry",
-  clippedBy: "Clipped by",
-  views: (n: number) => `${n} views`,
-  copy: "Copy link",
-  copied: "Copied",
-  share: "Share",
-  download: "Download",
-  delete: "Delete",
-  open: "Open original",
-  play: "Play",
-  sorts: {
-    recent: "Most recent",
-    views: "Most viewed",
-    today: "Top today",
-    all_time: "Top all time",
-  },
-} as const;
-
 const SORT_IDS = ["recent", "views", "today", "all_time"] as const;
 type SortId = (typeof SORT_IDS)[number];
+
+const SORT_KEYS: Record<SortId, TranslationKey> = {
+  recent: "clips.sort.recent",
+  views: "clips.sort.views",
+  today: "clips.sort.today",
+  all_time: "clips.sort.allTime",
+};
 
 const field =
   "w-full border border-zinc-800 bg-transparent py-2 ps-9 pe-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-zinc-600";
@@ -82,21 +63,21 @@ function formatDuration(seconds: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: typeof translate) {
   const parsed = Date.parse(iso);
   if (!Number.isFinite(parsed)) return "";
   const diff = Date.now() - parsed;
   const mins = Math.round(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  if (mins < 1) return t("clips.time.justNow");
+  if (mins < 60) return t("clips.time.minutes", { n: mins });
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (hours < 24) return t("clips.time.hours", { n: hours });
   const days = Math.round(hours / 24);
-  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
-  return new Date(parsed).toLocaleDateString();
+  if (days < 30) return t("clips.time.days", { n: days });
+  return new Date(parsed).toLocaleDateString("ar");
 }
 
-function normalizeClip(raw: unknown): Clip | null {
+function normalizeClip(raw: unknown, fallbackTitle: string, fallbackViewer: string): Clip | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
   const id = typeof row.id === "string" ? row.id : "";
@@ -104,14 +85,14 @@ function normalizeClip(raw: unknown): Clip | null {
   if (!id || !url) return null;
   return {
     id,
-    title: typeof row.title === "string" && row.title.trim() ? row.title.trim() : "Clip",
+    title: typeof row.title === "string" && row.title.trim() ? row.title.trim() : fallbackTitle,
     url,
     shareUrl: typeof row.shareUrl === "string" && row.shareUrl ? row.shareUrl : null,
     thumbnail: typeof row.thumbnail === "string" && row.thumbnail ? row.thumbnail : null,
     duration: typeof row.duration === "number" && Number.isFinite(row.duration) ? row.duration : 0,
     views: typeof row.views === "number" && Number.isFinite(row.views) ? row.views : 0,
     clippedBy:
-      typeof row.clippedBy === "string" && row.clippedBy.trim() ? row.clippedBy.trim() : "viewer",
+      typeof row.clippedBy === "string" && row.clippedBy.trim() ? row.clippedBy.trim() : fallbackViewer,
     createdAt: typeof row.createdAt === "string" && row.createdAt ? row.createdAt : new Date(0).toISOString(),
     platform: typeof row.platform === "string" && row.platform ? row.platform : "KICK",
   };
@@ -120,7 +101,7 @@ function normalizeClip(raw: unknown): Clip | null {
 function ClipsPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
-  const c = COPY;
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const fetchClips = useServerFn(listChannelClips);
   const removeClip = useServerFn(deleteClip);
@@ -142,9 +123,11 @@ function ClipsPage() {
       try {
         const result = await fetchClips();
         const rows = Array.isArray(result) ? result : [];
-        return rows.map(normalizeClip).filter((clip): clip is Clip => clip != null);
+        return rows
+          .map((row) => normalizeClip(row, t("clips.fallbackTitle"), t("clips.fallbackViewer")))
+          .filter((clip): clip is Clip => clip != null);
       } catch (error) {
-        throw error instanceof Error ? error : new Error("Could not load clips");
+        throw error instanceof Error ? error : new Error(t("clips.loadError"));
       }
     },
     retry: 1,
@@ -155,9 +138,9 @@ function ClipsPage() {
     onSuccess: (_result, id) => {
       if (active?.id === id) setActive(null);
       void queryClient.invalidateQueries({ queryKey: ["channel-clips"] });
-      toast.success("Clip deleted");
+      toast.success(t("clips.toast.deleted"));
     },
-    onError: (error: Error) => toast.error(error.message || "Could not delete clip"),
+    onError: (error: Error) => toast.error(error.message || t("clips.toast.deleteFail")),
   });
 
   const visible = useMemo(() => {
@@ -190,7 +173,7 @@ function ClipsPage() {
       setCopied(clip.id);
       setTimeout(() => setCopied((current) => (current === clip.id ? null : current)), 1600);
     } catch {
-      toast.error("Could not copy link");
+      toast.error(t("clips.toast.copyFail"));
     }
   };
 
@@ -208,7 +191,12 @@ function ClipsPage() {
   };
 
   return (
-    <AppShell user={user} profile={workspace?.profile} title={c.title} subtitle={c.subtitle}>
+    <AppShell
+      user={user}
+      profile={workspace?.profile}
+      title={t("clips.title")}
+      subtitle={t("clips.subtitle")}
+    >
       <div className="flex flex-col gap-10">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
           <div className="relative min-w-[12rem] flex-1 sm:max-w-sm">
@@ -219,13 +207,13 @@ function ClipsPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={c.search}
-              aria-label={c.search}
+              placeholder={t("clips.search")}
+              aria-label={t("clips.search")}
               className={field}
               dir="auto"
             />
           </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <div className="flex flex-wrap justify-start gap-x-5 gap-y-2">
             {SORT_IDS.map((id) => (
               <button
                 key={id}
@@ -235,14 +223,14 @@ function ClipsPage() {
                   sort === id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {c.sorts[id]}
+                {t(SORT_KEYS[id])}
               </button>
             ))}
           </div>
         </div>
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] lg:gap-14">
-          <div className="min-w-0">
+          <div className="min-w-0 text-start">
             {active ? (
               <>
                 <div className="aspect-video w-full bg-black">
@@ -252,62 +240,64 @@ function ClipsPage() {
                   {active.title}
                 </h2>
                 <p className="mt-1.5 text-[0.78rem] text-muted-foreground">
-                  {c.clippedBy} <span dir="auto">@{active.clippedBy}</span> · {c.views(active.views)}
-                  {active.createdAt ? ` · ${timeAgo(active.createdAt)}` : ""} · {active.platform}
+                  {t("clips.clippedBy")} <span dir="auto">@{active.clippedBy}</span> ·{" "}
+                  {t("clips.views", { n: active.views })}
+                  {active.createdAt ? ` · ${timeAgo(active.createdAt, t)}` : ""} ·{" "}
+                  <span dir="ltr">{active.platform}</span>
                 </p>
-                <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+                <div className="mt-5 flex flex-wrap items-center justify-start gap-x-5 gap-y-2">
                   <button type="button" onClick={() => void copy(active)} className={textAction}>
                     {copied === active.id ? (
                       <span className="inline-flex items-center gap-1">
                         <Check className="size-3.5" aria-hidden />
-                        {c.copied}
+                        {t("clips.copied")}
                       </span>
                     ) : (
-                      c.copy
+                      t("clips.copy")
                     )}
                   </button>
                   <button type="button" onClick={() => void share(active)} className={textAction}>
-                    {c.share}
+                    {t("clips.share")}
                   </button>
                   <a href={active.url} target="_blank" rel="noreferrer" className={textAction}>
-                    {c.download}
+                    {t("clips.download")}
                   </a>
                   <a href={active.url} target="_blank" rel="noreferrer" className={textAction}>
-                    {c.open}
+                    {t("clips.open")}
                   </a>
                   <button
                     type="button"
                     onClick={() => del.mutate(active.id)}
                     className="text-sm text-red-400 hover:text-red-300"
                   >
-                    {c.delete}
+                    {t("clips.delete")}
                   </button>
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">{c.pick}</p>
+              <p className="text-sm text-muted-foreground">{t("clips.pick")}</p>
             )}
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 text-start">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">{c.loading}</p>
+              <p className="text-sm text-muted-foreground">{t("clips.loading")}</p>
             ) : isError ? (
               <div className="space-y-3">
-                <p className="text-sm leading-relaxed text-muted-foreground">{c.loadError}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">{t("clips.loadError")}</p>
                 <button
                   type="button"
                   onClick={() => void refetch()}
                   disabled={isFetching}
                   className="rounded-full bg-[#bee1fc] px-4 py-1.5 text-sm font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
-                  {c.retry}
+                  {t("clips.retry")}
                 </button>
               </div>
             ) : clips.length === 0 ? (
-              <p className="text-sm leading-relaxed text-muted-foreground">{c.empty}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{t("clips.empty")}</p>
             ) : visible.length === 0 ? (
-              <p className="text-sm leading-relaxed text-muted-foreground">{c.noneMatch}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{t("clips.noneMatch")}</p>
             ) : (
               <ul className="max-h-[min(70vh,640px)] overflow-y-auto">
                 {visible.map((clip) => {
@@ -319,7 +309,7 @@ function ClipsPage() {
                         onClick={() => setActive(clip)}
                         className="flex w-full items-center gap-3 py-3 text-start"
                         aria-current={selected ? "true" : undefined}
-                        aria-label={`${c.play} ${clip.title}`}
+                        aria-label={`${t("clips.play")} ${clip.title}`}
                       >
                         <span className="relative size-16 shrink-0 overflow-hidden bg-black/40">
                           {clip.thumbnail ? (
@@ -335,7 +325,7 @@ function ClipsPage() {
                             </span>
                           )}
                         </span>
-                        <span className="min-w-0 flex-1">
+                        <span className="min-w-0 flex-1 text-start">
                           <span
                             className={`block truncate text-sm ${selected ? "text-foreground" : "text-foreground/90"}`}
                             dir="auto"
@@ -343,7 +333,9 @@ function ClipsPage() {
                             {clip.title}
                           </span>
                           <span className="mt-0.5 block truncate text-[0.72rem] text-muted-foreground">
-                            @{clip.clippedBy} · {formatDuration(clip.duration)} · {c.views(clip.views)}
+                            @{clip.clippedBy} ·{" "}
+                            <span dir="ltr">{formatDuration(clip.duration)}</span> ·{" "}
+                            {t("clips.views", { n: clip.views })}
                           </span>
                         </span>
                       </button>
