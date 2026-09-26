@@ -197,7 +197,7 @@ export function StreamEventsScheduleControlPanel({
           className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-2 text-xs font-semibold disabled:opacity-50"
           aria-label="Previous event"
         >
-          <ChevronLeft className="size-3.5" aria-hidden />
+          <ChevronLeft className="size-3.5 rtl:rotate-180" aria-hidden />
           Prev
         </button>
         <button
@@ -207,9 +207,9 @@ export function StreamEventsScheduleControlPanel({
           className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-2 text-xs font-semibold disabled:opacity-50"
           aria-label="Skip to next event"
         >
-          <SkipForward className="size-3.5" aria-hidden />
+          <SkipForward className="size-3.5 rtl:rotate-180" aria-hidden />
           Skip
-          <ChevronRight className="size-3.5" aria-hidden />
+          <ChevronRight className="size-3.5 rtl:rotate-180" aria-hidden />
         </button>
       </div>
 

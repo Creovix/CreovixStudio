@@ -284,7 +284,7 @@ export function AtmosphereStep() {
             </label>
             <input
               id="bio-font-name"
-              className={cn(wizardUi.field, "w-full pl-5 pr-3")}
+              className={cn(wizardUi.field, "w-full ps-5 pe-3")}
               placeholder="Satoshi"
               value={theme.fontCustomName}
               onChange={(event) => onPatch({ fontFamily: "custom", fontCustomName: event.target.value })}
@@ -311,7 +311,7 @@ export function AtmosphereStep() {
             </label>
             <input
               id="bio-font-href"
-              className={cn(wizardUi.field, "w-full pl-5 pr-3")}
+              className={cn(wizardUi.field, "w-full ps-5 pe-3")}
               placeholder="https://…/font.css or a .woff2"
               value={theme.fontCustomHref}
               onChange={(event) => onPatch({ fontFamily: "custom", fontCustomHref: event.target.value })}

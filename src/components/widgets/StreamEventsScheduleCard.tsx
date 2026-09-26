@@ -187,7 +187,7 @@ export function StreamEventsScheduleCard({
               className="rounded-xl border border-white/10 p-1.5 text-zinc-400 transition-opacity hover:opacity-80"
               aria-label="Previous event"
             >
-              <ChevronRight className="size-3.5" aria-hidden />
+              <ChevronLeft className="size-3.5 rtl:rotate-180" aria-hidden />
             </button>
             <button
               type="button"
@@ -195,7 +195,7 @@ export function StreamEventsScheduleCard({
               className="rounded-xl border border-white/10 p-1.5 text-zinc-400 transition-opacity hover:opacity-80"
               aria-label="Next event"
             >
-              <ChevronLeft className="size-3.5" aria-hidden />
+              <ChevronRight className="size-3.5 rtl:rotate-180" aria-hidden />
             </button>
           </div>
         ) : null}

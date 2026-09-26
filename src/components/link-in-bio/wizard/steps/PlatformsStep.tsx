@@ -70,7 +70,7 @@ export function PlatformsStep() {
                 <p className="text-sm font-medium">Image banner</p>
                 <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">A wide promo image between your bio and tiles.</p>
                 <Input
-                  className="mt-4 h-10 rounded-2xl border-[rgba(255,255,255,0.08)] bg-black/35 text-xs file:mr-3 file:rounded-xl file:border-0 file:bg-white/10 file:px-2.5 file:py-1 file:text-xs file:text-white/80"
+                  className="mt-4 h-10 rounded-2xl border-[rgba(255,255,255,0.08)] bg-black/35 text-xs file:me-3 file:rounded-xl file:border-0 file:bg-white/10 file:px-2.5 file:py-1 file:text-xs file:text-white/80"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(event) => void onFile(event.target.files?.[0], "banner")}

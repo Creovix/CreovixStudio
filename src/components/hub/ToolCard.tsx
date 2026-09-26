@@ -165,7 +165,7 @@ export function ToolCard({
           >
             {locked || comingSoon ? <Lock className="size-3" aria-hidden /> : null}
             {comingSoon ? t("home.comingSoon") : locked ? lockLabel : actionLabel}
-            {locked || comingSoon ? null : <ArrowRight className="size-3" aria-hidden />}
+            {locked || comingSoon ? null : <ArrowRight className="size-3 rtl:rotate-180" aria-hidden />}
           </button>
         </div>
       </div>

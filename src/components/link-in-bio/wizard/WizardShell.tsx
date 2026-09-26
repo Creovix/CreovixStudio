@@ -98,7 +98,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
       <footer className="relative z-20 shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]/90 px-4 py-3 backdrop-blur-xl sm:px-5 md:px-8">
         <div className="mx-auto flex w-full max-w-[110rem] items-center justify-between gap-3">
           <Button type="button" variant="ghost" className="min-h-11" disabled={step === 1} onClick={goBack}>
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-4 rtl:rotate-180" />
             Back
           </Button>
           {arrange ? (
@@ -130,7 +130,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
             {step < total ? (
               <Button type="button" className={cn(wizardUi.ctaPrimary, "min-h-11")} onClick={() => void goNext()} disabled={!canProceed || saving}>
                 Next
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-4 rtl:rotate-180" />
               </Button>
             ) : (
               <>

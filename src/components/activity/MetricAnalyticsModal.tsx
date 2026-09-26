@@ -131,7 +131,7 @@ export function MetricAnalyticsModal({
           onClick={onClose}
           className="mb-5 flex items-center gap-2 rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.04)] px-3.5 py-2 text-sm font-medium transition-colors hover:bg-[oklch(1_0_0/0.09)]"
         >
-          <ArrowLeft className="size-4" aria-hidden />
+          <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
           {backLabel ?? t("activity.analyticsBack")}
         </button>
 

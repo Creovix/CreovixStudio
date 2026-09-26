@@ -346,7 +346,7 @@ function BentoTile({
         ) : null}
         <span className="sr-only">{name}</span>
         <span
-          className="absolute left-5 top-5 z-[1] grid place-items-center"
+          className="absolute start-5 top-5 z-[1] grid place-items-center"
           style={{
             width: paint.glass ? logoSize + 14 : logoSize,
             height: paint.glass ? logoSize + 14 : logoSize,
@@ -386,7 +386,7 @@ function BentoTile({
           />
         </span>
         {live ? (
-          <span className="absolute right-5 top-5 z-[1] rounded-full bg-red-500 px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide text-white">
+          <span className="absolute end-5 top-5 z-[1] rounded-full bg-red-500 px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide text-white">
             LIVE
           </span>
         ) : null}
@@ -394,12 +394,12 @@ function BentoTile({
           <img
             src={preview.thumbnailUrl}
             alt=""
-            className="pointer-events-none absolute bottom-12 left-5 z-0 h-10 w-[3.6rem] rounded-md object-cover opacity-90"
+            className="pointer-events-none absolute bottom-12 start-5 z-0 h-10 w-[3.6rem] rounded-md object-cover opacity-90"
           />
         ) : null}
         {!arrangeMode ? (
           <span
-            className="pointer-events-none absolute bottom-5 right-5 z-[1] grid size-8 place-items-center rounded-full border"
+            className="pointer-events-none absolute bottom-5 end-5 z-[1] grid size-8 place-items-center rounded-full border"
             style={{
               borderColor: paint.monoIcons
                 ? paint.onLight

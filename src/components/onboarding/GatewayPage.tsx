@@ -140,7 +140,7 @@ function FreePlanCard({
         data-tier="free"
       >
         {cta}
-        <ChevronRight className="size-3.5 opacity-70" aria-hidden />
+        <ChevronRight className="size-3.5 opacity-70 rtl:rotate-180" aria-hidden />
       </Button>
     </article>
   );
@@ -404,7 +404,7 @@ function ProPlanCard({
         data-purchase-type={purchaseType}
       >
         {cta}
-        <ChevronRight className="size-3.5 opacity-70" aria-hidden />
+        <ChevronRight className="size-3.5 opacity-70 rtl:rotate-180" aria-hidden />
       </Button>
     </article>
   );

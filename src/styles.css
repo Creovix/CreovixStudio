@@ -383,8 +383,8 @@ body.overlay-transparent {
   background: var(--cyber-accent);
   box-shadow: 0 0 12px var(--cyber-accent);
 }
-.overlay-cyber-panel::before { left: 0; top: 0; }
-.overlay-cyber-panel::after { bottom: 0; right: 0; }
+.overlay-cyber-panel::before { inset-inline-start: 0; top: 0; }
+.overlay-cyber-panel::after { bottom: 0; inset-inline-end: 0; }
 .overlay-cyber-scan { animation: overlay-cyber-scan 3s linear infinite; }
 
 @keyframes overlay-spotlight-in {

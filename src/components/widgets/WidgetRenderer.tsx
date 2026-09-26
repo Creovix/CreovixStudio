@@ -334,7 +334,7 @@ export function ChatBoxView({
     const base = "overlay-anim-fade items-baseline";
     switch (messageLayout) {
       case "bubble":
-        return `${base} flex w-full flex-wrap gap-1.5 rounded-2xl rounded-tl-sm bg-slate-800/90 p-3 border border-slate-700/50 mb-2`;
+        return `${base} flex w-full flex-wrap gap-1.5 rounded-2xl rounded-ss-sm bg-slate-800/90 p-3 border border-slate-700/50 mb-2`;
       case "transparent":
         return `${base} flex w-full flex-wrap gap-1.5 bg-transparent border-0 p-0`;
       case "glass":

@@ -24,7 +24,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { disableTestMode, isTestMode } from "@/lib/testMode";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import type { Subathon } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 
@@ -45,17 +45,21 @@ const COLLAPSED_W = "4.75rem";
 
 /** Live sidebar destinations only — unfinished tools stay off the nav until ready. */
 const NAV = [
-  { to: "/dashboard" as const, icon: Home, label: "Home" },
-  { to: "/analytics" as const, icon: BarChart3, label: "Analytics" },
-  { to: "/activity-feed" as const, icon: Activity, label: "Activity" },
-  { to: "/custom-commands" as const, icon: MessageSquareCode, label: "Chat Commands" },
-  { to: "/link-in-bio" as const, icon: Link2, label: "Link in Bio" },
-  { to: "/live-counter" as const, icon: Hash, label: "Counter" },
-  { to: "/giveaway" as const, icon: Gift, label: "Giveaway" },
-  { to: "/clip-command" as const, icon: Scissors, label: "Clip Command" },
-  { to: "/schedule" as const, icon: CalendarDays, label: "Schedule" },
-  { to: "/mark-points" as const, icon: Bookmark, label: "Mark Points" },
-] as const;
+  { to: "/dashboard" as const, icon: Home, labelKey: "nav.home" },
+  { to: "/analytics" as const, icon: BarChart3, labelKey: "nav.analytics" },
+  { to: "/activity-feed" as const, icon: Activity, labelKey: "nav.activity" },
+  { to: "/custom-commands" as const, icon: MessageSquareCode, labelKey: "nav.chatCommands" },
+  { to: "/link-in-bio" as const, icon: Link2, labelKey: "nav.linkInBio" },
+  { to: "/live-counter" as const, icon: Hash, labelKey: "nav.counter" },
+  { to: "/giveaway" as const, icon: Gift, labelKey: "nav.giveaway" },
+  { to: "/clip-command" as const, icon: Scissors, labelKey: "nav.clipCommand" },
+  { to: "/schedule" as const, icon: CalendarDays, labelKey: "nav.schedule" },
+  { to: "/mark-points" as const, icon: Bookmark, labelKey: "nav.markPoints" },
+] as const satisfies ReadonlyArray<{
+  to: string;
+  icon: typeof Home;
+  labelKey: TranslationKey;
+}>;
 
 const menuSurface = "absolute z-50 min-w-44 rounded-xl border p-1.5";
 const menuSurfaceStyle = {
@@ -90,7 +94,7 @@ function IconTip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="right" sideOffset={10}>
+      <TooltipContent side="left" sideOffset={10}>
         {label}
       </TooltipContent>
     </Tooltip>
@@ -195,24 +199,24 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
               <button
                 type="button"
                 onClick={toggleCollapsed}
-                aria-label="Collapse sidebar"
+                aria-label={t("nav.collapseSidebar")}
                 className="ms-auto grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
               >
-                <ChevronsLeft className="size-4" />
+                <ChevronsLeft className="size-4 rtl:rotate-180" />
               </button>
             )}
           </div>
 
           {collapsed ? (
             <div className="flex justify-center py-2">
-              <IconTip label="Expand sidebar" collapsed>
+              <IconTip label={t("nav.expandSidebar")} collapsed>
                 <button
                   type="button"
                   onClick={toggleCollapsed}
-                  aria-label="Expand sidebar"
+                  aria-label={t("nav.expandSidebar")}
                   className="grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
                 >
-                  <ChevronsLeft className="size-4 rotate-180" />
+                  <ChevronsLeft className="size-4 rotate-180 rtl:rotate-0" />
                 </button>
               </IconTip>
             </div>
@@ -222,11 +226,12 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
             {NAV.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.to;
+              const label = t(item.labelKey);
               return (
-                <IconTip key={item.to} label={item.label} collapsed={collapsed}>
+                <IconTip key={item.to} label={label} collapsed={collapsed}>
                   <Link to={item.to} className={navBtn(active)} aria-current={active ? "page" : undefined}>
                     <Icon className="size-4 shrink-0" aria-hidden />
-                    {collapsed ? null : <span className="truncate">{item.label}</span>}
+                    {collapsed ? null : <span className="truncate">{label}</span>}
                   </Link>
                 </IconTip>
               );
