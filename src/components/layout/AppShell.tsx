@@ -7,6 +7,7 @@ import {
   Bookmark,
   CalendarDays,
   ChevronsLeft,
+  CreditCard,
   Gift,
   Hash,
   Home,
@@ -45,6 +46,7 @@ const COLLAPSED_W = "4.75rem";
 
 /** Live sidebar destinations only — unfinished tools stay off the nav until ready. */
 const NAV = [
+  { to: "/subscription" as const, icon: CreditCard, labelKey: "nav.subscription" },
   { to: "/dashboard" as const, icon: Home, labelKey: "nav.home" },
   { to: "/analytics" as const, icon: BarChart3, labelKey: "nav.analytics" },
   { to: "/activity-feed" as const, icon: Activity, labelKey: "nav.activity" },
@@ -328,7 +330,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                 <h1 className="text-[1.6rem] font-semibold tracking-tight">{title}</h1>
                 {subtitle ? <div className="mt-1 text-start text-sm text-muted-foreground">{subtitle}</div> : null}
               </div>
-              {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+              {actions ? <div className="flex items-center justify-end gap-2 pe-1 sm:pe-2">{actions}</div> : null}
             </div>
             <main className="min-w-0">{children}</main>
           </div>

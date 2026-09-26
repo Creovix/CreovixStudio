@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactElement } from "react";
 import {
   Gauge,
+  Gift,
   Lock,
   MessageSquare,
   Pin,
@@ -43,6 +44,27 @@ import {
   MediaRequestPreview,
   TimerPreview,
 } from "@/components/hub/previews";
+
+function GiveawayPreview() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 px-3">
+      <span className="grid size-10 place-items-center rounded-full border border-[#bee1fc]/35 bg-[#bee1fc]/12 text-[#bee1fc]">
+        <Gift className="size-4" aria-hidden />
+      </span>
+      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">+1</p>
+      <div className="flex gap-1">
+        {["A", "B", "C"].map((letter) => (
+          <span
+            key={letter}
+            className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[0.52rem] text-foreground/80"
+          >
+            @{letter}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 import {
   GOAL_TYPES,
   DEFAULT_GOAL_TYPE,
@@ -205,8 +227,19 @@ const TOOLS: Tool[] = [
     categoryKey: "cat.Kick",
     icon: PlaySquare,
     preview: MediaRequestPreview,
-    keywords: "media request song request youtube spotify anghami soundcloud kick channel points queue player",
+    keywords: "media request song request youtube spotify anghami soundcloud kick channel points queue player donation support",
     platforms: ["KICK"],
+  },
+  {
+    id: "giveaway",
+    name: "Giveaway",
+    nameKey: "home.tool.giveaway.name",
+    descriptionKey: "home.tool.giveaway.desc",
+    categoryKey: "cat.Utilities",
+    icon: Gift,
+    preview: GiveawayPreview,
+    keywords: "giveaway raffle keyword winner draw chat",
+    platforms: [...ALL_PLATFORMS],
   },
   {
     id: "emote-rain",
@@ -336,6 +369,15 @@ function HomePage() {
         await navigate({ to: "/media-requests" });
       } catch (err) {
         console.error("[dashboard] open media-requests failed", err);
+        setError(errorMessage(err, "Could not open this tool."));
+      }
+      return;
+    }
+    if (tool.id === "giveaway") {
+      try {
+        await navigate({ to: "/giveaway" });
+      } catch (err) {
+        console.error("[dashboard] open giveaway failed", err);
         setError(errorMessage(err, "Could not open this tool."));
       }
       return;

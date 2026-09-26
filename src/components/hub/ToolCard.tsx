@@ -98,7 +98,7 @@ export function ToolCard({
             {platforms.length > 0 ? (
               <span className="inline-flex items-center gap-1.5 overflow-visible" aria-hidden>
                 {sortHubPlatforms(platforms).map((id) => (
-                  <HubPlatformDot key={id} id={id} title={PLATFORM_META[id].label.en} />
+                  <HubPlatformDot key={id} id={id} title={PLATFORM_META[id].label.ar} />
                 ))}
               </span>
             ) : null}

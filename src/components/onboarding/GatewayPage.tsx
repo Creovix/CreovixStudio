@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Crown,
   Gift,
+  Info,
   Sparkles,
   Table2,
   UserRoundCheck,
@@ -18,6 +19,7 @@ import { RedeemCodeSection } from "@/components/onboarding/RedeemCodeSection";
 import { PlatformAsset } from "@/components/icons/platformAssets";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import {
   DEFAULT_PRO_BILLING,
@@ -32,30 +34,41 @@ import {
 import { cn } from "@/lib/utils";
 
 const PLATFORMS = [
-  { id: "twitch" as const, label: "Twitch" },
-  { id: "kick" as const, label: "Kick" },
-  { id: "youtube" as const, label: "YouTube" },
-  { id: "tiktok" as const, label: "TikTok" },
+  { id: "kick" as const, labelKey: "home.filterKick" as TranslationKey },
+  { id: "twitch" as const, labelKey: "home.filterTwitch" as TranslationKey },
+  { id: "youtube" as const, labelKey: "home.filterYouTube" as TranslationKey },
+  { id: "tiktok" as const, labelKey: "home.filterTikTok" as TranslationKey },
 ] as const;
 
-type Bullet = { key: TranslationKey; included: boolean };
+type Bullet = { key: TranslationKey; tipKey: TranslationKey; included: boolean; preview: FeaturePreviewId };
+type FeaturePreviewId =
+  | "platforms"
+  | "commands"
+  | "timers"
+  | "widgets"
+  | "linkInBio"
+  | "analytics"
+  | "unlimited"
+  | "advanced"
+  | "emoteRain"
+  | "export";
 
 const FREE_FEATURES: Bullet[] = [
-  { key: "gateway.free.bullet.platforms", included: true },
-  { key: "gateway.free.bullet.commands", included: true },
-  { key: "gateway.free.bullet.timers", included: true },
-  { key: "gateway.free.bullet.widgets", included: true },
-  { key: "gateway.free.bullet.linkInBio", included: false },
-  { key: "gateway.free.bullet.analytics", included: false },
+  { key: "gateway.free.bullet.platforms", tipKey: "gateway.tip.platforms", included: true, preview: "platforms" },
+  { key: "gateway.free.bullet.commands", tipKey: "gateway.tip.commands", included: true, preview: "commands" },
+  { key: "gateway.free.bullet.timers", tipKey: "gateway.tip.timers", included: true, preview: "timers" },
+  { key: "gateway.free.bullet.widgets", tipKey: "gateway.tip.widgets", included: true, preview: "widgets" },
+  { key: "gateway.free.bullet.linkInBio", tipKey: "gateway.tip.linkInBio", included: false, preview: "linkInBio" },
+  { key: "gateway.free.bullet.analytics", tipKey: "gateway.tip.analytics", included: false, preview: "analytics" },
 ];
 
 const PRO_FEATURES: Bullet[] = [
-  { key: "gateway.pro.bullet.unlimited", included: true },
-  { key: "gateway.pro.bullet.advanced", included: true },
-  { key: "gateway.pro.bullet.emoteRain", included: true },
-  { key: "gateway.pro.bullet.linkInBio", included: true },
-  { key: "gateway.pro.bullet.analytics", included: true },
-  { key: "gateway.pro.bullet.export", included: true },
+  { key: "gateway.pro.bullet.unlimited", tipKey: "gateway.tip.unlimited", included: true, preview: "unlimited" },
+  { key: "gateway.pro.bullet.advanced", tipKey: "gateway.tip.advanced", included: true, preview: "advanced" },
+  { key: "gateway.pro.bullet.emoteRain", tipKey: "gateway.tip.emoteRain", included: true, preview: "emoteRain" },
+  { key: "gateway.pro.bullet.linkInBio", tipKey: "gateway.tip.linkInBio", included: true, preview: "linkInBio" },
+  { key: "gateway.pro.bullet.analytics", tipKey: "gateway.tip.analytics", included: true, preview: "analytics" },
+  { key: "gateway.pro.bullet.export", tipKey: "gateway.tip.export", included: true, preview: "export" },
 ];
 
 const BILLING_LABEL_KEY: Record<ProBillingInterval, TranslationKey> = {
@@ -63,6 +76,40 @@ const BILLING_LABEL_KEY: Record<ProBillingInterval, TranslationKey> = {
   six_months: "gateway.billing.sixMonths",
   yearly: "gateway.billing.yearly",
 };
+
+function FeaturePreviewThumb({ id }: { id: FeaturePreviewId }) {
+  const label =
+    id === "platforms"
+      ? "منصات"
+      : id === "commands"
+        ? "!cmd"
+        : id === "timers"
+          ? "⏱"
+          : id === "widgets"
+            ? "OBS"
+            : id === "linkInBio"
+              ? "bio"
+              : id === "analytics"
+                ? "↗"
+                : id === "emoteRain"
+                  ? "✦"
+                  : id === "export"
+                    ? "JSON"
+                    : "Pro";
+  return (
+    <div
+      className="relative mt-2 h-20 w-full overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950"
+      aria-hidden
+    >
+      <div className="absolute inset-x-3 top-3 h-2 rounded-full bg-[#bee1fc]/35" />
+      <div className="absolute inset-x-3 top-7 h-2 w-2/3 rounded-full bg-white/15" />
+      <div className="absolute bottom-3 end-3 grid size-8 place-items-center rounded-md border border-[#bee1fc]/30 bg-[#bee1fc]/15 text-[0.62rem] font-bold text-[#bee1fc]">
+        {label}
+      </div>
+      <div className="absolute bottom-3 start-3 size-8 rounded-md bg-white/10" />
+    </div>
+  );
+}
 
 function FeatureList({ items }: { items: Bullet[] }) {
   const { t } = useLanguage();
@@ -85,9 +132,27 @@ function FeatureList({ items }: { items: Bullet[] }) {
               <X className="size-2.5 stroke-[2.75]" />
             )}
           </span>
-          <span className={item.included ? "text-zinc-100" : "text-zinc-500"}>
+          <span className={cn("min-w-0 flex-1", item.included ? "text-zinc-100" : "text-zinc-500")}>
             {t(item.key)}
           </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border border-zinc-700 bg-zinc-900 text-[0.58rem] font-bold text-zinc-400 transition-colors hover:border-[#bee1fc]/50 hover:text-[#bee1fc]"
+                aria-label={t(item.tipKey)}
+              >
+                <Info className="size-2.5" aria-hidden />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="max-w-[16rem] border border-zinc-700 bg-zinc-950 p-3 text-start text-[0.72rem] leading-relaxed text-zinc-100 shadow-xl"
+            >
+              <p>{t(item.tipKey)}</p>
+              <FeaturePreviewThumb id={item.preview} />
+            </TooltipContent>
+          </Tooltip>
         </li>
       ))}
     </ul>
@@ -192,62 +257,40 @@ function PurchaseTypeSelector({
   onChange: (next: ProPurchaseType) => void;
 }) {
   const { t } = useLanguage();
-  const options: Array<{
-    id: ProPurchaseType;
-    label: TranslationKey;
-    hint: TranslationKey;
-    icon: LucideIcon;
-  }> = [
-    {
-      id: "direct",
-      label: "gateway.purchaseType.direct",
-      hint: "gateway.purchaseType.directHint",
-      icon: UserRoundCheck,
-    },
-    {
-      id: "gift",
-      label: "gateway.purchaseType.gift",
-      hint: "gateway.purchaseType.giftHint",
-      icon: Gift,
-    },
+  /** In RTL, first item sits on the right (activate) and second on the left (gift). */
+  const options: Array<{ id: ProPurchaseType; label: TranslationKey; icon: LucideIcon }> = [
+    { id: "direct", label: "gateway.purchaseType.direct", icon: UserRoundCheck },
+    { id: "gift", label: "gateway.purchaseType.gift", icon: Gift },
   ];
 
   return (
-    <div className="mt-3 space-y-1.5">
-      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-        {t("gateway.purchaseType.label")}
-      </p>
-      <div
-        role="tablist"
-        aria-label={t("gateway.purchaseType.label")}
-        className="grid grid-cols-2 gap-1.5"
-      >
-        {options.map((option) => {
-          const active = value === option.id;
-          const Icon = option.icon;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onChange(option.id)}
-              className={cn(
-                "flex flex-col items-start gap-1 rounded-lg border px-2.5 py-2 text-start transition-colors",
-                active
-                  ? "border-primary/50 bg-primary/15 text-zinc-50"
-                  : "border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200",
-              )}
-            >
-              <span className="inline-flex items-center gap-1.5 text-[0.72rem] font-semibold leading-tight">
-                <Icon className="size-3.5 shrink-0 opacity-90" aria-hidden />
-                {t(option.label)}
-              </span>
-              <span className="text-[0.62rem] leading-snug opacity-80">{t(option.hint)}</span>
-            </button>
-          );
-        })}
-      </div>
+    <div
+      role="tablist"
+      aria-label={t("gateway.purchaseType.label")}
+      className="grid grid-cols-2 gap-1 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1"
+    >
+      {options.map((option) => {
+        const active = value === option.id;
+        const Icon = option.icon;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(option.id)}
+            className={cn(
+              "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[0.68rem] font-semibold transition-colors sm:text-[0.72rem]",
+              active
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
+            )}
+          >
+            <Icon className="size-3.5 shrink-0 opacity-90" aria-hidden />
+            <span className="truncate">{t(option.label)}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -266,7 +309,7 @@ function GiftFields({
   const { t } = useLanguage();
   return (
     <div
-      className="mt-2.5 space-y-2 overflow-hidden rounded-lg border border-zinc-800/90 bg-zinc-950/60 p-2.5"
+      className="mt-0 space-y-2 overflow-hidden rounded-lg border border-zinc-800/90 bg-zinc-950/60 p-2.5"
       data-gift-fields
     >
       <div className="space-y-1">
@@ -375,15 +418,6 @@ function ProPlanCard({
       </div>
 
       <ProBillingSelector value={billing} onChange={onBillingChange} />
-      <PurchaseTypeSelector value={purchaseType} onChange={onPurchaseTypeChange} />
-      {purchaseType === "gift" ? (
-        <GiftFields
-          recipientEmail={giftRecipientEmail}
-          giftMessage={giftMessage}
-          onRecipientChange={onGiftRecipientChange}
-          onMessageChange={onGiftMessageChange}
-        />
-      ) : null}
 
       <p className="mt-2 line-clamp-2 text-[0.78rem] leading-relaxed text-zinc-400">{description}</p>
 
@@ -391,21 +425,32 @@ function ProPlanCard({
         <FeatureList items={features} />
       </div>
 
-      <Button
-        type="button"
-        variant="default"
-        onClick={onUnlock}
-        className="mt-4 h-9 w-full text-[0.82rem] font-semibold shadow-[0_14px_36px_-16px_oklch(0.541_0.247_293_/_0.8)]"
-        data-tier="pro"
-        data-billing-interval={option.id}
-        data-amount={option.amount}
-        data-currency={option.currency}
-        data-months={option.months}
-        data-purchase-type={purchaseType}
-      >
-        {cta}
-        <ChevronRight className="size-3.5 opacity-70 rtl:rotate-180" aria-hidden />
-      </Button>
+      <div className="mt-4 space-y-2.5">
+        {purchaseType === "gift" ? (
+          <GiftFields
+            recipientEmail={giftRecipientEmail}
+            giftMessage={giftMessage}
+            onRecipientChange={onGiftRecipientChange}
+            onMessageChange={onGiftMessageChange}
+          />
+        ) : null}
+        <PurchaseTypeSelector value={purchaseType} onChange={onPurchaseTypeChange} />
+        <Button
+          type="button"
+          variant="default"
+          onClick={onUnlock}
+          className="h-9 w-full text-[0.82rem] font-semibold shadow-[0_14px_36px_-16px_oklch(0.541_0.247_293_/_0.8)]"
+          data-tier="pro"
+          data-billing-interval={option.id}
+          data-amount={option.amount}
+          data-currency={option.currency}
+          data-months={option.months}
+          data-purchase-type={purchaseType}
+        >
+          {cta}
+          <ChevronRight className="size-3.5 opacity-70 rtl:rotate-180" aria-hidden />
+        </Button>
+      </div>
     </article>
   );
 }
@@ -416,10 +461,16 @@ function isOptionalEmailValid(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }
 
-export function GatewayPage() {
+export function GatewayPlansPanel({
+  onContinueFree,
+  className,
+}: {
+  onContinueFree?: () => void;
+  className?: string;
+} = {}) {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const { user } = useRouteContext({ from: "/_authenticated" });
+  const navigate = useNavigate();
   const [compareOpen, setCompareOpen] = useState(false);
   const [proBilling, setProBilling] = useState<ProBillingInterval>(DEFAULT_PRO_BILLING);
   const [purchaseType, setPurchaseType] = useState<ProPurchaseType>("direct");
@@ -430,6 +481,8 @@ export function GatewayPage() {
     markGatewayCompleted();
     void navigate({ to: "/dashboard" });
   };
+
+  const continueFree = onContinueFree ?? goDashboard;
 
   const unlockPro = () => {
     if (purchaseType === "gift" && !isOptionalEmailValid(giftRecipientEmail)) {
@@ -472,6 +525,75 @@ export function GatewayPage() {
     purchaseType === "direct" ? t("gateway.pro.ctaDirect") : t("gateway.pro.ctaGift");
 
   return (
+    <TooltipProvider delayDuration={120}>
+      <div className={cn("flex w-full flex-col", className)}>
+        <section
+          className="grid min-h-0 items-stretch gap-3 sm:grid-cols-2 sm:gap-4"
+          aria-label={t("gateway.plansLabel")}
+        >
+          <FreePlanCard
+            title={t("gateway.free.name")}
+            price={PLAN_PRICES.free.label}
+            period={t("gateway.price.period")}
+            description={t("gateway.free.description")}
+            features={FREE_FEATURES}
+            cta={t("gateway.free.cta")}
+            onCta={continueFree}
+          />
+          <ProPlanCard
+            badge={t("gateway.pro.badge")}
+            title={t("gateway.pro.name")}
+            description={t("gateway.pro.description")}
+            features={PRO_FEATURES}
+            cta={unlockCta}
+            billing={proBilling}
+            onBillingChange={setProBilling}
+            purchaseType={purchaseType}
+            onPurchaseTypeChange={setPurchaseType}
+            giftRecipientEmail={giftRecipientEmail}
+            giftMessage={giftMessage}
+            onGiftRecipientChange={setGiftRecipientEmail}
+            onGiftMessageChange={setGiftMessage}
+            onUnlock={unlockPro}
+          />
+        </section>
+
+        <div className="my-3 flex shrink-0 items-center gap-3 sm:my-4" role="presentation">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-700 to-transparent" />
+          <button
+            type="button"
+            onClick={() => setCompareOpen(true)}
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[0.75rem] font-medium text-zinc-400 transition-colors hover:border-primary/40 hover:bg-zinc-900 hover:text-zinc-100"
+          >
+            <Table2 className="size-3 text-primary transition-transform group-hover:scale-105" aria-hidden />
+            {t("gateway.compare.open")}
+          </button>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-700 to-transparent" />
+        </div>
+
+        <RedeemCodeSection
+          id="gateway-redeem"
+          className="mx-auto w-full max-w-lg shrink-0"
+          compact
+          onActivated={goDashboard}
+        />
+
+        <PlanCompareDialog open={compareOpen} onOpenChange={setCompareOpen} />
+      </div>
+    </TooltipProvider>
+  );
+}
+
+export function GatewayPage() {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  const goDashboard = () => {
+    markGatewayCompleted();
+    void navigate({ to: "/dashboard" });
+  };
+
+  return (
     <main className="relative h-dvh overflow-hidden bg-charcoal text-foreground">
       <div
         className="pointer-events-none absolute inset-0"
@@ -512,7 +634,7 @@ export function GatewayPage() {
                     variant={platform.id === "kick" ? "Black" : "White"}
                     className="size-3"
                   />
-                  {platform.label}
+                  {t(platform.labelKey)}
                 </li>
               ))}
               <li className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-primary">
@@ -522,59 +644,10 @@ export function GatewayPage() {
           </div>
         </header>
 
-        <section
-          className="mt-4 grid min-h-0 shrink items-stretch gap-3 overflow-y-auto sm:mt-5 sm:grid-cols-2 sm:gap-4"
-          aria-label={t("gateway.plansLabel")}
-        >
-          <FreePlanCard
-            title={t("gateway.free.name")}
-            price={PLAN_PRICES.free.label}
-            period={t("gateway.price.period")}
-            description={t("gateway.free.description")}
-            features={FREE_FEATURES}
-            cta={t("gateway.free.cta")}
-            onCta={goDashboard}
-          />
-          <ProPlanCard
-            badge={t("gateway.pro.badge")}
-            title={t("gateway.pro.name")}
-            description={t("gateway.pro.description")}
-            features={PRO_FEATURES}
-            cta={unlockCta}
-            billing={proBilling}
-            onBillingChange={setProBilling}
-            purchaseType={purchaseType}
-            onPurchaseTypeChange={setPurchaseType}
-            giftRecipientEmail={giftRecipientEmail}
-            giftMessage={giftMessage}
-            onGiftRecipientChange={setGiftRecipientEmail}
-            onGiftMessageChange={setGiftMessage}
-            onUnlock={unlockPro}
-          />
-        </section>
-
-        <div className="my-3 flex shrink-0 items-center gap-3 sm:my-4" role="presentation">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-700 to-transparent" />
-          <button
-            type="button"
-            onClick={() => setCompareOpen(true)}
-            className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-[0.75rem] font-medium text-zinc-400 transition-colors hover:border-primary/40 hover:bg-zinc-900 hover:text-zinc-100"
-          >
-            <Table2 className="size-3 text-primary transition-transform group-hover:scale-105" aria-hidden />
-            {t("gateway.compare.open")}
-          </button>
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-700 to-transparent" />
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto sm:mt-5">
+          <GatewayPlansPanel onContinueFree={goDashboard} />
         </div>
-
-        <RedeemCodeSection
-          id="gateway-redeem"
-          className="mx-auto w-full max-w-lg shrink-0"
-          compact
-          onActivated={goDashboard}
-        />
       </div>
-
-      <PlanCompareDialog open={compareOpen} onOpenChange={setCompareOpen} />
     </main>
   );
 }

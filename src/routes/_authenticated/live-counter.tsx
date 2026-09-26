@@ -256,11 +256,11 @@ function PlatformSelect({
   const { t } = useLanguage();
   const platforms: { id: CounterPlatform; label: string; comingSoon?: boolean }[] = [
     { id: "ALL", label: t("counter.platform.all") },
-    { id: "KICK", label: "Kick" },
-    { id: "TWITCH", label: "Twitch" },
-    { id: "X", label: t("counter.platform.xTwitter") },
+    { id: "KICK", label: t("counter.platform.kick") },
+    { id: "TWITCH", label: t("counter.platform.twitch") },
+    { id: "YOUTUBE", label: t("counter.platform.youtube") },
     { id: "TIKTOK", label: t("counter.platform.tiktokSoon"), comingSoon: true },
-    { id: "YOUTUBE", label: "YouTube" },
+    { id: "X", label: t("counter.platform.xTwitter") },
   ];
 
   return (
@@ -762,11 +762,11 @@ function SocialCounterSection() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const socialPlatforms: { id: Exclude<CounterPlatform, "ALL">; label: string; comingSoon?: boolean }[] = [
-    { id: "KICK", label: "Kick" },
-    { id: "TWITCH", label: "Twitch" },
-    { id: "X", label: "X" },
+    { id: "KICK", label: t("counter.platform.kick") },
+    { id: "TWITCH", label: t("counter.platform.twitch") },
+    { id: "YOUTUBE", label: t("counter.platform.youtube") },
     { id: "TIKTOK", label: t("counter.platform.tiktokSoon"), comingSoon: true },
-    { id: "YOUTUBE", label: "YouTube" },
+    { id: "X", label: t("counter.platform.xTwitter") },
   ];
 
   useEffect(() => {

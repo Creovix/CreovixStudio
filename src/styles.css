@@ -781,3 +781,19 @@ textarea::placeholder {
   .hub-eq-bar { transform: scaleY(0.55); }
   .hub-tappers-row { transition: none; }
 }
+
+/* Native date/datetime pickers — dark theme */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  color-scheme: dark;
+  background-color: oklch(0.18 0.01 260);
+  color: oklch(0.95 0 0);
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  opacity: 0.75;
+  cursor: pointer;
+}

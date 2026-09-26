@@ -28,6 +28,7 @@ import { Route as AuthenticatedMarkPointsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMediaRequestsRouteImport } from './routes/_authenticated/media-requests'
 import { Route as AuthenticatedScheduleRouteImport } from './routes/_authenticated/schedule'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BioSlugRouteImport } from './routes/bio.$slug'
@@ -179,6 +180,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSubscriptionRoute =
+  AuthenticatedSubscriptionRouteImport.update({
+    id: '/subscription',
+    path: '/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -482,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/media-requests': typeof AuthenticatedMediaRequestsRoute
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bio/$slug': typeof BioSlugRoute
@@ -553,6 +561,7 @@ export interface FileRoutesByTo {
   '/media-requests': typeof AuthenticatedMediaRequestsRoute
   '/schedule': typeof AuthenticatedScheduleRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bio/$slug': typeof BioSlugRoute
@@ -625,6 +634,7 @@ export interface FileRoutesById {
   '/_authenticated/media-requests': typeof AuthenticatedMediaRequestsRoute
   '/_authenticated/schedule': typeof AuthenticatedScheduleRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bio/$slug': typeof BioSlugRoute
@@ -698,6 +708,7 @@ export interface FileRouteTypes {
     | '/media-requests'
     | '/schedule'
     | '/settings'
+    | '/subscription'
     | '/welcome'
     | '/auth/callback'
     | '/bio/$slug'
@@ -769,6 +780,7 @@ export interface FileRouteTypes {
     | '/media-requests'
     | '/schedule'
     | '/settings'
+    | '/subscription'
     | '/welcome'
     | '/auth/callback'
     | '/bio/$slug'
@@ -840,6 +852,7 @@ export interface FileRouteTypes {
     | '/_authenticated/media-requests'
     | '/_authenticated/schedule'
     | '/_authenticated/settings'
+    | '/_authenticated/subscription'
     | '/_authenticated/welcome'
     | '/auth/callback'
     | '/bio/$slug'
@@ -1075,6 +1088,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/subscription': {
+      id: '/_authenticated/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/welcome': {
@@ -1475,6 +1495,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMediaRequestsRoute: typeof AuthenticatedMediaRequestsRoute
   AuthenticatedScheduleRoute: typeof AuthenticatedScheduleRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedWidgetsWidgetIdRoute: typeof AuthenticatedWidgetsWidgetIdRouteWithChildren
   AuthenticatedWidgetsIndexRoute: typeof AuthenticatedWidgetsIndexRoute
@@ -1497,6 +1518,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMediaRequestsRoute: AuthenticatedMediaRequestsRoute,
   AuthenticatedScheduleRoute: AuthenticatedScheduleRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedWidgetsWidgetIdRoute:
     AuthenticatedWidgetsWidgetIdRouteWithChildren,

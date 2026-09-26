@@ -4,12 +4,12 @@ export type PlatformFilter = "ALL" | PlatformId;
 
 export const PLATFORM_META: Record<
   PlatformId,
-  { color: string; label: { en: string } }
+  { color: string; label: { en: string; ar: string } }
 > = {
-  KICK: { color: "#53FC18", label: { en: "Kick" } },
-  TWITCH: { color: "#9146FF", label: { en: "Twitch" } },
-  YOUTUBE: { color: "#FF0000", label: { en: "YouTube" } },
-  TIKTOK: { color: "#25F4EE", label: { en: "TikTok" } },
+  KICK: { color: "#53FC18", label: { en: "Kick", ar: "كيك" } },
+  TWITCH: { color: "#9146FF", label: { en: "Twitch", ar: "تويتش" } },
+  YOUTUBE: { color: "#FF0000", label: { en: "YouTube", ar: "يوتيوب" } },
+  TIKTOK: { color: "#25F4EE", label: { en: "TikTok", ar: "تيك توك" } },
 };
 
 /** Hub-only platform mark: a small color dot (TikTok is black / cyan on one circle). */
