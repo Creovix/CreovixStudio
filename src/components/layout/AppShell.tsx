@@ -239,7 +239,7 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           </nav>
 
           <div className="mt-auto space-y-2 border-t border-white/10 px-2 py-3">
-            <div ref={profileRef} className="relative" dir="ltr">
+            <div ref={profileRef} className="relative">
               <IconTip label={t("nav.profile")} collapsed={collapsed}>
                 <button
                   type="button"
@@ -294,24 +294,26 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                   <button
                     type="button"
                     role="menuitem"
+                    dir="rtl"
                     onClick={() => {
                       setProfileOpen(false);
                       navigate({ to: "/settings" });
                     }}
-                    className={`${menuItem} text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground`}
+                    className={`${menuItem} flex-row text-muted-foreground hover:bg-[oklch(1_0_0/0.06)] hover:text-foreground`}
                   >
-                    <Settings className="size-4" aria-hidden />
-                    {t("nav.settings")}
+                    <Settings className="size-4 shrink-0" aria-hidden />
+                    <span className="min-w-0 flex-1 text-start">{t("nav.settings")}</span>
                   </button>
                   <div className="my-1 border-t border-[rgba(255,255,255,0.08)]" />
                   <button
                     type="button"
                     role="menuitem"
+                    dir="rtl"
                     onClick={() => void signOut()}
-                    className={`${menuItem} text-red-500 hover:bg-[rgba(239,68,68,0.15)]`}
+                    className={`${menuItem} flex-row text-red-500 hover:bg-[rgba(239,68,68,0.15)]`}
                   >
-                    <LogOut className="size-4" aria-hidden />
-                    {t("nav.signOut")}
+                    <LogOut className="size-4 shrink-0" aria-hidden />
+                    <span className="min-w-0 flex-1 text-start">{t("nav.signOut")}</span>
                   </button>
                 </div>
               ) : null}
