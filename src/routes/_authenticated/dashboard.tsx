@@ -19,7 +19,6 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { SaudiBusinessSeal } from "@/components/brand/SaudiBusinessSeal";
 import { DeleteWidgetDialog } from "@/components/widgets/DeleteWidgetDialog";
-import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase/client";
 import { ToolCard } from "@/components/hub/ToolCard";
@@ -283,7 +282,6 @@ function HomePage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [goalModal, setGoalModal] = useState(false);
-  const [redeemModal, setRedeemModal] = useState(false);
   const [goalType, setGoalType] = useState<GoalTypeId>(DEFAULT_GOAL_TYPE);
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -358,7 +356,7 @@ function HomePage() {
   const open = async (tool: Tool) => {
     if (tool.comingSoon) return;
     if (toolLocked(tool)) {
-      setRedeemModal(true);
+      await navigate({ to: "/subscription" });
       return;
     }
     if (tool.id === "custom-goal") {
@@ -437,7 +435,7 @@ function HomePage() {
           </div>
           <button
             type="button"
-            onClick={() => setRedeemModal(true)}
+            onClick={() => void navigate({ to: "/subscription" })}
             className="ms-auto rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             {t("home.unlockPro")}
@@ -685,8 +683,6 @@ function HomePage() {
           onConfirm={() => void confirmDelete()}
         />
       ) : null}
-
-      {redeemModal ? <RedeemCodeModal onClose={() => setRedeemModal(false)} /> : null}
     </AppShell>
   );
 }

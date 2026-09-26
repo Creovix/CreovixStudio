@@ -77,7 +77,16 @@ export function ToolCard({
           {preview}
         </div>
         {previewLocked ? (
-          <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">
+          <button
+            type="button"
+            onClick={() => {
+              if (comingSoon) return;
+              onOpen();
+            }}
+            disabled={comingSoon}
+            className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px] disabled:cursor-not-allowed"
+            aria-label={overlayLabel}
+          >
             <span
               className="flex items-center gap-1.5 rounded-full border border-[oklch(1_0_0/0.14)] px-3 py-1.5 text-[0.66rem] font-semibold text-foreground"
               style={{ background: "rgba(10, 10, 10, 0.85)" }}
@@ -85,7 +94,7 @@ export function ToolCard({
               <Lock className="size-3.5 text-primary" aria-hidden />
               {overlayLabel}
             </span>
-          </div>
+          </button>
         ) : null}
       </div>
 

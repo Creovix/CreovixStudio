@@ -54,9 +54,9 @@ const DICT = {
     "الأدوات الأساسية متاحة. فعّل رمزاً لفتح Pro يشمل السحب وطلبات الأغاني وجدول فعاليات البث ومطر الإيموتات.",
   "home.proGate.title": "فتح Pro",
   "home.proGate.body":
-    "هذه الميزة ضمن خطة Pro. أدخل رمز الترخيص لتفعيلها وتخصيصها ونسخ رابط OBS.",
+    "هذه الميزة ضمن خطة Pro. انتقل إلى صفحة الاشتراك للترقية أو تفعيل رمز.",
   "home.proGate.home": "الرئيسية",
-  "home.proGate.activate": "تفعيل الرمز",
+  "home.proGate.activate": "فتح الاشتراك",
   "home.status.live": "مباشر",
   "home.status.paused": "متوقف",
   "home.status.ready": "جاهز",

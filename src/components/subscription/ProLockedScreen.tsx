@@ -1,8 +1,7 @@
 import { Lock } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import { RedeemCodeModal } from "@/components/subscription/RedeemCodeModal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useLanguage } from "@/lib/i18n";
 
@@ -10,7 +9,6 @@ import { useLanguage } from "@/lib/i18n";
 export function ProLockedScreen() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [redeem, setRedeem] = useState(false);
 
   return (
     <div className="ambient-field min-h-screen bg-background px-4 py-24 text-foreground" dir="rtl" lang="ar">
@@ -23,21 +21,20 @@ export function ProLockedScreen() {
         <div className="mt-6 flex justify-center gap-2">
           <button
             type="button"
-            onClick={() => navigate({ to: "/dashboard" })}
+            onClick={() => void navigate({ to: "/dashboard" })}
             className="rounded-lg border border-[oklch(1_0_0/0.1)] px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
           >
             {t("home.proGate.home")}
           </button>
           <button
             type="button"
-            onClick={() => setRedeem(true)}
+            onClick={() => void navigate({ to: "/subscription" })}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
-            {t("home.proGate.activate")}
+            {t("home.unlockPro")}
           </button>
         </div>
       </div>
-      {redeem ? <RedeemCodeModal onClose={() => setRedeem(false)} /> : null}
     </div>
   );
 }
