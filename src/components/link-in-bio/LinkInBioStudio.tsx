@@ -4,6 +4,7 @@ import { LinkInBioDashboard } from "@/components/link-in-bio/LinkInBioDashboard"
 import { LinkInBioWizard } from "@/components/link-in-bio/wizard";
 import { AppShell } from "@/components/layout/AppShell";
 import { useLinkInBioDraft } from "@/hooks/useLinkInBioDraft";
+import { useLanguage } from "@/lib/i18n";
 
 export function LinkInBioStudio({
   userId,
@@ -18,6 +19,7 @@ export function LinkInBioStudio({
   forceSetup: boolean;
   step?: number;
 }) {
+  const { t } = useLanguage();
   const draft = useLinkInBioDraft(userId);
   const navigate = useNavigate();
   const goDashboard = () => {
@@ -32,7 +34,7 @@ export function LinkInBioStudio({
       <div className="grid min-h-dvh place-items-center px-6 text-sm text-muted-foreground">
         <div className="flex flex-col items-center gap-3">
           <span className="size-2 animate-pulse rounded-full bg-muted-foreground/60" aria-hidden />
-          Loading your page…
+          {t("linkInBio.loading")}
         </div>
       </div>
     );
@@ -54,8 +56,8 @@ export function LinkInBioStudio({
     <AppShell
       user={user}
       profile={workspaceProfile}
-      title="Link in Bio"
-      subtitle="Your public page. Click the preview or Replay setup to go through the guided flow again."
+      title={t("linkInBio.title")}
+      subtitle={t("linkInBio.subtitle")}
     >
       <LinkInBioDashboard draft={draft} onReplay={() => goSetup(1)} />
     </AppShell>

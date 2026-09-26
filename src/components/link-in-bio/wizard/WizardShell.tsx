@@ -2,15 +2,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { LinkInBioPage } from "@/components/link-in-bio/LinkInBioPage";
 import { useWizard } from "@/components/link-in-bio/wizard/WizardProvider";
-import { MOTION_CSS, WIZARD_COPY, wizardUi } from "@/components/link-in-bio/wizard/wizardTokens";
+import { getWizardCopy, MOTION_CSS, wizardUi } from "@/components/link-in-bio/wizard/wizardTokens";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n";
 import { applyBentoPlacement, publicBioPath } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
 
 export function WizardShell({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage();
   const { step, total, goBack, goNext, canProceed, canExit, onExit, finish, saving, draft, focusId, setFocusId } =
     useWizard();
-  const meta = WIZARD_COPY[step - 1];
+  const wizardCopy = getWizardCopy(t);
+  const meta = wizardCopy[step - 1];
   const fillForm = step === 2 || step === 3;
   const arrange = step === 4;
 
@@ -19,14 +22,14 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
       <style>{MOTION_CSS}</style>
 
       <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-4 py-3 sm:px-5 md:px-8">
-        <p className="truncate text-[0.72rem] uppercase tracking-[0.2em] text-white/38">CylixStudio · Link in Bio</p>
+        <p className="truncate text-[0.72rem] uppercase tracking-[0.2em] text-white/38">{t("linkInBio.wizard.brandBar")}</p>
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-sm tabular-nums text-white/40">
             {step} / {total}
           </span>
           {canExit ? (
             <button type="button" className="min-h-10 text-sm text-white/60 hover:text-white" onClick={onExit}>
-              Back to studio
+              {t("linkInBio.wizard.backToStudio")}
             </button>
           ) : null}
         </div>
@@ -99,18 +102,18 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex w-full max-w-[110rem] items-center justify-between gap-3">
           <Button type="button" variant="ghost" className="min-h-11" disabled={step === 1} onClick={goBack}>
             <ChevronLeft className="size-4 rtl:rotate-180" />
-            Back
+            {t("linkInBio.wizard.back")}
           </Button>
           {arrange ? (
             <div className="hidden min-w-0 flex-1 text-center sm:block">
               <p className="truncate text-sm text-white/70" dir="auto">
-                {draft.profile.slug ? publicBioPath(draft.profile.slug) : "Add a username to publish"}
+                {draft.profile.slug ? publicBioPath(draft.profile.slug) : t("linkInBio.wizard.addUsernameToPublish")}
               </p>
-            <p className="mt-0.5 text-[0.68rem] text-white/38">Drag to move. Drag edges or corners to resize, then publish.</p>
+            <p className="mt-0.5 text-[0.68rem] text-white/38">{t("linkInBio.wizard.arrangeFooterHint")}</p>
             </div>
           ) : (
             <ol className="hidden flex-1 gap-1 sm:flex">
-              {WIZARD_COPY.map((item, index) => (
+              {wizardCopy.map((item, index) => (
                 <li
                   key={item.title}
                   className={cn(
@@ -124,12 +127,12 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
           <div className="flex gap-2 sm:gap-3">
             {step !== 1 && step !== 4 ? (
               <Button type="button" variant="ghost" className={cn(wizardUi.ctaQuiet, "min-h-11")} onClick={() => void goNext()}>
-                Skip
+                {t("linkInBio.wizard.skip")}
               </Button>
             ) : null}
             {step < total ? (
               <Button type="button" className={cn(wizardUi.ctaPrimary, "min-h-11")} onClick={() => void goNext()} disabled={!canProceed || saving}>
-                Next
+                {t("linkInBio.wizard.next")}
                 <ChevronRight className="size-4 rtl:rotate-180" />
               </Button>
             ) : (
@@ -141,7 +144,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                   onClick={() => void finish(false)}
                   disabled={saving}
                 >
-                  Enter studio
+                  {t("linkInBio.wizard.enterStudio")}
                 </Button>
                 <Button
                   type="button"
@@ -149,7 +152,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                   onClick={() => void finish(true)}
                   disabled={!draft.profile.slug || saving}
                 >
-                  Publish
+                  {t("linkInBio.wizard.publish")}
                 </Button>
               </>
             )}

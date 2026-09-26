@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { FREE_PLAN_LIMITS } from "@/lib/plans";
 import {
   COMMAND_ROLES,
@@ -123,113 +123,109 @@ export const Route = createFileRoute("/_authenticated/custom-commands")({
   component: CustomCommandsPage,
 });
 
-const COPY = {
-    title: "Custom Chat Commands",
-    subtitle: "Create chat triggers and automatic replies for your stream.",
-    prefixTitle: "Command trigger",
-    prefixHint:
-      "Choose how viewers fire commands: a symbol before the word (!hello), a question mark after it (hello? or سؤال؟), or the word alone.",
-    none: "No symbol (direct)",
-    savePrefix: "Save trigger",
-    add: "Add command",
-    emptyTitle: "No commands yet",
-    empty: "Create a chat trigger and auto-reply so viewers get instant answers.",
-    createFirst: "Create first command",
-    name: "Command",
-    reply: "Auto-reply",
-    platform: "Platforms",
-    status: "Status",
-    on: "On",
-    off: "Off",
-    edit: "Edit",
-    delete: "Delete",
-    modalCreate: "New command",
-    modalEdit: "Edit command",
-    modalHint: "Viewers type the trigger in chat and the bot sends your reply.",
-    nameLabel: "Command name",
-    namePlaceholder: "discord",
-    prefixLabel: "Where the symbol goes",
-    inherit: "Use default",
-    suffixAuto: "Arabic letters use ؟ and English letters use ? automatically.",
-    testerPlaceholder: "hello?",
-    showVariables: "Show Variables",
-    hideVariables: "Hide Variables",
-    responseLabel: "Bot reply",
-    responsePlaceholder: "Join Discord: discord.gg/your-server",
-    platformsLabel: "Platforms",
-    rolesLabel: "Who can use it",
-    cooldown: "Cooldown (seconds)",
-    enabled: "Enabled",
-    cancel: "Cancel",
-    save: "Save command",
-    deleteTitle: "Delete this command?",
-    deleteBody: "The chat trigger will stop working immediately.",
-    previewTitle: "Trigger preview",
-    testerTitle: "Try a chat line",
-    testerHint: "Type what a viewer would send. Matching is local and does not post to chat.",
-    testerHit: "Would reply",
-    testerMiss: "No matching command",
-    howTitle: "How it works",
-    how: [
-      "Pick a start symbol (! or #), an ending question mark (? ؟), or no symbol.",
-      "Add a command name and the message the bot should send.",
-      "Choose Kick, Twitch, or both, then enable the command.",
-    ],
-    errName: "Enter a command name.",
-    errReply: "Enter a reply message.",
-    errDup: "That command name already exists.",
-    errSave: "Could not save the command.",
-    saved: "Saved",
-    prefixSaved: "Default trigger saved",
-    search: "Search commands…",
-    filters: "Filters",
-    filterAll: "All",
-    filterRoles: "User Roles",
-    filterDisabled: "Disabled",
-    filterNone: "No commands match.",
-    loadMore: "Load More",
-    tabDefaults: "Default Commands",
-    tabCommands: "Custom Commands",
-    tabTimers: "Message Timers",
-    defaultSubtitle: "Built-in Kick chat commands. Edit the reply — the trigger stays reserved.",
-    defaultHint: "Customize the bot reply. The trigger name cannot be changed.",
-    defaultVars: "Variables: {user}  {command}  {target}  {list}  {followage}",
-    defaultHowTitle: "How it works",
-    defaultHow: [
-      "These five commands are always listed. Enable the ones you want in Kick chat.",
-      "Edit the reply template. The trigger (!commands, !lurk, …) cannot be renamed.",
-      "Kick sends the reply. Twitch is stored as a flag only. !clip is never taken.",
-    ],
-    defaultSave: "Save command",
-    fallbackLabel: "Fallback reply",
-    errReserved: "That name is reserved for a default command.",
-    errFreeCommands: `Free plan allows up to ${FREE_PLAN_LIMITS.customCommands} custom commands. Upgrade to Pro in Settings to add more.`,
-    errFreeTimers: `Free plan allows up to ${FREE_PLAN_LIMITS.messageTimers} message timers. Upgrade to Pro in Settings to add more.`,
-    timerSubtitle: "Repeating Kick chat messages on an interval.",
-    addTimer: "Add timer",
-    timerEmpty: "No timers yet. Add one to post a repeating Kick chat message.",
-    timerModalCreate: "New timer",
-    timerModalEdit: "Edit timer",
-    timerHint: "The bot posts this message on Kick every N minutes while Studio stays open.",
-    timerMessage: "Message",
-    timerMessagePlaceholder: "Follow the stream and drink water.",
-    timerInterval: "Interval (minutes)",
-    timerEveryPrefix: "every",
-    timerMinutesUnit: "min",
-    timerSave: "Save timer",
-    timerDeleteTitle: "Delete this timer?",
-    timerDeleteBody: "The repeating message will stop immediately.",
-    errTimerMessage: "Enter a message.",
-    errTimerSave: "Could not save the timer.",
-    timerHowTitle: "How it works",
-    timerHow: [
-      "Write the message and how often it should post (minutes).",
-      "Enable it. The bot sends to Kick while this Studio page is open.",
-      "There is no server cron and Twitch is not sent.",
-    ],
-  } as const;
+function buildCommandsCopy(t: ReturnType<typeof useLanguage>["t"]) {
+  return {
+    title: t("commands.title"),
+    subtitle: t("commands.subtitle"),
+    prefixTitle: t("commands.prefixTitle"),
+    prefixHint: t("commands.prefixHint"),
+    none: t("commands.none"),
+    savePrefix: t("commands.savePrefix"),
+    add: t("commands.add"),
+    emptyTitle: t("commands.emptyTitle"),
+    empty: t("commands.empty"),
+    createFirst: t("commands.createFirst"),
+    name: t("commands.name"),
+    reply: t("commands.reply"),
+    platform: t("commands.platform"),
+    status: t("commands.status"),
+    on: t("common.on"),
+    off: t("common.off"),
+    edit: t("common.edit"),
+    delete: t("common.delete"),
+    modalCreate: t("commands.modalCreate"),
+    modalEdit: t("commands.modalEdit"),
+    modalHint: t("commands.modalHint"),
+    nameLabel: t("commands.nameLabel"),
+    namePlaceholder: t("commands.namePlaceholder"),
+    prefixLabel: t("commands.prefixLabel"),
+    inherit: t("commands.inherit"),
+    suffixAuto: t("commands.suffixAuto"),
+    testerPlaceholder: t("commands.testerPlaceholder"),
+    showVariables: t("commands.showVariables"),
+    hideVariables: t("commands.hideVariables"),
+    responseLabel: t("commands.responseLabel"),
+    responsePlaceholder: t("commands.responsePlaceholder"),
+    platformsLabel: t("commands.platformsLabel"),
+    rolesLabel: t("commands.rolesLabel"),
+    cooldown: t("commands.cooldown"),
+    enabled: t("common.enabled"),
+    cancel: t("common.cancel"),
+    save: t("commands.save"),
+    deleteTitle: t("commands.deleteTitle"),
+    deleteBody: t("commands.deleteBody"),
+    previewTitle: t("commands.previewTitle"),
+    testerTitle: t("commands.testerTitle"),
+    testerHint: t("commands.testerHint"),
+    testerHit: t("commands.testerHit"),
+    testerMiss: t("commands.testerMiss"),
+    howTitle: t("common.howItWorks"),
+    how: [t("commands.how1"), t("commands.how2"), t("commands.how3")],
+    errName: t("commands.errName"),
+    errReply: t("commands.errReply"),
+    errDup: t("commands.errDup"),
+    errSave: t("commands.errSave"),
+    saved: t("common.saved"),
+    prefixSaved: t("commands.prefixSaved"),
+    search: t("commands.search"),
+    filters: t("commands.filters"),
+    filterAll: t("commands.filterAll"),
+    filterRoles: t("commands.filterRoles"),
+    filterDisabled: t("commands.filterDisabled"),
+    filterNone: t("commands.filterNone"),
+    loadMore: t("common.loadMore"),
+    tabDefaults: t("commands.tabDefaults"),
+    tabCommands: t("commands.tabCommands"),
+    tabTimers: t("commands.tabTimers"),
+    defaultSubtitle: t("commands.defaultSubtitle"),
+    defaultHint: t("commands.defaultHint"),
+    defaultVars: t("commands.defaultVars"),
+    defaultHowTitle: t("common.howItWorks"),
+    defaultHow: [t("commands.defaultHow1"), t("commands.defaultHow2"), t("commands.defaultHow3")],
+    defaultSave: t("commands.defaultSave"),
+    fallbackLabel: t("commands.fallbackLabel"),
+    errReserved: t("commands.errReserved"),
+    errFreeCommands: t("commands.errFreeCommands", { n: FREE_PLAN_LIMITS.customCommands }),
+    errFreeTimers: t("commands.errFreeTimers", { n: FREE_PLAN_LIMITS.messageTimers }),
+    timerSubtitle: t("commands.timerSubtitle"),
+    addTimer: t("commands.addTimer"),
+    timerEmpty: t("commands.timerEmpty"),
+    timerModalCreate: t("commands.timerModalCreate"),
+    timerModalEdit: t("commands.timerModalEdit"),
+    timerHint: t("commands.timerHint"),
+    timerMessage: t("commands.timerMessage"),
+    timerMessagePlaceholder: t("commands.timerMessagePlaceholder"),
+    timerInterval: t("commands.timerInterval"),
+    timerEveryPrefix: t("commands.timerEveryPrefix"),
+    timerMinutesUnit: t("commands.timerMinutesUnit"),
+    timerSave: t("commands.timerSave"),
+    timerDeleteTitle: t("commands.timerDeleteTitle"),
+    timerDeleteBody: t("commands.timerDeleteBody"),
+    errTimerMessage: t("commands.errTimerMessage"),
+    errTimerSave: t("commands.errTimerSave"),
+    timerHowTitle: t("common.howItWorks"),
+    timerHow: [t("commands.timerHow1"), t("commands.timerHow2"), t("commands.timerHow3")],
+  };
+}
 
-type CommandsCopy = typeof COPY;
+type CommandsCopy = ReturnType<typeof buildCommandsCopy>;
+
+const ROLE_LABEL_KEY = {
+  Everyone: "commands.role.everyone",
+  Subs: "commands.role.subs",
+  VIPs: "commands.role.vips",
+  Mods: "commands.role.mods",
+} as const satisfies Record<CommandRole, TranslationKey>;
 
 const field =
   "w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(0.14_0.02_265/0.9)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-[color-mix(in_oklab,var(--primary)_55%,transparent)]";
@@ -287,12 +283,7 @@ const PLATFORMS: { id: ChatCommandPlatform; label: string }[] = [
   { id: "TWITCH", label: "Twitch" },
 ];
 
-const ROLE_FILTERS: { id: CommandRole; label: string }[] = [
-  { id: "Everyone", label: "Everyone" },
-  { id: "Subs", label: "Subscribers" },
-  { id: "VIPs", label: "VIPs" },
-  { id: "Mods", label: "Moderators & Streamer" },
-];
+const ROLE_FILTER_IDS: CommandRole[] = ["Everyone", "Subs", "VIPs", "Mods"];
 
 const FACE_GRID = "grid grid-cols-[repeat(auto-fill,190px)] justify-start gap-3";
 const FACE_ROW = "flex flex-wrap justify-start gap-3";
@@ -333,8 +324,8 @@ function CustomCommandsPage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
   const subscription = useSubscription(user.id);
-  const { lang } = useLanguage();
-  const c = COPY;
+  const { t, lang } = useLanguage();
+  const c = buildCommandsCopy(t);
   const queryClient = useQueryClient();
   const test = isTestMode();
   const isPro = Boolean(subscription.data?.isActive);
@@ -900,6 +891,7 @@ function CommandFilterMenu({
   onPlatformFilter: (value: PlatformFilter) => void;
   onRoleFilter: (value: RoleFilter) => void;
 }) {
+  const { t } = useLanguage();
   const active = statusFilter !== "all" || platformFilter !== "all" || roleFilter !== "all";
   return (
     <DropdownMenu>
@@ -952,9 +944,9 @@ function CommandFilterMenu({
           onValueChange={(value) => onRoleFilter(value as RoleFilter)}
         >
           <DropdownMenuRadioItem value="all">{copy.filterAll}</DropdownMenuRadioItem>
-          {ROLE_FILTERS.map((role) => (
-            <DropdownMenuRadioItem key={role.id} value={role.id}>
-              {role.label}
+          {ROLE_FILTER_IDS.map((id) => (
+            <DropdownMenuRadioItem key={id} value={id}>
+              {t(ROLE_LABEL_KEY[id])}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
@@ -1525,6 +1517,7 @@ function CommandEditor({
   onChange: (next: CustomChatCommandInput) => void;
   onSave: () => void;
 }) {
+  const { t } = useLanguage();
   const [showVars, setShowVars] = useState(false);
   const responseRef = useRef<HTMLTextAreaElement>(null);
   if (!draft) return null;
@@ -1745,7 +1738,7 @@ function CommandEditor({
                             : "border-[oklch(1_0_0/0.1)] text-muted-foreground",
                         )}
                       >
-                        {role}
+                        {t(ROLE_LABEL_KEY[role])}
                       </button>
                     );
                   })}

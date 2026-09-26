@@ -1,9 +1,17 @@
-export const WIZARD_COPY = [
-  { title: "Who should they meet?", hint: "Username, name, bio, and a face for the page." },
-  { title: "Set the atmosphere", hint: "Page background and typography — the rest stays at the theme defaults." },
-  { title: "Platforms and extras", hint: "Handles in one tab. Schedule, banner, and countdown in the other." },
-  { title: "Arrange, review, publish", hint: "Work on the page itself. Publish when it feels like you." },
-] as const;
+import type { TranslationKey } from "@/lib/i18n";
+
+type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
+
+export function getWizardCopy(t: Translate) {
+  return [
+    { title: t("linkInBio.wizard.step1.title"), hint: t("linkInBio.wizard.step1.hint") },
+    { title: t("linkInBio.wizard.step2.title"), hint: t("linkInBio.wizard.step2.hint") },
+    { title: t("linkInBio.wizard.step3.title"), hint: t("linkInBio.wizard.step3.hint") },
+    { title: t("linkInBio.wizard.step4.title"), hint: t("linkInBio.wizard.step4.hint") },
+  ] as const;
+}
+
+export const WIZARD_STEP_COUNT = 4;
 
 export const wizardUi = {
   label: "mb-2 block text-[0.68rem] font-medium uppercase tracking-[0.16em] text-white/40",

@@ -1,47 +1,48 @@
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export type CommandVariableGroup = {
   id: string;
-  label: string;
-  description: string;
+  labelKey: TranslationKey;
+  descriptionKey: TranslationKey;
   tags: readonly string[];
 };
 
 export const COMMAND_VARIABLE_GROUPS: readonly CommandVariableGroup[] = [
   {
     id: "sender",
-    label: "SENDER",
-    description: "The viewer who typed the command.",
+    labelKey: "commands.vars.sender.label",
+    descriptionKey: "commands.vars.sender.description",
     tags: ["{{sender.username}}", "{{sender.followers}}", "{{sender.followage}}", "{{sender.url}}"],
   },
   {
     id: "streamer",
-    label: "STREAMER",
-    description: "The channel the command ran in.",
+    labelKey: "commands.vars.streamer.label",
+    descriptionKey: "commands.vars.streamer.description",
     tags: ["{{streamer.username}}", "{{streamer.followers}}", "{{streamer.url}}"],
   },
   {
     id: "param",
-    label: "TAGGED USER / PARAM",
-    description: "Argument after the command, or an @mentioned user.",
+    labelKey: "commands.vars.param.label",
+    descriptionKey: "commands.vars.param.description",
     tags: ["{{param}}", "{{taggedUser.username}}", "{{taggedUser.followers}}", "{{taggedUser.followage}}"],
   },
   {
     id: "stream",
-    label: "STREAM",
-    description: "Live stream info when the platform provides it.",
+    labelKey: "commands.vars.stream.label",
+    descriptionKey: "commands.vars.stream.description",
     tags: ["{{stream.title}}", "{{stream.category}}", "{{stream.viewers}}"],
   },
   {
     id: "random",
-    label: "RANDOM",
-    description: "Pick a number range or one of the listed items.",
+    labelKey: "commands.vars.random.label",
+    descriptionKey: "commands.vars.random.description",
     tags: ['{{randomRange(1,100)}}', '{{randomItem("a","b","c")}}'],
   },
   {
     id: "api",
-    label: "API REQUEST",
-    description: "Fetch a value from a URL when the engine supports it.",
+    labelKey: "commands.vars.api.label",
+    descriptionKey: "commands.vars.api.description",
     tags: ['{{request("https://api.example.com").value}}'],
   },
 ];
@@ -56,6 +57,7 @@ export function CommandVariablesSidebar({
   onInsert: (tag: string) => void;
   className?: string;
 }) {
+  const { t } = useLanguage();
   return (
     <aside
       className={cn(
@@ -63,9 +65,11 @@ export function CommandVariablesSidebar({
         className,
       )}
     >
-      <p className="text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">Variables</p>
+      <p className="text-[0.72rem] font-medium uppercase tracking-wide text-muted-foreground">
+        {t("commands.vars.sidebarTitle")}
+      </p>
       <div className="space-y-1.5">
-        <p className="text-[0.68rem] text-muted-foreground">Live now</p>
+        <p className="text-[0.68rem] text-muted-foreground">{t("commands.vars.liveNow")}</p>
         <div className="flex flex-wrap gap-1">
           {LIVE_COMMAND_INTERPOLATORS.map((tag) => (
             <VariableTag key={tag} tag={tag} onInsert={onInsert} />
@@ -74,8 +78,8 @@ export function CommandVariablesSidebar({
       </div>
       {COMMAND_VARIABLE_GROUPS.map((group) => (
         <div key={group.id} className="space-y-1.5">
-          <p className="text-[0.68rem] font-semibold tracking-wide text-zinc-300">{group.label}</p>
-          <p className="text-[0.68rem] leading-snug text-muted-foreground">{group.description}</p>
+          <p className="text-[0.68rem] font-semibold tracking-wide text-zinc-300">{t(group.labelKey)}</p>
+          <p className="text-[0.68rem] leading-snug text-muted-foreground">{t(group.descriptionKey)}</p>
           <div className="flex flex-wrap gap-1">
             {group.tags.map((tag) => (
               <VariableTag key={tag} tag={tag} onInsert={onInsert} />

@@ -67,48 +67,50 @@ export const Route = createFileRoute("/_authenticated/schedule")({
   component: SchedulePage,
 });
 
-const COPY = {
-    title: "Stream schedule",
-    subtitle: "A monthly calendar of go-live times. Share a public page or export ICS — no fake push alerts.",
-    timezone: "Timezone",
-    calendarTitle: "Public title",
-    reminder: "Reminder note",
-    reminderHint: "Shown on the public page (e.g. “Turn on channel notifications”). Not a push system.",
-    reminderPlaceholder: "Enable channel notifications so you don’t miss a go-live.",
-    share: "Public schedule",
-    copy: "Copy link",
-    copied: "Copied",
-    ics: "Download ICS",
-    add: "Add session",
-    empty: "Click a day to add a go-live. Recurring weekly slots appear on every matching weekday.",
-    modalCreate: "New session",
-    modalEdit: "Edit session",
-    date: "Date",
-    repeat: "Repeat every week on this weekday",
-    cover: "Game cover",
-    coverHint: "Shown as a poster under the day’s details in the calendar. Images are compressed.",
-    coverRemove: "Remove image",
-    day: "Day",
-    time: "Start time",
-    duration: "Duration (minutes)",
-    sessionTitle: "Title",
-    game: "Game / category",
-    notes: "Notes",
-    enabled: "Listed publicly",
-    cancel: "Cancel",
-    save: "Save",
-    delete: "Delete",
-    deleteTitle: "Delete this session?",
-    deleteBody: "It will disappear from the public schedule immediately.",
-    saved: "Saved",
-    errTitle: "Enter a session title.",
-    errTime: "Use 24-hour time like 18:00.",
-    errSave: "Could not save the session.",
-    errCover: "Could not read that image. Try a smaller JPG or PNG.",
-    errStorage: "Could not store the image locally. Try a smaller file.",
-    howTitle: "Sharing",
-    how: "Viewers open the public URL. They can add sessions to their own calendar via ICS. Local OS reminders come from that calendar — we do not send push notifications.",
-  } as const;
+function buildScheduleCopy(t: ReturnType<typeof useLanguage>["t"]) {
+  return {
+    title: t("schedule.title"),
+    subtitle: t("schedule.subtitle"),
+    timezone: t("schedule.timezone"),
+    calendarTitle: t("schedule.calendarTitle"),
+    reminder: t("schedule.reminder"),
+    reminderHint: t("schedule.reminderHint"),
+    reminderPlaceholder: t("schedule.reminderPlaceholder"),
+    share: t("schedule.share"),
+    copy: t("schedule.copy"),
+    copied: t("schedule.copied"),
+    ics: t("schedule.ics"),
+    add: t("schedule.add"),
+    empty: t("schedule.empty"),
+    modalCreate: t("schedule.modalCreate"),
+    modalEdit: t("schedule.modalEdit"),
+    date: t("schedule.date"),
+    repeat: t("schedule.repeat"),
+    cover: t("schedule.cover"),
+    coverHint: t("schedule.coverHint"),
+    coverRemove: t("schedule.coverRemove"),
+    day: t("schedule.day"),
+    time: t("schedule.time"),
+    duration: t("schedule.duration"),
+    sessionTitle: t("schedule.sessionTitle"),
+    game: t("schedule.game"),
+    notes: t("schedule.notes"),
+    enabled: t("schedule.enabled"),
+    cancel: t("schedule.cancel"),
+    save: t("schedule.save"),
+    delete: t("schedule.delete"),
+    deleteTitle: t("schedule.deleteTitle"),
+    deleteBody: t("schedule.deleteBody"),
+    saved: t("schedule.saved"),
+    errTitle: t("schedule.errTitle"),
+    errTime: t("schedule.errTime"),
+    errSave: t("schedule.errSave"),
+    errCover: t("schedule.errCover"),
+    errStorage: t("schedule.errStorage"),
+    howTitle: t("schedule.howTitle"),
+    how: t("schedule.how"),
+  };
+}
 
 const field =
   "w-full border-b border-zinc-800/50 bg-transparent px-0 py-2 text-sm text-foreground outline-none transition-colors focus:border-white/20";
@@ -129,8 +131,8 @@ const ZONES = [
 function SchedulePage() {
   const { user } = Route.useRouteContext();
   const { data } = useWorkspace(user.id);
-  const { lang } = useLanguage();
-  const c = COPY;
+  const { t, lang } = useLanguage();
+  const c = buildScheduleCopy(t);
   const queryClient = useQueryClient();
   const test = isTestMode();
 

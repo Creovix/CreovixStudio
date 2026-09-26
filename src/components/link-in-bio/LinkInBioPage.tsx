@@ -6,6 +6,7 @@ import { LinkInBioAmbient } from "@/components/link-in-bio/LinkInBioAmbient";
 import { LinkInBioBento } from "@/components/link-in-bio/LinkInBioBento";
 import { LinkInBioStreamCard } from "@/components/link-in-bio/LinkInBioStreamCard";
 import { LinkInBioText } from "@/components/link-in-bio/LinkInBioText";
+import { useLanguage } from "@/lib/i18n";
 import { publicBioPath, resolveBioFont, type PublicLinkInBio } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +111,7 @@ export function LinkInBioPage({
 }
 
 function PublicCopyLink({ slug, accent }: { slug: string; accent: string }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [href, setHref] = useState("");
 
@@ -122,10 +124,10 @@ function PublicCopyLink({ slug, accent }: { slug: string; accent: string }) {
     try {
       await navigator.clipboard.writeText(target);
       setCopied(true);
-      toast.success("Link copied");
+      toast.success(t("linkInBio.toast.linkCopied"));
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      toast.error("Could not copy link");
+      toast.error(t("linkInBio.err.couldNotCopy"));
     }
   };
 
@@ -146,10 +148,10 @@ function PublicCopyLink({ slug, accent }: { slug: string; accent: string }) {
             : "color-mix(in oklab, var(--bio-fg) 6%, var(--bio-bg))",
           color: "var(--bio-fg)",
         }}
-        aria-label={copied ? "Link copied" : "Copy page link"}
+        aria-label={copied ? t("linkInBio.copied") : t("linkInBio.copyLink")}
       >
         {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-        {copied ? "Copied" : "Copy Link"}
+        {copied ? t("linkInBio.copied") : t("linkInBio.copyLink")}
       </button>
     </div>
   );

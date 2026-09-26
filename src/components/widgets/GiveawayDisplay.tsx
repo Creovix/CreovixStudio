@@ -2,24 +2,10 @@ import { type CSSProperties } from "react";
 import { CheckCircle2, Expand, Minimize2, RotateCcw, Trophy } from "lucide-react";
 
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
+import { useLanguage } from "@/lib/i18n";
 
 export type DrawPhase = "idle" | "shuffling" | "revealing" | "settled";
 export type ClaimState = "pending" | "confirmed" | "expired";
-
-const COPY = {
-    shuffling: "Shuffling",
-    revealing: "Revealing",
-    winnerSelected: "Winner selected",
-    liveEntries: "Live entries",
-    expand: "Expand giveaway display",
-    collapse: "Close expanded giveaway display",
-    joinHint: (keyword: string) => `Viewers join by typing ${keyword} in chat.`,
-    from: "From",
-    claimHint: (keyword: string) => `Re-type (${keyword}) in chat to claim the prize`,
-    confirmed: "Confirmed — the winner replied in chat",
-    reroll: "Re-roll",
-    lastWinner: "Last winner",
-  } as const;
 
 export const platformLabel = (platform: string) =>
   ({ KICK: "Kick", TWITCH: "Twitch", YOUTUBE: "YouTube", TIKTOK: "TikTok" })[
@@ -69,17 +55,17 @@ export function GiveawayDisplay({
   onToggleExpand?: (() => void) | undefined;
   onReroll?: (() => void) | undefined;
 }) {
-  const c = COPY;
+  const { t } = useLanguage();
   const keywordLabel = keyword || "+1";
 
   const phaseLabel =
     phase === "shuffling"
-      ? c.shuffling
+      ? t("giveaway.shuffling")
       : phase === "revealing"
-        ? c.revealing
+        ? t("giveaway.revealing")
         : winner
-          ? c.winnerSelected
-          : c.liveEntries;
+          ? t("giveaway.winnerSelected")
+          : t("giveaway.liveEntries");
 
   return (
     <section
@@ -102,8 +88,8 @@ export function GiveawayDisplay({
               type="button"
               onClick={onToggleExpand}
               className="ms-auto text-muted-foreground hover:text-foreground"
-              aria-label={expanded ? c.collapse : c.expand}
-              title={expanded ? c.collapse : c.expand}
+              aria-label={expanded ? t("giveaway.collapse") : t("giveaway.expand")}
+              title={expanded ? t("giveaway.collapse") : t("giveaway.expand")}
             >
               {expanded ? <Minimize2 className="size-4" aria-hidden /> : <Expand className="size-4" aria-hidden />}
             </button>
@@ -119,13 +105,13 @@ export function GiveawayDisplay({
         {participants.length === 0 ? (
           transparent ? null : (
             <div className="absolute inset-0 grid place-items-center px-8 text-center text-sm text-muted-foreground">
-              {c.joinHint(keywordLabel)}
+              {t("giveaway.joinHint", { keyword: keywordLabel })}
             </div>
           )
         ) : (
           <div
             className={`giveaway-entries absolute inset-0 ${phase === "shuffling" ? "is-shuffling" : ""} ${phase === "revealing" || phase === "settled" ? "is-revealing" : ""}`}
-            aria-label={c.liveEntries}
+            aria-label={t("giveaway.liveEntries")}
           >
             {participants.map((participant, index) => {
               const spot = entrySpot(participant.id, index);
@@ -166,7 +152,7 @@ export function GiveawayDisplay({
                 {winner.username}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                {c.from}: {platformLabel(winner.platform)}
+                {t("giveaway.from")}: {platformLabel(winner.platform)}
               </p>
 
               {phase === "settled" && claimState === "pending" ? (
@@ -174,12 +160,14 @@ export function GiveawayDisplay({
                   <p className="font-mono text-3xl font-semibold tabular-nums text-foreground">
                     {Math.floor(claimLeft / 60)}:{String(claimLeft % 60).padStart(2, "0")}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{c.claimHint(keywordLabel)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("giveaway.claimHint", { keyword: keywordLabel })}
+                  </p>
                 </div>
               ) : phase === "settled" && claimState === "confirmed" ? (
                 <p className="mt-5 flex items-center gap-2 text-sm text-kick">
                   <CheckCircle2 className="size-4" aria-hidden />
-                  {c.confirmed}
+                  {t("giveaway.confirmed")}
                 </p>
               ) : phase === "settled" && claimState === "expired" && onReroll && !transparent ? (
                 <button
@@ -188,7 +176,7 @@ export function GiveawayDisplay({
                   className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-[0.82rem] text-kick hover:bg-white/5"
                 >
                   <RotateCcw className="size-4" aria-hidden />
-                  {c.reroll}
+                  {t("giveaway.reroll")}
                 </button>
               ) : null}
             </div>
@@ -198,7 +186,7 @@ export function GiveawayDisplay({
         {lastWinner && !winner && !transparent ? (
           <p className="absolute bottom-3 start-3 z-30 flex items-center gap-2 text-xs text-muted-foreground">
             <Trophy className="size-3.5" aria-hidden />
-            {c.lastWinner}: <span dir="auto">{lastWinner.username}</span> ({lastWinner.platform})
+            {t("giveaway.lastWinner")}: <span dir="auto">{lastWinner.username}</span> ({lastWinner.platform})
           </p>
         ) : null}
       </div>

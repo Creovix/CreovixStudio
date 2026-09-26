@@ -7,6 +7,7 @@ import { wizardUi } from "@/components/link-in-bio/wizard/wizardTokens";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/lib/i18n";
 import { LINK_PLATFORMS, type LinkInBioTheme } from "@/lib/linkInBio";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ function localDateValue(iso: string | null): string {
 }
 
 export function PlatformsStep() {
+  const { t } = useLanguage();
   const { draft, handles, applyHandles, onFile } = useWizard();
   const { theme, setTheme, state } = draft;
   const scheduleReady = Boolean(state?.scheduleShareToken);
@@ -28,10 +30,10 @@ export function PlatformsStep() {
     <Tabs defaultValue="platforms" className="flex h-full min-h-0 flex-col">
       <TabsList className={wizardUi.tabListPair}>
         <TabsTrigger value="platforms" className={wizardUi.tabTrigger}>
-          Platforms
+          {t("linkInBio.wizard.tab.platforms")}
         </TabsTrigger>
         <TabsTrigger value="extras" className={wizardUi.tabTrigger}>
-          Extras
+          {t("linkInBio.wizard.tab.extras")}
         </TabsTrigger>
       </TabsList>
 
@@ -48,8 +50,10 @@ export function PlatformsStep() {
                   <CalendarDays className="size-4 text-white/70" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">Stream schedule</p>
-                  <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">Pin your public calendar on the page.</p>
+                  <p className="text-sm font-medium">{t("linkInBio.widget.schedule")}</p>
+                  <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">
+                    {t("linkInBio.widget.schedulePinHint")}
+                  </p>
                 </div>
               </div>
               <Switch
@@ -58,7 +62,9 @@ export function PlatformsStep() {
                 onCheckedChange={(scheduleEnabled) => onTheme({ scheduleEnabled })}
               />
             </div>
-            {!scheduleReady ? <p className={cn(wizardUi.hint, "mt-3")}>Create a schedule first to enable it here.</p> : null}
+            {!scheduleReady ? (
+              <p className={cn(wizardUi.hint, "mt-3")}>{t("linkInBio.widget.scheduleEnableHint")}</p>
+            ) : null}
           </ModuleCard>
 
           <ModuleCard>
@@ -67,8 +73,10 @@ export function PlatformsStep() {
                 <ImagePlus className="size-4 text-white/70" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">Image banner</p>
-                <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">A wide promo image between your bio and tiles.</p>
+                <p className="text-sm font-medium">{t("linkInBio.field.imageBanner")}</p>
+                <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">
+                  {t("linkInBio.widget.imageBannerHint")}
+                </p>
                 <Input
                   className="mt-4 h-10 rounded-2xl border-[rgba(255,255,255,0.08)] bg-black/35 text-xs file:me-3 file:rounded-xl file:border-0 file:bg-white/10 file:px-2.5 file:py-1 file:text-xs file:text-white/80"
                   type="file"
@@ -76,7 +84,7 @@ export function PlatformsStep() {
                   onChange={(event) => void onFile(event.target.files?.[0], "banner")}
                 />
                 {theme.widgetBannerUrl ? (
-                  <p className={cn(wizardUi.hint, "mt-2")}>Banner added — it shows in the preview.</p>
+                  <p className={cn(wizardUi.hint, "mt-2")}>{t("linkInBio.widget.bannerAdded")}</p>
                 ) : null}
               </div>
             </div>
@@ -89,8 +97,10 @@ export function PlatformsStep() {
                   <Timer className="size-4 text-white/70" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">Countdown</p>
-                  <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">A timer to a drop, launch, or next stream.</p>
+                  <p className="text-sm font-medium">{t("linkInBio.widget.countdown")}</p>
+                  <p className="mt-1 text-[0.68rem] leading-relaxed text-white/40">
+                    {t("linkInBio.widget.countdownHint")}
+                  </p>
                 </div>
               </div>
               <Switch checked={theme.countdownEnabled} onCheckedChange={(countdownEnabled) => onTheme({ countdownEnabled })} />
@@ -99,7 +109,7 @@ export function PlatformsStep() {
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className={wizardUi.label} htmlFor="bio-countdown-label">
-                    Label
+                    {t("linkInBio.field.countdownLabel")}
                   </label>
                   <Input
                     id="bio-countdown-label"
@@ -111,7 +121,7 @@ export function PlatformsStep() {
                 </div>
                 <div>
                   <label className={wizardUi.label} htmlFor="bio-countdown-ends">
-                    Ends
+                    {t("linkInBio.field.countdownEnds")}
                   </label>
                   <Input
                     id="bio-countdown-ends"

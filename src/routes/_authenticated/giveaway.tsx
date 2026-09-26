@@ -26,6 +26,7 @@ import {
   type GiveawayDrawState,
   type GiveawaySettings,
 } from "@/lib/giveaway.functions";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/giveaway")({
   head: () => ({
@@ -48,43 +49,6 @@ export const Route = createFileRoute("/_authenticated/giveaway")({
   component: GiveawayPage,
 });
 
-const COPY = {
-    title: "Giveaway",
-    subtitle: "Collect chat entries with a keyword, then pick a winner live on stream.",
-    how: "Viewers join by typing the keyword in Kick or Twitch chat. Open entries, wait for names, then draw.",
-    entryTitle: "How viewers enter",
-    entryHint: "Entries are captured automatically from every connected chat.",
-    keyword: "Keyword",
-    entriesOpen: "Entries open",
-    entriesClosed: "Entries closed",
-    subsOnly: "Paid subs only",
-    multiplier: "Subscriber multiplier",
-    multiplierOff: "Off",
-    multiplierN: (n: number) => `×${n} entries`,
-    drawTitle: "Draw",
-    drawHint: "Set the spin and claim window, then launch when the list is ready.",
-    spin: "Spin duration",
-    seconds: (n: number) => `${n} seconds`,
-    claim: "Claim window",
-    minutes: (n: number) => (n === 1 ? "1 minute" : `${n} minutes`),
-    pick: "Pick winner",
-    clear: "Clear list",
-    stageTitle: "Live stage",
-    overlayTitle: "OBS browser source",
-    overlayHint:
-      "Add this link as a Browser Source in OBS (1920×1080, transparent) to show the name cloud, winner reveal and claim countdown on stream.",
-    overlayPlaceholder: "Generating link…",
-    copy: "Copy",
-    copied: "Overlay URL copied",
-    saved: "Giveaway settings saved",
-    cleared: "Participant list cleared",
-    noParticipants: "No participants yet",
-    peopleTitle: "Live participants",
-    peopleEmpty: (keyword: string) =>
-      `Nobody has entered yet. Viewers join by typing ${keyword} in chat.`,
-    entriesCount: (people: number, entries: number) => `${people} · ${entries} entries`,
-  } as const;
-
 const field =
   "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-foreground outline-none focus:border-zinc-600";
 const label = "mb-1.5 block text-[0.68rem] font-medium uppercase tracking-wide text-muted-foreground";
@@ -99,7 +63,7 @@ const MULTIPLIERS = [1, 2, 3, 5, 10];
 function GiveawayPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
-  const c = COPY;
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const fetchState = useServerFn(getGiveawayState);
@@ -215,7 +179,7 @@ function GiveawayPage() {
     mutationFn: (next: GiveawaySettings) => save({ data: next }),
     onSuccess: (result) => {
       if (result.ok) {
-        toast.success(c.saved);
+        toast.success(t("giveaway.saved"));
         void queryClient.invalidateQueries({ queryKey: ["giveaway"] });
       } else toast.error(result.error);
     },
@@ -236,7 +200,7 @@ function GiveawayPage() {
       setDrawPhase("idle");
       winnerRef.current = null;
       push({ phase: "idle" });
-      toast.success(c.cleared);
+      toast.success(t("giveaway.cleared"));
       void queryClient.invalidateQueries({ queryKey: ["giveaway"] });
     },
     onError: (error: Error) => toast.error(error.message || "Could not clear participants"),
@@ -253,7 +217,7 @@ function GiveawayPage() {
     if (!result.ok) {
       setSpinning(false);
       setDrawPhase("idle");
-      toast.error(c.noParticipants);
+      toast.error(t("giveaway.noParticipants"));
       return;
     }
 
@@ -283,6 +247,9 @@ function GiveawayPage() {
     }).catch(() => undefined);
   };
 
+  const minutes = (n: number) =>
+    n === 1 ? t("giveaway.minutes1") : t("giveaway.minutesN", { n });
+
   const display = (
     <GiveawayDisplay
       participants={participants}
@@ -299,11 +266,16 @@ function GiveawayPage() {
   );
 
   return (
-    <AppShell user={user} profile={workspace?.profile} title={c.title} subtitle={c.subtitle}>
+    <AppShell
+      user={user}
+      profile={workspace?.profile}
+      title={t("giveaway.title")}
+      subtitle={t("giveaway.subtitle")}
+    >
       <div className="flex flex-col gap-12 lg:gap-16">
         <div className="flex flex-wrap items-end gap-x-5 gap-y-5">
           <label className="min-w-[8.5rem] flex-1 basis-40 sm:max-w-[13rem]">
-            <span className={label}>{c.keyword}</span>
+            <span className={label}>{t("giveaway.keyword")}</span>
             <input
               className={field}
               value={form.keyword}
@@ -314,7 +286,7 @@ function GiveawayPage() {
             />
           </label>
           <label className="min-w-[8.5rem] flex-1 basis-36 sm:max-w-[12rem]">
-            <span className={label}>{c.multiplier}</span>
+            <span className={label}>{t("giveaway.multiplier")}</span>
             <DarkSelect
               className={selectClass}
               contentClassName="rounded-xl border-zinc-800 bg-zinc-900"
@@ -322,12 +294,12 @@ function GiveawayPage() {
               onValueChange={(value) => update({ subMultiplier: Number(value) })}
               options={MULTIPLIERS.map((n) => ({
                 value: String(n),
-                label: n === 1 ? c.multiplierOff : c.multiplierN(n),
+                label: n === 1 ? t("giveaway.multiplierOff") : t("giveaway.multiplierN", { n }),
               }))}
             />
           </label>
           <label className="min-w-[8.5rem] flex-1 basis-36 sm:max-w-[11rem]">
-            <span className={label}>{c.spin}</span>
+            <span className={label}>{t("giveaway.spin")}</span>
             <DarkSelect
               className={selectClass}
               contentClassName="rounded-xl border-zinc-800 bg-zinc-900"
@@ -335,12 +307,12 @@ function GiveawayPage() {
               onValueChange={(value) => update({ spinDuration: Number(value) })}
               options={SPIN_DURATIONS.map((seconds) => ({
                 value: String(seconds),
-                label: c.seconds(seconds),
+                label: t("giveaway.seconds", { n: seconds }),
               }))}
             />
           </label>
           <label className="min-w-[8.5rem] flex-1 basis-36 sm:max-w-[11rem]">
-            <span className={label}>{c.claim}</span>
+            <span className={label}>{t("giveaway.claim")}</span>
             <DarkSelect
               className={selectClass}
               contentClassName="rounded-xl border-zinc-800 bg-zinc-900"
@@ -348,7 +320,10 @@ function GiveawayPage() {
               onValueChange={(value) => update({ claimSeconds: Number(value) })}
               options={CLAIM_WINDOWS.map((seconds) => ({
                 value: String(seconds),
-                label: seconds >= 60 ? c.minutes(seconds / 60) : c.seconds(seconds),
+                label:
+                  seconds >= 60
+                    ? minutes(seconds / 60)
+                    : t("giveaway.seconds", { n: seconds }),
               }))}
             />
           </label>
@@ -359,7 +334,7 @@ function GiveawayPage() {
               checked={form.subsOnly}
               onChange={(e) => update({ subsOnly: e.target.checked })}
             />
-            {c.subsOnly}
+            {t("giveaway.subsOnly")}
           </label>
           <div className="flex flex-wrap items-center gap-3 pb-0.5">
             <button
@@ -377,7 +352,7 @@ function GiveawayPage() {
               ) : (
                 <Lock className="size-4" aria-hidden />
               )}
-              {form.isOpen ? c.entriesOpen : c.entriesClosed}
+              {form.isOpen ? t("giveaway.entriesOpen") : t("giveaway.entriesClosed")}
             </button>
             <button
               type="button"
@@ -390,7 +365,7 @@ function GiveawayPage() {
               ) : (
                 <Sparkles className="size-4" aria-hidden />
               )}
-              {c.pick}
+              {t("giveaway.pick")}
             </button>
             <button
               type="button"
@@ -398,23 +373,27 @@ function GiveawayPage() {
               disabled={clearMutation.isPending}
               className="text-sm text-red-400 hover:text-red-300 disabled:opacity-40"
             >
-              {c.clear}
+              {t("giveaway.clear")}
             </button>
           </div>
         </div>
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_15.5rem] lg:gap-14">
           <div className="min-w-0">
-            <p className={label}>{c.stageTitle}</p>
+            <p className={label}>{t("giveaway.stageTitle")}</p>
             {display}
           </div>
           <div className="min-w-0">
             <p className={label}>
-              {c.peopleTitle} · {c.entriesCount(participants.length, totalEntries)}
+              {t("giveaway.peopleTitle")} ·{" "}
+              {t("giveaway.entriesCount", {
+                people: participants.length,
+                entries: totalEntries,
+              })}
             </p>
             {participants.length === 0 ? (
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {c.peopleEmpty(form.keyword || "+1")}
+                {t("giveaway.peopleEmpty", { keyword: form.keyword || "+1" })}
               </p>
             ) : (
               <ul className="max-h-[min(52vh,420px)] overflow-y-auto">
@@ -436,13 +415,13 @@ function GiveawayPage() {
         </div>
 
         <div className="max-w-2xl">
-          <span className={label}>{c.overlayTitle}</span>
+          <span className={label}>{t("giveaway.overlayTitle")}</span>
           <div className="flex items-stretch overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
             <input
               readOnly
               className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 font-mono text-[0.78rem] text-foreground outline-none"
               value={overlayUrl}
-              placeholder={c.overlayPlaceholder}
+              placeholder={t("giveaway.overlayPlaceholder")}
               dir="ltr"
             />
             <button
@@ -450,11 +429,11 @@ function GiveawayPage() {
               onClick={() => {
                 if (!overlayUrl) return;
                 void navigator.clipboard.writeText(overlayUrl);
-                toast.success(c.copied);
+                toast.success(t("giveaway.copied"));
               }}
               className="shrink-0 border-s border-zinc-800 px-3.5 text-sm text-muted-foreground transition-colors hover:bg-zinc-800/80 hover:text-foreground"
             >
-              {c.copy}
+              {t("giveaway.copy")}
             </button>
           </div>
         </div>
@@ -462,7 +441,7 @@ function GiveawayPage() {
 
       <Dialog open={expanded} onOpenChange={setExpanded}>
         <DialogContent className="h-[min(88vh,900px)] w-[min(94vw,1600px)] max-w-none overflow-hidden border-0 bg-background p-0 shadow-none [&>button]:hidden">
-          <DialogTitle className="sr-only">{c.stageTitle}</DialogTitle>
+          <DialogTitle className="sr-only">{t("giveaway.stageTitle")}</DialogTitle>
           <GiveawayDisplay
             participants={participants}
             winner={winner}

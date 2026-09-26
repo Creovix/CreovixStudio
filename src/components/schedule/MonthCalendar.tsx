@@ -10,6 +10,7 @@ import {
   weekdayLabel,
   type ScheduleSlot,
 } from "@/lib/schedule";
+import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type CalendarSlot = Pick<
@@ -36,11 +37,12 @@ export function MonthCalendar({
   onAdd?: (iso: string) => void;
   onEdit?: (id: string) => void;
 }) {
+  const { t } = useLanguage();
   const days = weekOrder(lang);
   const cells = monthGrid(year, month, days, todayIso);
   const visible = slots.filter((slot) => slot.enabled || onEdit);
-  const prev = "Previous month";
-  const next = "Next month";
+  const prev = t("schedule.prevMonth");
+  const next = t("schedule.nextMonth");
 
   return (
     <div>

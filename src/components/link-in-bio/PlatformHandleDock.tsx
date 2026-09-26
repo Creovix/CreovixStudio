@@ -10,6 +10,7 @@ import {
   type HandleMap,
   type SocialPlatform,
 } from "@/hooks/useLinkInBioDraft";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import {
   bumpPlatformUsage,
   customLinkFaviconUrl,
@@ -28,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type PlatformMeta = (typeof LINK_PLATFORMS)[number];
+type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
 type DockItem =
   | { key: SocialPlatform; platform: SocialPlatform; label: string; hint: string }
@@ -35,44 +37,62 @@ type DockItem =
 
 type OpenKey = string;
 
-function platformHint(id: LinkPlatform, value: string, filled: boolean) {
+function platformLabel(id: LinkPlatform, metaLabel: string, t: Translate) {
+  if (id === "whatsapp") return t("linkInBio.dock.whatsappCommunity");
+  if (id === "custom") return t("linkInBio.dock.customLink");
+  return metaLabel;
+}
+
+const PLATFORM_IDLE_HINT: Partial<Record<LinkPlatform, TranslationKey>> = {
+  kick: "linkInBio.dock.hint.kick",
+  twitch: "linkInBio.dock.hint.twitch",
+  youtube: "linkInBio.dock.hint.youtube",
+  tiktok: "linkInBio.dock.hint.tiktok",
+  instagram: "linkInBio.dock.hint.instagram",
+  x: "linkInBio.dock.hint.x",
+  discord: "linkInBio.dock.hint.discord",
+  snapchat: "linkInBio.dock.hint.snapchat",
+  custom: "linkInBio.dock.hint.custom",
+};
+
+function platformHint(id: LinkPlatform, value: string, filled: boolean, fallbackHint: string, t: Translate) {
   if (id === "whatsapp") {
-    if (!value) return "Community or group invite link — not a phone number";
-    return sanitizeWhatsappCommunityUrl(value)
-      ? value
-      : "Use chat.whatsapp.com/… or whatsapp.com/channel/…";
+    if (!value) return t("linkInBio.dock.hint.whatsappEmpty");
+    return sanitizeWhatsappCommunityUrl(value) ? value : t("linkInBio.dock.hint.whatsappInvalid");
   }
   if (id === "custom") {
     const host = hostnameFromLink(value);
     if (host) return host;
-    return filled ? value : "https://…";
+    return filled ? value : t("linkInBio.dock.hint.custom");
   }
   if (filled && !usesFullUrl(id) && !looksLikeHttpUrl(value)) return urlFromHandle(id, value);
-  return LINK_PLATFORMS.find((item) => item.id === id)?.hint ?? "";
+  const idleKey = PLATFORM_IDLE_HINT[id];
+  return idleKey ? t(idleKey) : fallbackHint;
 }
 
-function fieldPlaceholder(id: LinkPlatform, hint: string, fullUrl: boolean) {
-  if (id === "whatsapp") return "https://chat.whatsapp.com/… or whatsapp.com/channel/…";
-  if (id === "instagram") return "@you or instagram.com/p/…";
-  if (id === "snapchat") return "@you or snapchat.com/add/…";
-  if (id === "tiktok") return "@you or tiktok.com/@you/video/…";
-  if (id === "x") return "@you or x.com/you/status/…";
-  if (id === "discord") return "discord.gg/invite";
-  if (fullUrl) return hint;
-  return "handle";
+function fieldPlaceholder(id: LinkPlatform, hint: string, fullUrl: boolean, t: Translate) {
+  if (id === "whatsapp") return t("linkInBio.dock.placeholder.whatsapp");
+  if (id === "instagram") return t("linkInBio.dock.placeholder.instagram");
+  if (id === "snapchat") return t("linkInBio.dock.placeholder.snapchat");
+  if (id === "tiktok") return t("linkInBio.dock.placeholder.tiktok");
+  if (id === "x") return t("linkInBio.dock.placeholder.x");
+  if (id === "discord") return t("linkInBio.dock.placeholder.discord");
+  if (fullUrl) {
+    const idleKey = PLATFORM_IDLE_HINT[id];
+    return idleKey ? t(idleKey) : hint;
+  }
+  return t("linkInBio.dock.handlePlaceholder");
 }
 
-function validatePlatformValue(platform: LinkPlatform, value: string): string | null {
+function validatePlatformValue(platform: LinkPlatform, value: string, t: Translate): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   if (platform === "whatsapp") {
-    return sanitizeWhatsappCommunityUrl(trimmed)
-      ? null
-      : "Use a WhatsApp community or channel invite link.";
+    return sanitizeWhatsappCommunityUrl(trimmed) ? null : t("linkInBio.dock.err.whatsapp");
   }
   if (!urlFromHandle(platform, trimmed)) {
-    if (platform === "custom") return "Enter a valid https:// URL.";
-    return "Enter a valid handle or profile URL.";
+    if (platform === "custom") return t("linkInBio.dock.err.customUrl");
+    return t("linkInBio.dock.err.handleOrUrl");
   }
   return null;
 }
@@ -89,7 +109,7 @@ function filledMap(handles: HandleMap): Partial<Record<LinkPlatform, boolean>> {
   return out;
 }
 
-function dockItems(platforms: ReadonlyArray<PlatformMeta>, handles: HandleMap): DockItem[] {
+function dockItems(platforms: ReadonlyArray<PlatformMeta>, handles: HandleMap, t: Translate): DockItem[] {
   const usage = readPlatformUsageCounts();
   const filled = filledMap(handles);
   const ordered = sortPlatformsByUsage(platforms, { filled, usage });
@@ -100,7 +120,7 @@ function dockItems(platforms: ReadonlyArray<PlatformMeta>, handles: HandleMap): 
         {
           key: platform.id,
           platform: platform.id,
-          label: platform.label,
+          label: platformLabel(platform.id, platform.label, t),
           hint: platform.hint,
         } satisfies DockItem,
       ];
@@ -110,7 +130,7 @@ function dockItems(platforms: ReadonlyArray<PlatformMeta>, handles: HandleMap): 
         key: `custom:${slot.id}`,
         platform: "custom" as const,
         slot,
-        label: index === 0 ? "Link" : `Link ${index + 1}`,
+        label: index === 0 ? t("linkInBio.dock.customLink") : t("linkInBio.dock.customLinkN", { n: index + 1 }),
         hint: platform.hint,
       }),
     );
@@ -134,7 +154,8 @@ export function PlatformHandleDock({
   onChange: (next: HandleMap) => void;
   tone?: "wizard" | "inspector";
 }) {
-  const items = useMemo(() => dockItems(platforms, handles), [platforms, handles]);
+  const { t } = useLanguage();
+  const items = useMemo(() => dockItems(platforms, handles, t), [platforms, handles, t]);
   const firstFilled = items.find((item) =>
     item.platform === "custom" ? Boolean(item.slot.url) : Boolean(handles[item.platform]),
   )?.key;
@@ -180,13 +201,13 @@ export function PlatformHandleDock({
 
   const onBlurValidate = () => {
     if (!open) return;
-    const error = validatePlatformValue(open.platform, value);
+    const error = validatePlatformValue(open.platform, value, t);
     setFieldError(error);
     if (error) {
       toast.error(error);
       return;
     }
-    if (value.trim() && open.platform === "custom") toast.success("Link looks good");
+    if (value.trim() && open.platform === "custom") toast.success(t("linkInBio.dock.toast.linkOk"));
   };
 
   return (
@@ -194,7 +215,7 @@ export function PlatformHandleDock({
       <div
         className="flex gap-5 overflow-x-auto pb-1 scroll-smooth sm:gap-8 [scrollbar-width:thin]"
         role="tablist"
-        aria-label="Platforms"
+        aria-label={t("linkInBio.dock.platformsAria")}
       >
         {items.map((item) => {
           const active = openKey === item.key;
@@ -238,7 +259,7 @@ export function PlatformHandleDock({
 
       {!hasAnyFilled && !open ? (
         <p className="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-center text-[0.78rem] leading-relaxed text-white/40">
-          Tap a platform above to add your first handle or custom link.
+          {t("linkInBio.dock.empty")}
         </p>
       ) : null}
 
@@ -271,7 +292,7 @@ export function PlatformHandleDock({
             <div className="min-w-0">
               <p className="text-sm font-medium">{open.label}</p>
               <p className="truncate text-[0.68rem] text-white/40" dir="auto">
-                {platformHint(open.platform, value, filled)}
+                {platformHint(open.platform, value, filled, open.hint, t)}
               </p>
             </div>
           </div>
@@ -289,7 +310,7 @@ export function PlatformHandleDock({
                 : { ["--tw-ring-color" as string]: `color-mix(in oklab, ${accent.css} 55%, white)` }
             }
             dir="auto"
-            placeholder={fieldPlaceholder(open.platform, open.hint, fullUrl)}
+            placeholder={fieldPlaceholder(open.platform, open.hint, fullUrl, t)}
             value={value}
             aria-invalid={Boolean(fieldError || whatsappInvalid)}
             onBlur={onBlurValidate}
@@ -305,7 +326,7 @@ export function PlatformHandleDock({
           />
           {fieldError || whatsappInvalid ? (
             <p className="mt-2 text-[0.72rem] text-rose-300" role="alert">
-              {fieldError ?? "Use a WhatsApp community or channel invite link."}
+              {fieldError ?? t("linkInBio.dock.err.whatsapp")}
             </p>
           ) : null}
           <PlatformLivePreview platform={open.platform} value={value} compact={inspector} />

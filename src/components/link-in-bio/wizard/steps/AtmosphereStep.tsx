@@ -5,6 +5,7 @@ import { useWizard } from "@/components/link-in-bio/wizard/WizardProvider";
 import { wizardUi } from "@/components/link-in-bio/wizard/wizardTokens";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { BENTO_COLOR_MODES, BACKGROUND_PRESETS, FONT_CHOICES, isLightBioTheme, type BentoColorMode, type LinkInBioTheme } from "@/lib/linkInBio";
 import { extractLogoPalette } from "@/lib/logoPalette";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,25 @@ import { cn } from "@/lib/utils";
 function isLightTheme(theme: LinkInBioTheme) {
   return isLightBioTheme(theme.paletteBg);
 }
+
+const BG_LABEL: Record<(typeof BACKGROUND_PRESETS)[number]["id"], TranslationKey> = {
+  paper: "linkInBio.wizard.bg.paper.label",
+  dark: "linkInBio.wizard.bg.dark.label",
+};
+
+const BG_HINT: Record<(typeof BACKGROUND_PRESETS)[number]["id"], TranslationKey> = {
+  paper: "linkInBio.wizard.bg.paper.hint",
+  dark: "linkInBio.wizard.bg.dark.hint",
+};
+
+const BENTO_LABEL: Record<BentoColorMode, TranslationKey> = {
+  brand: "linkInBio.wizard.bento.brand",
+  mono: "linkInBio.wizard.bento.mono",
+  gradient: "linkInBio.wizard.bento.gradient",
+  glow: "linkInBio.wizard.bento.glow",
+  glass: "linkInBio.wizard.bento.glass",
+  custom: "linkInBio.wizard.bento.custom",
+};
 
 function BentoModeSwatch({
   mode,
@@ -84,6 +104,7 @@ function BentoModeSwatch({
 }
 
 export function AtmosphereStep() {
+  const { t } = useLanguage();
   const { draft } = useWizard();
   const { theme, setTheme, profile } = draft;
   const [logoSync, setLogoSync] = useState(false);
@@ -93,7 +114,7 @@ export function AtmosphereStep() {
 
   const applyLogoPalette = async () => {
     if (!profile.avatarUrl) {
-      setSyncError("Upload a logo on Profile first.");
+      setSyncError(t("linkInBio.wizard.err.uploadLogoFirst"));
       return;
     }
     setSyncing(true);
@@ -101,7 +122,7 @@ export function AtmosphereStep() {
     const palette = await extractLogoPalette(profile.avatarUrl);
     setSyncing(false);
     if (!palette) {
-      setSyncError("Could not read that logo (remote images need CORS). Re-upload the file and try again.");
+      setSyncError(t("linkInBio.wizard.err.logoCors"));
       return;
     }
     const light = isLightTheme(theme);
@@ -137,10 +158,10 @@ export function AtmosphereStep() {
       ) : null}
       <TabsList className={wizardUi.tabList}>
         <TabsTrigger value="background" className={wizardUi.tabTrigger}>
-          Page background
+          {t("linkInBio.wizard.tab.background")}
         </TabsTrigger>
         <TabsTrigger value="typography" className={wizardUi.tabTrigger}>
-          Typography
+          {t("linkInBio.wizard.tab.typography")}
         </TabsTrigger>
       </TabsList>
 
@@ -176,14 +197,14 @@ export function AtmosphereStep() {
                         : `linear-gradient(165deg, ${preset.paletteBg}, #171717)`,
                   }}
                 />
-                <span className="mt-3 block text-sm font-medium">{preset.label}</span>
-                <span className="text-[0.68rem] text-white/40">{preset.hint}</span>
+                <span className="mt-3 block text-sm font-medium">{t(BG_LABEL[preset.id])}</span>
+                <span className="text-[0.68rem] text-white/40">{t(BG_HINT[preset.id])}</span>
               </OptionTile>
             );
           })}
         </div>
         <div className="mt-4">
-          <p className={wizardUi.label}>Bento colors</p>
+          <p className={wizardUi.label}>{t("linkInBio.wizard.bentoColors")}</p>
           <div className="grid grid-cols-2 gap-2">
             {BENTO_COLOR_MODES.map((mode) => {
               const active = theme.bentoColorMode === mode.id;
@@ -205,7 +226,7 @@ export function AtmosphereStep() {
                     light={isLightTheme(theme)}
                     customFill={theme.bentoCustomFill}
                   />
-                  <span className="mt-2 block text-[0.72rem] font-medium leading-tight">{mode.label}</span>
+                  <span className="mt-2 block text-[0.72rem] font-medium leading-tight">{t(BENTO_LABEL[mode.id])}</span>
                 </button>
               );
             })}
@@ -213,7 +234,7 @@ export function AtmosphereStep() {
           {theme.bentoColorMode === "custom" ? (
             <div className="mt-3 grid grid-cols-2 gap-3">
               <label className="grid gap-1.5">
-                <span className={wizardUi.label}>Card fill</span>
+                <span className={wizardUi.label}>{t("linkInBio.wizard.cardFill")}</span>
                 <span className="flex items-center gap-2">
                   <input
                     type="color"
@@ -229,7 +250,7 @@ export function AtmosphereStep() {
                 </span>
               </label>
               <label className="grid gap-1.5">
-                <span className={wizardUi.label}>Icon accent</span>
+                <span className={wizardUi.label}>{t("linkInBio.wizard.iconAccent")}</span>
                 <span className="flex items-center gap-2">
                   <input
                     type="color"
@@ -249,8 +270,8 @@ export function AtmosphereStep() {
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium">Sync with logo</p>
-            <p className="text-[0.68rem] text-white/40">Tint accent and glow from your avatar.</p>
+            <p className="text-sm font-medium">{t("linkInBio.wizard.syncLogo")}</p>
+            <p className="text-[0.68rem] text-white/40">{t("linkInBio.wizard.syncLogoHint")}</p>
           </div>
           <div className="flex items-center gap-3">
             <Switch
@@ -269,7 +290,7 @@ export function AtmosphereStep() {
                 void applyLogoPalette();
               }}
             >
-              {syncing ? "Sampling…" : "Apply"}
+              {syncing ? t("linkInBio.wizard.sampling") : t("linkInBio.wizard.apply")}
             </button>
           </div>
         </div>
@@ -280,12 +301,12 @@ export function AtmosphereStep() {
         <ModuleCard className="mb-4 grid gap-3">
           <div>
             <label className={wizardUi.label} htmlFor="bio-font-name">
-              Custom font-family
+              {t("linkInBio.field.customFontName")}
             </label>
             <input
               id="bio-font-name"
               className={cn(wizardUi.field, "w-full ps-5 pe-3")}
-              placeholder="Satoshi"
+              placeholder={t("linkInBio.wizard.fontNamePlaceholder")}
               value={theme.fontCustomName}
               onChange={(event) => onPatch({ fontFamily: "custom", fontCustomName: event.target.value })}
               style={
@@ -302,17 +323,17 @@ export function AtmosphereStep() {
                   : undefined,
               }}
             >
-              {theme.fontCustomName.trim() || "Type a family name to preview it here."}
+              {theme.fontCustomName.trim() || t("linkInBio.wizard.fontNamePreview")}
             </p>
           </div>
           <div>
             <label className={wizardUi.label} htmlFor="bio-font-href">
-              Font or stylesheet URL
+              {t("linkInBio.field.customFontUrl")}
             </label>
             <input
               id="bio-font-href"
               className={cn(wizardUi.field, "w-full ps-5 pe-3")}
-              placeholder="https://…/font.css or a .woff2"
+              placeholder={t("linkInBio.wizard.fontHrefPlaceholder")}
               value={theme.fontCustomHref}
               onChange={(event) => onPatch({ fontFamily: "custom", fontCustomHref: event.target.value })}
               style={
@@ -330,8 +351,8 @@ export function AtmosphereStep() {
               }}
             >
               {theme.fontCustomName.trim()
-                ? `The quick brown fox — ${theme.fontCustomName}`
-                : "Load a stylesheet, then type a family name to preview."}
+                ? t("linkInBio.wizard.fontHrefPreview", { name: theme.fontCustomName })
+                : t("linkInBio.wizard.fontHrefPreviewEmpty")}
             </p>
           </div>
         </ModuleCard>

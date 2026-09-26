@@ -10,6 +10,7 @@ import { StudioPageTabs } from "@/components/layout/StudioPageTabs";
 import { DarkSelect } from "@/components/ui/dark-select";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useLanguage } from "@/lib/i18n";
 import {
   lookupChannel,
   searchTwitchChannels,
@@ -52,21 +53,6 @@ type ChannelSuggestion = {
 };
 
 const TRACKABLE: ChannelSuggestion["platform"][] = ["KICK", "TWITCH", "X", "YOUTUBE"];
-const SOURCE_LABEL: Record<SuggestionSource, string> = {
-  connected: "Connected",
-  favorite: "Favorite",
-  recent: "Recent",
-  twitch: "Twitch",
-};
-
-const PLATFORMS: { id: CounterPlatform; label: string; comingSoon?: boolean }[] = [
-  { id: "ALL", label: "All Platforms" },
-  { id: "KICK", label: "Kick" },
-  { id: "TWITCH", label: "Twitch" },
-  { id: "X", label: "X (Twitter)" },
-  { id: "TIKTOK", label: "TikTok (Coming Soon)", comingSoon: true },
-  { id: "YOUTUBE", label: "YouTube" },
-];
 
 const POLL_MS = 5_000;
 const FAVORITES_KEY = "creovix.live-counter.favorites";
@@ -267,13 +253,23 @@ function PlatformSelect({
   ariaLabel: string;
   className?: string;
 }) {
+  const { t } = useLanguage();
+  const platforms: { id: CounterPlatform; label: string; comingSoon?: boolean }[] = [
+    { id: "ALL", label: t("counter.platform.all") },
+    { id: "KICK", label: "Kick" },
+    { id: "TWITCH", label: "Twitch" },
+    { id: "X", label: t("counter.platform.xTwitter") },
+    { id: "TIKTOK", label: t("counter.platform.tiktokSoon"), comingSoon: true },
+    { id: "YOUTUBE", label: "YouTube" },
+  ];
+
   return (
     <DarkSelect
       value={value}
       onValueChange={(next) => onPlatform(next as CounterPlatform)}
       aria-label={ariaLabel}
       className={className ?? "h-11 w-[12.5rem] shrink-0"}
-      options={PLATFORMS.filter((entry) => !entry.comingSoon).map((entry) => ({
+      options={platforms.filter((entry) => !entry.comingSoon).map((entry) => ({
         value: entry.id,
         label: (
           <span className="flex items-center gap-2">
@@ -303,6 +299,13 @@ function ChannelSearchField({
   label: string;
   localSuggestions: ChannelSuggestion[];
 }) {
+  const { t } = useLanguage();
+  const sourceLabel: Record<SuggestionSource, string> = {
+    connected: t("counter.source.connected"),
+    favorite: t("counter.source.favorite"),
+    recent: t("counter.source.recent"),
+    twitch: t("counter.source.twitch"),
+  };
   const listId = useMemo(
     () => `channel-suggest-${label.replace(/\s+/g, "-").toLowerCase()}`,
     [label],
@@ -365,8 +368,8 @@ function ChannelSearchField({
   const showList = open && typed.length > 0;
   const emptyHint =
     platform === "ALL" || platform === "TWITCH"
-      ? "No matching channels in connected accounts, recent comparisons, or Twitch search."
-      : "No matching channels in connected accounts or recent comparisons.";
+      ? t("counter.search.emptyTwitch")
+      : t("counter.search.emptyLocal");
 
   const pick = (item: ChannelSuggestion) => {
     onValue(item.username);
@@ -445,7 +448,7 @@ function ChannelSearchField({
           {suggestions.length === 0 ? (
             <li className="px-3 py-3 text-center text-xs text-muted-foreground">
               {canSearchTwitch && twitchQuery.isFetching
-                ? "Searching Twitch…"
+                ? t("counter.search.searchingTwitch")
                 : emptyHint}
             </li>
           ) : (
@@ -484,8 +487,8 @@ function ChannelSearchField({
                   </span>
                   <span className="flex shrink-0 items-center gap-1.5 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
                     <PlatformIcon platform={item.platform} size={12} />
-                    {SOURCE_LABEL[item.source]}
-                    {item.isLive ? " · Live" : ""}
+                    {sourceLabel[item.source]}
+                    {item.isLive ? t("counter.search.liveSuffix") : ""}
                   </span>
                 </button>
               </li>
@@ -514,6 +517,7 @@ function SearchBar({
   label: string;
   localSuggestions: ChannelSuggestion[];
 }) {
+  const { t } = useLanguage();
   return (
     <form
       className="flex flex-wrap items-center gap-2"
@@ -531,12 +535,12 @@ function SearchBar({
         label={label}
         localSuggestions={localSuggestions}
       />
-      <PlatformSelect value={platform} onPlatform={onPlatform} ariaLabel="Platform" />
+      <PlatformSelect value={platform} onPlatform={onPlatform} ariaLabel={t("counter.aria.platform")} />
       <button
         type="submit"
         className="h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
-        Track Live
+        {t("counter.trackLive")}
       </button>
     </form>
   );
@@ -565,6 +569,7 @@ function VsComparisonBar({
   onTrack: (a: Target, b: Target) => void;
   localSuggestions: ChannelSuggestion[];
 }) {
+  const { t } = useLanguage();
   const ready = Boolean(normalizeUsername(inputA) && normalizeUsername(inputB));
   const selectClass = "h-11 w-[9.75rem] shrink-0";
 
@@ -586,19 +591,19 @@ function VsComparisonBar({
             platform={platformA}
             onValue={onInputA}
             onPlatform={onPlatformA}
-            label="Creator A"
+            label={t("counter.creatorA")}
             localSuggestions={localSuggestions}
           />
           <PlatformSelect
             value={platformA}
             onPlatform={onPlatformA}
-            ariaLabel="Creator A platform"
+            ariaLabel={t("counter.aria.creatorAPlatform")}
             className={selectClass}
           />
         </div>
         <div className="flex justify-center">
           <span className="rounded-full border border-white/10 bg-muted px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.2em] text-muted-foreground">
-            VS
+            {t("counter.vs")}
           </span>
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -607,13 +612,13 @@ function VsComparisonBar({
             platform={platformB}
             onValue={onInputB}
             onPlatform={onPlatformB}
-            label="Creator B"
+            label={t("counter.creatorB")}
             localSuggestions={localSuggestions}
           />
           <PlatformSelect
             value={platformB}
             onPlatform={onPlatformB}
-            ariaLabel="Creator B platform"
+            ariaLabel={t("counter.aria.creatorBPlatform")}
             className={selectClass}
           />
         </div>
@@ -622,7 +627,7 @@ function VsComparisonBar({
           disabled={!ready}
           className="h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-40"
         >
-          Track Live
+          {t("counter.trackLive")}
         </button>
       </div>
     </form>
@@ -642,6 +647,7 @@ function ChannelCard({
   compact?: boolean;
   action?: React.ReactNode;
 }) {
+  const { t } = useLanguage();
   const growth = useDailyGrowth(snapshot);
 
   if (error) {
@@ -655,7 +661,7 @@ function ChannelCard({
               : "bg-amber-400/15 text-amber-300"
           }`}
         >
-          {notFound ? "Channel Not Found" : "Lookup failed"}
+          {notFound ? t("counter.channelNotFound") : t("counter.lookupFailed")}
         </span>
         <p className="max-w-md text-xs text-muted-foreground">{error}</p>
       </div>
@@ -666,16 +672,23 @@ function ChannelCard({
     if (compact) {
       return (
         <div className="grid min-h-[7.5rem] place-items-center rounded-2xl border border-white/5 text-sm text-muted-foreground">
-          {loading ? "Loading…" : null}
+          {loading ? t("counter.loading") : null}
         </div>
       );
     }
     return (
       <div className="p-10 text-center text-sm text-muted-foreground">
-        {loading ? "Loading channel…" : "Search a channel to start tracking."}
+        {loading ? t("counter.loadingChannel") : t("counter.searchToStart")}
       </div>
     );
   }
+
+  const growthLabel =
+    growth === null
+      ? null
+      : t("counter.followersToday", {
+          n: `${growth >= 0 ? "+" : ""}${growth.toLocaleString()}`,
+        });
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/5 p-8 text-center">
@@ -683,7 +696,7 @@ function ChannelCard({
         {snapshot.avatarUrl ? (
           <img
             src={snapshot.avatarUrl}
-            alt={`${snapshot.displayName} avatar`}
+            alt={snapshot.displayName}
             className="size-16 rounded-full border border-[oklch(1_0_0/0.12)] object-cover"
           />
         ) : (
@@ -703,26 +716,28 @@ function ChannelCard({
 
       <RollingCounter value={snapshot.followers} size={compact ? "text-5xl" : "text-7xl"} />
       <p className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-        <Users className="size-3.5" aria-hidden /> Followers
+        <Users className="size-3.5" aria-hidden /> {t("counter.followers")}
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
         <span className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in_oklab,var(--primary)_18%,transparent)] px-3 py-1 font-semibold text-primary">
           <span className="size-2 animate-pulse rounded-full bg-primary" aria-hidden />
-          LIVE POLLING ACTIVE
+          {t("counter.livePollingActive")}
         </span>
         {snapshot.isLive ? (
           <span className="rounded-full bg-destructive/20 px-3 py-1 font-semibold text-destructive">
-            ● ON AIR{snapshot.viewers !== null ? ` · ${snapshot.viewers.toLocaleString()} viewers` : ""}
+            {t("counter.onAir")}
+            {snapshot.viewers !== null
+              ? ` ${t("counter.viewersSuffix", { n: snapshot.viewers.toLocaleString() })}`
+              : ""}
           </span>
         ) : (
-          <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">Offline</span>
-        )}
-        {growth !== null ? (
-          <span className="rounded-full border border-[oklch(1_0_0/0.1)] px-3 py-1">
-            {growth >= 0 ? "+" : ""}
-            {growth.toLocaleString()} Followers Today
+          <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+            {t("counter.offline")}
           </span>
+        )}
+        {growthLabel ? (
+          <span className="rounded-full border border-[oklch(1_0_0/0.1)] px-3 py-1">{growthLabel}</span>
         ) : null}
       </div>
 
@@ -733,25 +748,26 @@ function ChannelCard({
   );
 }
 
-function errorText(error: unknown): string | null {
+function errorText(error: unknown, fallback: string): string | null {
   if (!error) return null;
-  return error instanceof Error ? error.message : "Could not load this channel";
+  return error instanceof Error ? error.message : fallback;
 }
 
-const SOCIAL_PLATFORMS: { id: Exclude<CounterPlatform, "ALL">; label: string; comingSoon?: boolean }[] = [
-  { id: "KICK", label: "Kick" },
-  { id: "TWITCH", label: "Twitch" },
-  { id: "X", label: "X" },
-  { id: "TIKTOK", label: "TikTok (Coming Soon)", comingSoon: true },
-  { id: "YOUTUBE", label: "YouTube" },
-];
-
 function SocialCounterSection() {
+  const { t } = useLanguage();
   const run = useServerFn(lookupChannel);
   const [accounts, setAccounts] = useState<Saved[]>([]);
   const [input, setInput] = useState("");
   const [platform, setPlatform] = useState<Exclude<CounterPlatform, "ALL">>("TWITCH");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const socialPlatforms: { id: Exclude<CounterPlatform, "ALL">; label: string; comingSoon?: boolean }[] = [
+    { id: "KICK", label: "Kick" },
+    { id: "TWITCH", label: "Twitch" },
+    { id: "X", label: "X" },
+    { id: "TIKTOK", label: t("counter.platform.tiktokSoon"), comingSoon: true },
+    { id: "YOUTUBE", label: "YouTube" },
+  ];
 
   useEffect(() => {
     setAccounts(readJson<Saved[]>(SOCIAL_KEY, []));
@@ -821,16 +837,16 @@ function SocialCounterSection() {
           ref={inputRef}
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          placeholder="Username or handle"
+          placeholder={t("counter.social.usernamePlaceholder")}
           className={`${field} min-w-[180px] flex-1`}
           dir="auto"
         />
         <DarkSelect
           value={platform}
           onValueChange={(next) => setPlatform(next as Exclude<CounterPlatform, "ALL">)}
-          aria-label="Social platform"
+          aria-label={t("counter.aria.socialPlatform")}
           className="h-11 w-[11.5rem] shrink-0"
-          options={SOCIAL_PLATFORMS.filter((entry) => !entry.comingSoon).map((entry) => ({
+          options={socialPlatforms.filter((entry) => !entry.comingSoon).map((entry) => ({
             value: entry.id,
             label: (
               <span className="flex items-center gap-2">
@@ -845,33 +861,33 @@ function SocialCounterSection() {
           className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
         >
           <Plus className="size-4" aria-hidden />
-          Add
+          {t("counter.social.add")}
         </button>
       </form>
 
       {accounts.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No accounts yet"
-          description="Add Kick, Twitch, or other channels to sum public follower totals in one live counter."
-          actionLabel="Add first account"
+          title={t("counter.social.emptyTitle")}
+          description={t("counter.social.emptyDescription")}
+          actionLabel={t("counter.social.addFirst")}
           onAction={focusAdd}
         />
       ) : (
         <div className="rounded-2xl border border-white/5 px-5 py-6 text-center">
           {total === null ? (
-            <p className="text-sm text-muted-foreground">
-              No public follower totals yet for these accounts.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("counter.social.noTotalsYet")}</p>
           ) : (
             <>
               <RollingCounter value={total} size="text-6xl" />
               <p className="mt-2 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                <Users className="size-3.5" aria-hidden /> Combined followers
+                <Users className="size-3.5" aria-hidden /> {t("counter.social.combinedFollowers")}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {knownCounts.length} of {accounts.length} account
-                {accounts.length === 1 ? "" : "s"} with a live total
+                {t("counter.social.accountsWithTotal", {
+                  known: knownCounts.length,
+                  total: accounts.length,
+                })}
               </p>
             </>
           )}
@@ -882,7 +898,7 @@ function SocialCounterSection() {
         <ul className="space-y-2">
           {accounts.map((account, index) => {
             const snapshot = queries[index]?.data;
-            const error = errorText(queries[index]?.error);
+            const error = errorText(queries[index]?.error, t("counter.couldNotLoad"));
             const followers = snapshot?.followers ?? null;
             return (
               <li
@@ -915,14 +931,14 @@ function SocialCounterSection() {
                   ) : (
                     <p className="max-w-[12rem] text-[0.68rem] leading-snug text-muted-foreground">
                       {queries[index]?.isFetching
-                        ? "Looking up…"
-                        : error || snapshot?.note || "No public count"}
+                        ? t("counter.social.lookingUp")
+                        : error || snapshot?.note || t("counter.social.noPublicCount")}
                     </p>
                   )}
                 </div>
                 <button
                   type="button"
-                  aria-label={`Remove ${account.displayName}`}
+                  aria-label={t("counter.aria.remove", { name: account.displayName })}
                   className="text-muted-foreground hover:text-destructive"
                   onClick={() =>
                     persistSocial(
@@ -948,6 +964,7 @@ function SocialCounterSection() {
 function LiveCounterPage() {
   const { user } = Route.useRouteContext();
   const { data: workspace } = useWorkspace(user.id);
+  const { t } = useLanguage();
 
   const [pane, setPane] = useState<"live" | "social">("live");
   const [vsMode, setVsMode] = useState(false);
@@ -1118,25 +1135,25 @@ function LiveCounterPage() {
     <AppShell
       user={user}
       profile={workspace?.profile}
-      title="Counter"
-      subtitle="Live channel counts and a combined social total — from APIs that actually return followers."
+      title={t("counter.title")}
+      subtitle={t("counter.subtitle")}
     >
       <StudioPageTabs
         value={pane}
         onChange={setPane}
         items={[
-          { id: "live", label: "Live" },
-          { id: "social", label: "Social" },
+          { id: "live", label: t("counter.tab.live") },
+          { id: "social", label: t("counter.tab.social") },
         ]}
       />
       {pane === "live" ? (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-1 border-b border-white/5 pb-4">
           <button type="button" className={toggleClass(!vsMode)} onClick={() => setVsMode(false)}>
-            <Radio className="size-4" aria-hidden /> Single View
+            <Radio className="size-4" aria-hidden /> {t("counter.singleView")}
           </button>
           <button type="button" className={toggleClass(vsMode)} onClick={() => setVsMode(true)}>
-            <Swords className="size-4" aria-hidden /> VS Comparison Mode
+            <Swords className="size-4" aria-hidden /> {t("counter.vsMode")}
           </button>
         </div>
 
@@ -1153,7 +1170,7 @@ function LiveCounterPage() {
                   setPlatform(nextPlatform);
                   setTarget({ platform: nextPlatform, username });
                 }}
-                label="Channel username"
+                label={t("counter.channelUsername")}
                 localSuggestions={localSuggestions}
               />
 
@@ -1192,7 +1209,7 @@ function LiveCounterPage() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`Remove ${entry.displayName}`}
+                        aria-label={t("counter.aria.remove", { name: entry.displayName })}
                         className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                         onClick={() =>
                           persist(
@@ -1215,7 +1232,7 @@ function LiveCounterPage() {
             <ChannelCard
               snapshot={main.data}
               loading={main.isFetching}
-              error={errorText(main.error)}
+              error={errorText(main.error, t("counter.couldNotLoad"))}
               action={
                 main.data ? (
                   <button
@@ -1232,7 +1249,7 @@ function LiveCounterPage() {
                       fill={isFavorite ? "currentColor" : "none"}
                       aria-hidden
                     />
-                    {isFavorite ? "Favorited" : "Favorite"}
+                    {isFavorite ? t("counter.favorited") : t("counter.favorite")}
                   </button>
                 ) : null
               }
@@ -1266,13 +1283,13 @@ function LiveCounterPage() {
                   <ChannelCard
                     snapshot={sideA.data}
                     loading={sideA.isFetching}
-                    error={errorText(sideA.error)}
+                    error={errorText(sideA.error, t("counter.couldNotLoad"))}
                     compact
                   />
                   <ChannelCard
                     snapshot={sideB.data}
                     loading={sideB.isFetching}
-                    error={errorText(sideB.error)}
+                    error={errorText(sideB.error, t("counter.couldNotLoad"))}
                     compact
                   />
                 </div>
@@ -1280,16 +1297,20 @@ function LiveCounterPage() {
                 {gap !== null ? (
                   <div className="border-t border-white/5 p-6 text-center">
                     {gap === 0 ? (
-                      <p className="text-lg font-semibold">Dead heat — both channels are level.</p>
+                      <p className="text-lg font-semibold">{t("counter.deadHeat")}</p>
                     ) : (
                       <>
-                        <p className="text-sm text-muted-foreground">Live difference</p>
+                        <p className="text-sm text-muted-foreground">{t("counter.liveDifference")}</p>
                         <div className="flex justify-center">
                           <RollingCounter value={Math.abs(gap)} size="text-5xl" />
                         </div>
                         <p className="mt-2 text-sm font-semibold">
-                          {(gap > 0 ? sideA.data?.displayName : sideB.data?.displayName) ?? "Channel"}{" "}
-                          leads by {Math.abs(gap).toLocaleString()} Followers
+                          {t("counter.leadsBy", {
+                            name:
+                              (gap > 0 ? sideA.data?.displayName : sideB.data?.displayName) ??
+                              t("counter.channelFallback"),
+                            n: Math.abs(gap).toLocaleString(),
+                          })}
                         </p>
                         {(() => {
                           const a = sideA.data?.followers ?? 0;
