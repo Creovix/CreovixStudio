@@ -4,12 +4,14 @@ import type React from "react";
 import { OverlayView } from "@/components/overlay/OverlayView";
 import { PlatformIcon, normalizePlatform } from "@/components/widgets/PlatformIcon";
 import { RoleBadgeIcon, resolveBadgeRoles } from "@/components/widgets/RoleBadgeIcon";
+import { StreamEventsScheduleView } from "@/components/widgets/StreamEventsScheduleCard";
 
 import { useKickBadges, kickGlobalBadgeUrl, type KickBadge } from "@/hooks/useKickBadges";
 import { TWITCH_BADGE_SET, useTwitchBadges } from "@/hooks/useTwitchBadges";
 import { useLiveChat, type ChatMessage, type ChatSources } from "@/hooks/useLiveChat";
 import { parseOverlayTheme, withAlpha } from "@/lib/overlayTheme";
 import { parseWidgetThemeId, widgetThemeSkin } from "@/lib/widgetThemes";
+import type { StreamEventsRuntime } from "@/lib/streamEventsSchedule";
 import { formatDuration, type TimerFrame } from "@/lib/timer";
 import {
   describeEvent,
@@ -1447,6 +1449,7 @@ export function WidgetRenderer({
   events,
   spin,
   spotlight = null,
+  streamEvents = null,
   tappers = [],
   tapGoal = 0,
   chat = null,
@@ -1461,6 +1464,7 @@ export function WidgetRenderer({
   events: OverlayEvent[];
   spin: SpinState | null;
   spotlight?: SpotlightMessage | null;
+  streamEvents?: StreamEventsRuntime | null;
   tappers?: TapperEntry[];
   tapGoal?: number;
   chat?: ChatSources | null;
@@ -1484,6 +1488,10 @@ export function WidgetRenderer({
       return <TikTokTapGoalView config={config} taps={tapGoal} demo={demo} />;
     case "CHAT_SPOTLIGHT":
       return <ChatSpotlightView config={config} spotlight={spotlight} chat={chat} demo={demo} />;
+    case "STREAM_EVENTS_SCHEDULE":
+      return (
+        <StreamEventsScheduleView config={config} runtime={streamEvents} demo={demo} />
+      );
     case "SUBATHON_TIMER":
     default: {
       const skin = widgetThemeSkin(parseWidgetThemeId(config));

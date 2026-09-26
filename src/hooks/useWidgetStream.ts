@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useWidgetRealtime } from "@/hooks/useWidgetRealtime";
 import type { ChatMessage, ChatSources } from "@/hooks/useLiveChat";
+import type { StreamEventsRuntime } from "@/lib/streamEventsSchedule";
 import { computeRemaining, type TimerFrame } from "@/lib/timer";
 import type {
   GoalSnapshot,
@@ -28,6 +29,7 @@ type Snapshot = {
   events: OverlayEvent[];
   spin: SpinState | null;
   spotlight?: SpotlightMessage | null;
+  streamEvents?: StreamEventsRuntime | null;
   tappers?: TapperEntry[];
   tapGoal?: { taps: number } | null;
   chat?: ChatSources | null;
@@ -47,6 +49,7 @@ export function useWidgetStream(publicToken: string | null) {
   const [events, setEvents] = useState<OverlayEvent[]>([]);
   const [spin, setSpin] = useState<SpinState | null>(null);
   const [spotlight, setSpotlight] = useState<SpotlightMessage | null>(null);
+  const [streamEvents, setStreamEvents] = useState<StreamEventsRuntime | null>(null);
   const [tappers, setTappers] = useState<TapperEntry[]>([]);
   const [tapGoal, setTapGoal] = useState(0);
   const [chat, setChat] = useState<ChatSources | null>(null);
@@ -79,6 +82,7 @@ export function useWidgetStream(publicToken: string | null) {
         setEvents(payload.events ?? []);
         setSpin(payload.spin);
         setSpotlight(payload.spotlight ?? null);
+        setStreamEvents(payload.streamEvents ?? null);
         setTappers(payload.tappers ?? []);
         setTapGoal(payload.tapGoal?.taps ?? 0);
         setChat(payload.chat ?? null);
@@ -101,6 +105,14 @@ export function useWidgetStream(publicToken: string | null) {
           config: unknown;
         };
         setSpotlight(payload.spotlight);
+        setWidget((current) => (current ? { ...current, config: payload.config } : current));
+      });
+      source.addEventListener("streamevents", (event) => {
+        const payload = JSON.parse((event as MessageEvent).data) as {
+          streamEvents: StreamEventsRuntime | null;
+          config: unknown;
+        };
+        setStreamEvents(payload.streamEvents);
         setWidget((current) => (current ? { ...current, config: payload.config } : current));
       });
       source.addEventListener("tappers", (event) => {
@@ -151,7 +163,6 @@ export function useWidgetStream(publicToken: string | null) {
     };
   }, [publicToken]);
 
-  // Fresh authoritative snapshot; also used as the Realtime broadcast handler.
   const poll = useCallback(async () => {
     if (!publicToken) return;
     try {
@@ -165,6 +176,7 @@ export function useWidgetStream(publicToken: string | null) {
       setEvents(payload.events ?? []);
       setSpin(payload.spin);
       setSpotlight(payload.spotlight ?? null);
+      setStreamEvents(payload.streamEvents ?? null);
       setTappers(payload.tappers ?? []);
       setTapGoal(payload.tapGoal?.taps ?? 0);
       if (payload.chat) setChat(payload.chat);
@@ -186,7 +198,6 @@ export function useWidgetStream(publicToken: string | null) {
     return () => clearInterval(id);
   }, [publicToken, poll]);
 
-  // Supabase Realtime: instant push whenever the server changes widget state.
   useWidgetRealtime(widget?.id ?? null, (message) => {
     if (message.event === "chat") {
       const payload = message.payload as Partial<ChatMessage>;
@@ -225,6 +236,7 @@ export function useWidgetStream(publicToken: string | null) {
     events,
     spin,
     spotlight,
+    streamEvents,
     tappers,
     tapGoal,
     chat,

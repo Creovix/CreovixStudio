@@ -1837,6 +1837,7 @@ export type Database = {
         | "SPIN_WHEEL"
         | "EMOTE_RAIN"
         | "CHAT_SPOTLIGHT"
+        | "STREAM_EVENTS_SCHEDULE"
         | "TIKTOK_TAPPERS"
         | "TIKTOK_TAP_GOAL"
     }
@@ -1995,6 +1996,7 @@ export const Constants = {
         "SPIN_WHEEL",
         "EMOTE_RAIN",
         "CHAT_SPOTLIGHT",
+        "STREAM_EVENTS_SCHEDULE",
         "TIKTOK_TAPPERS",
         "TIKTOK_TAP_GOAL",
       ],

@@ -8,6 +8,7 @@ import {
   parseEmoteRainConfig,
   parseSpinConfig,
   parseSpotlightConfig,
+  parseStreamEventsScheduleConfig,
   parseTappersConfig,
   parseTapGoalConfig,
   type WidgetType,
@@ -32,6 +33,8 @@ function defaultConfig(type: WidgetType, goalType?: GoalTypeId): Record<string, 
       return { ...parseEmoteRainConfig(null) };
     case "CHAT_SPOTLIGHT":
       return { ...parseSpotlightConfig(null) };
+    case "STREAM_EVENTS_SCHEDULE":
+      return { ...parseStreamEventsScheduleConfig(null) };
     case "TIKTOK_TAPPERS":
       return { ...parseTappersConfig(null) };
     case "TIKTOK_TAP_GOAL":

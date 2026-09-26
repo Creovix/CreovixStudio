@@ -11,7 +11,8 @@ import { WidgetRenderer } from "@/components/widgets/WidgetRenderer";
 import { SubathonElementControlPanel } from "@/components/widgets/SubathonElementControlPanel";
 import { SubathonTimerSidebar } from "@/components/widgets/SubathonTimerSidebar";
 import { SpotlightControlPanel } from "@/components/widgets/SpotlightControlPanel";
-import { parseSpotlightConfig } from "@/lib/widgets";
+import { StreamEventsScheduleControlPanel } from "@/components/widgets/StreamEventsScheduleControlPanel";
+import { parseSpotlightConfig, parseStreamEventsScheduleState } from "@/lib/widgets";
 import { supabase } from "@/lib/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { syncGoalFollowers } from "@/lib/goals.functions";
@@ -800,6 +801,17 @@ function WidgetBuilder() {
               />
             ) : null}
 
+            {widget.type === "STREAM_EVENTS_SCHEDULE" ? (
+              <StreamEventsScheduleControlPanel
+                widgetId={widget.id}
+                config={config}
+                state={widget.state}
+                onConfigChange={(next) => {
+                  setConfig({ ...next });
+                }}
+              />
+            ) : null}
+
             <TestSimulatePanel widgetId={widget.id} type={widget.type} lang={"en"} />
 
             <div className="rounded-xl border border-border bg-background p-4">
@@ -840,6 +852,10 @@ function WidgetBuilder() {
               events={stream.events}
               spin={stream.spin}
               spotlight={stream.spotlight}
+              streamEvents={
+                stream.streamEvents ??
+                (widget ? parseStreamEventsScheduleState(widget.state) : null)
+              }
               tappers={stream.tappers}
               tapGoal={stream.tapGoal}
 

@@ -352,6 +352,74 @@ export function SpotlightPreview() {
   );
 }
 
+const HUB_SCHEDULE_EVENTS = [
+  { title: "Just Chatting", remaining: 12 * 60 + 40 },
+  { title: "Main Game", remaining: 3 * 60 + 18 },
+  { title: "Viewer Games", remaining: 45 },
+] as const;
+
+export function StreamEventsSchedulePreview() {
+  const reduced = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  const [seconds, setSeconds] = useState(HUB_SCHEDULE_EVENTS[0]!.remaining);
+  const [motion, setMotion] = useState<"shown" | "exit" | "enter">("shown");
+
+  useEffect(() => {
+    if (reduced) return;
+    const tick = window.setInterval(() => {
+      setSeconds((current) => {
+        if (current <= 1) {
+          setMotion("exit");
+          window.setTimeout(() => {
+            setIndex((i) => {
+              const next = (i + 1) % HUB_SCHEDULE_EVENTS.length;
+              setSeconds(HUB_SCHEDULE_EVENTS[next]!.remaining);
+              setMotion("enter");
+              window.requestAnimationFrame(() =>
+                window.requestAnimationFrame(() => setMotion("shown")),
+              );
+              return next;
+            });
+          }, HUB_SHIFT_MS);
+          return current;
+        }
+        return current - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(tick);
+  }, [reduced]);
+
+  const event = HUB_SCHEDULE_EVENTS[index]!;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  const urgent = seconds <= 60;
+  const warn = seconds <= 120;
+
+  return (
+    <div className="grid h-full place-items-center overflow-hidden px-3" dir="rtl">
+      <div
+        className="hub-spotlight-card w-full rounded-xl border border-[oklch(1_0_0/0.1)] bg-[oklch(1_0_0/0.05)] px-3 py-2.5 backdrop-blur-sm"
+        data-motion={motion}
+      >
+        <div className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-primary" />
+          <span className="truncate text-[0.68rem] font-bold text-primary">{event.title}</span>
+          <span className="ms-auto text-[0.5rem] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            {index === 0 ? "ON STREAM" : "UP NEXT"}
+          </span>
+        </div>
+        <p
+          className={`mt-1.5 font-mono text-[0.95rem] font-bold tabular-nums ${
+            urgent ? "animate-pulse text-rose-400" : warn ? "text-amber-300" : "text-zinc-100"
+          }`}
+        >
+          {m}:{String(s).padStart(2, "0")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function WheelPreview() {
   return (
     <div className="grid h-full place-items-center overflow-hidden">

@@ -4,6 +4,7 @@ import { snapshotFromRow, toFrame } from "@/lib/timer";
 import {
   parseSpinState,
   parseSpotlightState,
+  parseStreamEventsScheduleState,
   parseTappers,
   parseTappersConfig,
   type OverlayEvent,
@@ -131,6 +132,8 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/live")({
 
         const spin = type === "SPIN_WHEEL" ? parseSpinState(widget.state) : null;
         const spotlight = type === "CHAT_SPOTLIGHT" ? parseSpotlightState(widget.state) : null;
+        const streamEvents =
+          type === "STREAM_EVENTS_SCHEDULE" ? parseStreamEventsScheduleState(widget.state) : null;
 
         let chat = null;
         if (type === "CHAT_BOX" || type === "CHAT_SPOTLIGHT") {
@@ -146,6 +149,7 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/live")({
             events,
             spin,
             spotlight,
+            streamEvents,
             tappers,
             tapGoal,
             chat,

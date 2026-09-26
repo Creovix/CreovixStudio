@@ -6,6 +6,7 @@ import type { OverlayEvent } from "@/lib/widgets";
 import {
   parseSpinState,
   parseSpotlightState,
+  parseStreamEventsScheduleState,
   parseTappers,
   parseTappersConfig,
 } from "@/lib/widgets";
@@ -74,6 +75,7 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/stream")({
             let lastEventsPayload = "";
             let lastSpinPayload = "";
             let lastSpotlightPayload = "";
+            let lastStreamEventsPayload = "";
             let lastTapGoalPayload = "";
             let lastTappersPayload = "";
             let lastTimerEventsPayload = "";
@@ -240,6 +242,20 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/stream")({
                 }
                 return;
               }
+              if (type === "STREAM_EVENTS_SCHEDULE") {
+                const current = await fetchWidgetState();
+                const streamEvents = parseStreamEventsScheduleState(current?.state ?? null);
+                const payload = JSON.stringify({
+                  streamEvents,
+                  config: current?.config ?? null,
+                });
+                if (payload !== lastStreamEventsPayload) {
+                  lastStreamEventsPayload = payload;
+                  lastBeat = Date.now();
+                  send("streamevents", { streamEvents, config: current?.config ?? null });
+                }
+                return;
+              }
               if (type === "GOAL_BAR") {
                 const goal = await fetchGoal();
                 const payload = JSON.stringify(goal);
@@ -315,6 +331,10 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/stream")({
                 : [];
             const spin = type === "SPIN_WHEEL" ? parseSpinState(widget.state) : null;
             const spotlight = type === "CHAT_SPOTLIGHT" ? parseSpotlightState(widget.state) : null;
+            const streamEvents =
+              type === "STREAM_EVENTS_SCHEDULE"
+                ? parseStreamEventsScheduleState(widget.state)
+                : null;
             let chat = null;
             if (type === "CHAT_BOX" || type === "CHAT_SPOTLIGHT") {
               const { resolveChatSources } = await import("@/lib/chatSources.server");
@@ -336,6 +356,7 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/stream")({
             lastEventsPayload = JSON.stringify(events);
             lastSpinPayload = JSON.stringify({ spin, config: widget.config });
             lastSpotlightPayload = JSON.stringify({ spotlight, config: widget.config });
+            lastStreamEventsPayload = JSON.stringify({ streamEvents, config: widget.config });
             lastTimerEventsPayload = type === "SUBATHON_TIMER" ? JSON.stringify(events) : "";
 
             send("init", {
@@ -351,6 +372,7 @@ export const Route = createFileRoute("/api/public/overlay/$publicId/stream")({
               events,
               spin,
               spotlight,
+              streamEvents,
               tappers,
               tapGoal,
               chat,

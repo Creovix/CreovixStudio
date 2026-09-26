@@ -30,7 +30,7 @@ export const Route = createFileRoute("/overlay/$publicId")({
 
 function OverlayPage() {
   const { publicId } = Route.useParams();
-  const { widget, frame, remaining, goal, events, spin, spotlight, tappers, chat, testMessages, status } =
+  const { widget, frame, remaining, goal, events, spin, spotlight, streamEvents, tappers, chat, testMessages, status } =
     useWidgetStream(publicId);
 
   // OBS composites the page over the scene, so nothing may paint a background.
@@ -56,6 +56,7 @@ function OverlayPage() {
           events={events}
           spin={spin}
           spotlight={spotlight}
+          streamEvents={streamEvents}
           tappers={tappers}
           chat={chat}
           testMessages={testMessages}

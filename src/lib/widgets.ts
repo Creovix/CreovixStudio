@@ -5,6 +5,13 @@
  */
 
 import { OVERLAY_FONTS, DEFAULT_OVERLAY_THEME } from "@/lib/overlayTheme";
+import {
+  defaultScheduleEvents,
+  normalizeScheduleEvents,
+  parseStreamEventsRuntime,
+  type StreamEventsRuntime,
+  type StreamScheduleEvent,
+} from "@/lib/streamEventsSchedule";
 
 
 export type WidgetType =
@@ -14,6 +21,7 @@ export type WidgetType =
   | "SPIN_WHEEL"
   | "EMOTE_RAIN"
   | "CHAT_SPOTLIGHT"
+  | "STREAM_EVENTS_SCHEDULE"
   | "TIKTOK_TAPPERS"
   | "TIKTOK_TAP_GOAL";
 
@@ -27,6 +35,11 @@ export const WIDGET_TYPES: { value: WidgetType; label: string; hint: string }[] 
     value: "CHAT_SPOTLIGHT",
     label: "Chat spotlight",
     hint: "Pin one chat message to a featured glass card",
+  },
+  {
+    value: "STREAM_EVENTS_SCHEDULE",
+    label: "Stream events schedule",
+    hint: "Timed on-stream segments with live countdown on OBS",
   },
   {
     value: "TIKTOK_TAPPERS",
@@ -47,6 +60,7 @@ export const WIDGET_LABEL: Record<WidgetType, string> = {
   SPIN_WHEEL: "Spin wheel",
   EMOTE_RAIN: "Emote rain",
   CHAT_SPOTLIGHT: "Chat spotlight",
+  STREAM_EVENTS_SCHEDULE: "جدول فعاليات البث",
   TIKTOK_TAPPERS: "Top tappers overlay",
   TIKTOK_TAP_GOAL: "TikTok tap goal overlay",
 };
@@ -304,6 +318,34 @@ export function parseSpotlightState(raw: unknown): SpotlightMessage | null {
     nonce: typeof entry["nonce"] === "number" ? entry["nonce"] : 0,
   };
 }
+
+/* ----------------------- Stream events schedule ----------------------- */
+
+export type StreamEventsScheduleConfig = BaseStyle & {
+  events: StreamScheduleEvent[];
+  showUptime: boolean;
+  title: string;
+};
+
+export function parseStreamEventsScheduleConfig(raw: unknown): StreamEventsScheduleConfig {
+  const source = asRecord(raw);
+  const title =
+    typeof source["title"] === "string" && source["title"].trim()
+      ? source["title"].trim().slice(0, 60)
+      : "جدول فعاليات البث";
+  return {
+    ...parseStyle(source, { ...DEFAULT_STYLE, fontSize: 22, accentColor: "#bee1fc" }),
+    events: normalizeScheduleEvents(source["events"]),
+    showUptime: bool(source["showUptime"], true),
+    title,
+  };
+}
+
+export function parseStreamEventsScheduleState(raw: unknown): StreamEventsRuntime {
+  return parseStreamEventsRuntime(raw);
+}
+
+export { defaultScheduleEvents };
 
 export type OverlayEvent = {
   id: string;
