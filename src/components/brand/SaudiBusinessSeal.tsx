@@ -10,13 +10,13 @@ type SaudiBusinessSealProps = {
 
 /**
  * Dashboard footer identity — centered SBC verification link + Saudi-made line.
- * Uses the global Saudi Web typeface from the design system.
+ * Uses local Saudi Web only (exempt from the global IBM Plex Sans Arabic stack).
  */
 export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
   return (
     <footer
       className={cn(
-        "mt-8 flex justify-center border-t border-[oklch(1_0_0/0.06)] pt-6 pb-1",
+        "saudi-identity-footer mt-8 flex justify-center border-t border-[oklch(1_0_0/0.06)] pt-6 pb-1",
         className,
       )}
     >
@@ -24,7 +24,6 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
         dir="rtl"
         lang="ar"
         className="max-w-full px-1 text-center font-bold text-[0.82rem] leading-none tracking-wide text-muted-foreground"
-        style={{ fontFamily: "var(--font-saudi)" }}
       >
         صناعة سعودية
         <span aria-hidden className="mx-2 text-[oklch(1_0_0/0.35)]">
