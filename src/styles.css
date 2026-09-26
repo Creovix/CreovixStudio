@@ -4,10 +4,85 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Tajawal is the app-wide typeface.
- * Disk files cover 200–500; 600/700 alias Medium so Tailwind
- * font-semibold / font-bold stay crisp (no faux-bold).
+ * Official Saudi Web (Ministry of Culture / ArabicType) — app-wide typeface.
+ * Regular + Bold only on disk; mid weights map to Regular, 600+ to Bold
+ * so Tailwind font-semibold / font-bold stay crisp (no faux-bold).
+ * Tajawal remains a graceful fallback if local Saudi files fail to load.
  */
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Regular.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Regular.woff") format("woff");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Regular.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Regular.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Regular.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Regular.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Regular.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saudi";
+  src:
+    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
+    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Optional Tajawal stack (local files when present) */
 @font-face {
   font-family: "Tajawal";
   src: url("./assets/Fonts/Tajawal-ExtraLight.ttf") format("truetype");
@@ -54,35 +129,6 @@
   font-family: "Tajawal";
   src: url("./assets/Fonts/Tajawal-Medium.ttf") format("truetype");
   font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Official Saudi web font (Ministry of Culture) — identity / verification footer */
-@font-face {
-  font-family: "Saudi";
-  src:
-    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
-    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Saudi";
-  src:
-    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
-    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Saudi";
-  src:
-    url("./assets/Fonts/Saudi Font/WOFF-2-TT/Saudi Web/SaudiWeb-Bold.woff2") format("woff2"),
-    url("./assets/Fonts/Saudi Font/WOFF-TT/Saudi Web/SaudiWeb-Bold.woff") format("woff");
-  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -160,9 +206,9 @@
   --color-overlay-line: var(--overlay-line);
   --color-overlay-box: var(--overlay-box);
   --color-overlay-box-border: var(--overlay-box-border);
-  --font-sans: "Tajawal", ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: "Tajawal", ui-sans-serif, sans-serif;
-  --font-saudi: "Saudi", sans-serif;
+  --font-sans: "Saudi", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Saudi", "Tajawal", ui-sans-serif, sans-serif;
+  --font-saudi: "Saudi", "Tajawal", sans-serif;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -549,7 +595,8 @@ body.overlay-transparent {
 
 /* ---------- Premium studio surfaces & spatial motion ---------- */
 html,
-body {
+body,
+#root {
   font-family: var(--font-sans);
   font-weight: 400;
   line-height: 1.6;
@@ -565,8 +612,8 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: inherit;
-  font-weight: 600;
+  font-family: var(--font-sans);
+  font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.01em;
   text-wrap: balance;
@@ -577,7 +624,16 @@ button,
 input,
 select,
 textarea,
-label {
+label,
+a,
+span,
+li,
+td,
+th,
+nav,
+aside,
+header,
+footer {
   font-family: inherit;
   line-height: 1.55;
 }
@@ -588,7 +644,7 @@ textarea::placeholder {
   letter-spacing: 0;
 }
 
-/* Arabic / auto-dir user content: Tajawal reads cleanest with open leading */
+/* Arabic / RTL surfaces stay on the Saudi design-system stack */
 :lang(ar),
 [lang="ar"],
 [dir="rtl"],

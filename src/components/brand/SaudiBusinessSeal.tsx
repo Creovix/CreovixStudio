@@ -10,7 +10,7 @@ type SaudiBusinessSealProps = {
 
 /**
  * Dashboard footer identity — centered SBC verification link + Saudi-made line.
- * Uses SaudiWeb-Bold via font-family: Saudi; font-weight: bold.
+ * Uses the global Saudi Web typeface from the design system.
  */
 export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
   return (
@@ -23,8 +23,8 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
       <p
         dir="rtl"
         lang="ar"
-        className="max-w-full px-1 text-center text-[0.82rem] leading-none tracking-wide text-muted-foreground"
-        style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}
+        className="max-w-full px-1 text-center font-bold text-[0.82rem] leading-none tracking-wide text-muted-foreground"
+        style={{ fontFamily: "var(--font-saudi)" }}
       >
         صناعة سعودية
         <span aria-hidden className="mx-2 text-[oklch(1_0_0/0.35)]">
@@ -35,7 +35,6 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}
         >
           موثق لدى المركز السعودي للأعمال
         </a>

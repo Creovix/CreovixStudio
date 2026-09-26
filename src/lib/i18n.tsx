@@ -21,7 +21,7 @@ const DICT = {
   "nav.counter": "عداد المتابعين (مباشر)",
   "nav.giveaway": "السحب",
   "nav.clipCommand": "أمر الكليب",
-  "nav.markPoints": "نقاط العلامات",
+  "nav.markPoints": "العلامات المرجعية",
   "nav.collapseSidebar": "طي الشريط الجانبي",
   "nav.expandSidebar": "توسيع الشريط الجانبي",
   "home.title": "أدوات بث صُمّمت لستريمك.",
@@ -670,7 +670,7 @@ const DICT = {
   "schedule.prevMonth": "الشهر السابق",
   "schedule.nextMonth": "الشهر التالي",
 
-  "marks.title": "نقاط العلامات",
+  "marks.title": "العلامات المرجعية",
   "marks.subtitle":
     "أبرز لحظات خاصة. !mark للبدء و !emark للإغلاق — الأوقات وفق مدة البث.",
   "marks.search": "بحث في العلامات…",
