@@ -18,6 +18,16 @@ import { PlanCompareDialog } from "@/components/onboarding/PlanCompareDialog";
 import { RedeemCodeSection } from "@/components/onboarding/RedeemCodeSection";
 import { PlatformAsset } from "@/components/icons/platformAssets";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import {
+  ActivityPreview,
+  ChatPreview,
+  CountdownPreview,
+  EmotePreview,
+  MediaRequestPreview,
+  SocialPreview,
+  StreamEventsSchedulePreview,
+  TimerPreview,
+} from "@/components/hub/previews";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
@@ -78,35 +88,79 @@ const BILLING_LABEL_KEY: Record<ProBillingInterval, TranslationKey> = {
 };
 
 function FeaturePreviewThumb({ id }: { id: FeaturePreviewId }) {
-  const label =
-    id === "platforms"
-      ? "منصات"
-      : id === "commands"
-        ? "!cmd"
-        : id === "timers"
-          ? "⏱"
-          : id === "widgets"
-            ? "OBS"
-            : id === "linkInBio"
-              ? "bio"
-              : id === "analytics"
-                ? "↗"
-                : id === "emoteRain"
-                  ? "✦"
-                  : id === "export"
-                    ? "JSON"
-                    : "Pro";
+  const preview =
+    id === "platforms" ? (
+      <div className="flex h-full items-center justify-center gap-2 px-2">
+        {(["kick", "twitch", "youtube", "tiktok"] as const).map((name) => (
+          <span
+            key={name}
+            className="grid size-8 place-items-center rounded-lg border border-white/10 bg-zinc-900/80"
+          >
+            <PlatformAsset name={name} size={16} variant="Primary" className="size-4" />
+          </span>
+        ))}
+      </div>
+    ) : id === "commands" ? (
+      <div className="flex h-full flex-col justify-end gap-1.5 px-3 py-2">
+        {[
+          { cmd: "!discord", reply: "Join our Discord →" },
+          { cmd: "!socials", reply: "All links in bio" },
+          { cmd: "!uptime", reply: "Live for 2h 14m" },
+        ].map((row) => (
+          <div
+            key={row.cmd}
+            className="rounded-lg border border-white/8 bg-zinc-900/70 px-2.5 py-1.5 text-[0.62rem]"
+          >
+            <span className="font-semibold text-[#bee1fc]">{row.cmd}</span>{" "}
+            <span className="text-zinc-400">{row.reply}</span>
+          </div>
+        ))}
+      </div>
+    ) : id === "timers" ? (
+      <CountdownPreview />
+    ) : id === "widgets" ? (
+      <ChatPreview />
+    ) : id === "linkInBio" ? (
+      <SocialPreview />
+    ) : id === "analytics" ? (
+      <ActivityPreview />
+    ) : id === "unlimited" ? (
+      <TimerPreview />
+    ) : id === "advanced" ? (
+      <StreamEventsSchedulePreview />
+    ) : id === "emoteRain" ? (
+      <EmotePreview />
+    ) : id === "export" ? (
+      <div className="flex h-full flex-col justify-center gap-1.5 px-3 font-mono text-[0.58rem] text-zinc-400">
+        <div className="rounded-lg border border-white/8 bg-zinc-900/80 px-2.5 py-2 leading-relaxed">
+          <span className="text-emerald-400/90">{"{"}</span>
+          <br />
+          &nbsp;&nbsp;<span className="text-[#bee1fc]">&quot;version&quot;</span>:{" "}
+          <span className="text-amber-200/90">&quot;1&quot;</span>,
+          <br />
+          &nbsp;&nbsp;<span className="text-[#bee1fc]">&quot;commands&quot;</span>:{" "}
+          <span className="text-zinc-300">[…]</span>
+          <br />
+          <span className="text-emerald-400/90">{"}"}</span>
+        </div>
+      </div>
+    ) : (
+      <MediaRequestPreview />
+    );
+
   return (
     <div
-      className="relative mt-2 h-20 w-full overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950"
+      className="relative mt-2 h-[7.25rem] w-full overflow-hidden rounded-lg border border-white/10 bg-[#0a0a0a]"
       aria-hidden
     >
-      <div className="absolute inset-x-3 top-3 h-2 rounded-full bg-[#bee1fc]/35" />
-      <div className="absolute inset-x-3 top-7 h-2 w-2/3 rounded-full bg-white/15" />
-      <div className="absolute bottom-3 end-3 grid size-8 place-items-center rounded-md border border-[#bee1fc]/30 bg-[#bee1fc]/15 text-[0.62rem] font-bold text-[#bee1fc]">
-        {label}
-      </div>
-      <div className="absolute bottom-3 start-3 size-8 rounded-md bg-white/10" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.55]"
+        style={{
+          background:
+            "radial-gradient(120% 80% at 50% 0%, rgba(190,225,252,0.12), transparent 55%), linear-gradient(180deg, rgba(24,24,27,0.4), transparent 40%)",
+        }}
+      />
+      <div className="relative h-full min-h-0">{preview}</div>
     </div>
   );
 }
@@ -147,7 +201,7 @@ function FeatureList({ items }: { items: Bullet[] }) {
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              className="max-w-[16rem] border border-zinc-700 bg-zinc-950 p-3 text-start text-[0.72rem] leading-relaxed text-zinc-100 shadow-xl"
+              className="max-w-[17.5rem] border border-zinc-700 bg-zinc-950 p-3 text-start text-[0.72rem] leading-relaxed text-zinc-100 shadow-xl"
             >
               <p>{t(item.tipKey)}</p>
               <FeaturePreviewThumb id={item.preview} />

@@ -20,12 +20,16 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
         className,
       )}
     >
-      <div
+      <p
         dir="rtl"
         lang="ar"
-        className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 px-1 text-[0.82rem] leading-none tracking-wide text-muted-foreground"
+        className="max-w-full px-1 text-center text-[0.82rem] leading-none tracking-wide text-muted-foreground"
         style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}
       >
+        صناعة سعودية
+        <span aria-hidden className="mx-2 text-[oklch(1_0_0/0.35)]">
+          •
+        </span>
         <a
           href={SBC_CERTIFICATE_URL}
           target="_blank"
@@ -33,18 +37,9 @@ export function SaudiBusinessSeal({ className }: SaudiBusinessSealProps) {
           className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}
         >
-          موثّق لدى المركز السعودي للأعمال
+          موثق لدى المركز السعودي للأعمال
         </a>
-
-        <span
-          aria-hidden
-          className="size-1 shrink-0 rounded-full bg-[oklch(1_0_0/0.22)]"
-        />
-
-        <span style={{ fontFamily: "'Saudi', sans-serif", fontWeight: "bold" }}>
-          صناعة سعودية
-        </span>
-      </div>
+      </p>
     </footer>
   );
 }

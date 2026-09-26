@@ -191,7 +191,7 @@ export function TestEventMenu({
               style={{ background: activeGroup.color }}
               aria-hidden
             />
-            <p className="text-start text-[0.72rem] font-semibold tracking-[0.02em] text-muted-foreground" dir="rtl">
+            <p className="text-start text-[0.72rem] font-semibold tracking-[0.02em] text-muted-foreground" dir="ltr">
               {t(activeGroup.headingKey)}
             </p>
           </div>

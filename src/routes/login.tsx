@@ -115,7 +115,7 @@ function LoginPage() {
             imgClassName="h-11 sm:h-12"
           />
         </div>
-        <h1 className="mt-6 text-center text-2xl font-bold tracking-tight text-zinc-50 sm:text-3xl">
+        <h1 className="mt-6 text-center text-xl font-bold tracking-tight text-zinc-50 sm:text-2xl whitespace-nowrap">
           {t("login.title")}
         </h1>
 

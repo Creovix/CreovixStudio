@@ -100,7 +100,7 @@ export function EventTestPanel() {
           <p
             className="mb-3 flex items-center gap-2 text-start text-sm font-semibold"
             style={{ color: activeGroup.color }}
-            dir="rtl"
+            dir="ltr"
           >
             <PlatformAsset name={activeGroup.icon} size={14} label="" />
             <span>{t(activeGroup.headingKey)}</span>
