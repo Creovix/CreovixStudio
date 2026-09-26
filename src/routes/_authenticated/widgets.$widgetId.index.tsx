@@ -284,8 +284,9 @@ function WidgetBuilder() {
                 Goal control
               </Link>
             ) : null}
-            {widget.type !== "CHAT_BOX" && widget.type !== "GOAL_BAR" ? (
-
+            {widget.type !== "CHAT_BOX" &&
+            widget.type !== "GOAL_BAR" &&
+            widget.type !== "SUBATHON_TIMER" ? (
               <Link
                 to="/widgets/$widgetId/rules"
                 params={{ widgetId }}

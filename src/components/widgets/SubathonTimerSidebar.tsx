@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { DarkSelect } from "@/components/ui/dark-select";
 import { TestSimulatePanel } from "@/components/widgets/TestSimulatePanel";
 import { SubathonElementControlPanel } from "@/components/widgets/SubathonElementControlPanel";
+import { WidgetRulesPanel } from "@/components/widgets/WidgetRulesPanel";
 import { OVERLAY_LAYOUTS, OVERLAY_TIME_FORMATS, parseOverlayTheme } from "@/lib/overlayTheme";
 import type { TimerFrame } from "@/lib/timer";
 
@@ -12,7 +13,7 @@ const fieldClass =
 const labelClass =
   "text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground";
 
-type TabId = "general" | "controls" | "test";
+type TabId = "general" | "controls" | "test" | "rules";
 
 export function SubathonTimerSidebar({
   widgetId,
@@ -50,17 +51,24 @@ export function SubathonTimerSidebar({
     { id: "general", label: "General & Layout" },
     { id: "controls", label: "Controls & Actions" },
     { id: "test", label: "Test & Integration" },
+    { id: "rules", label: "Rules & Logic" },
   ];
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 rounded-xl border border-white/8 bg-black/20 p-1">
+      <div
+        role="tablist"
+        aria-label="Subathon settings"
+        className="flex gap-1 rounded-xl border border-white/8 bg-black/20 p-1"
+      >
         {tabs.map((entry) => (
           <button
             key={entry.id}
             type="button"
+            role="tab"
+            aria-selected={tab === entry.id}
             onClick={() => setTab(entry.id)}
-            className={`flex-1 rounded-lg px-2 py-1.5 text-[0.7rem] font-semibold transition ${
+            className={`min-w-0 flex-1 rounded-lg px-1.5 py-1.5 text-center text-[0.62rem] font-semibold leading-tight transition sm:text-[0.68rem] ${
               tab === entry.id
                 ? "border border-primary/60 bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.35)]"
                 : "border border-transparent text-muted-foreground hover:text-foreground"
@@ -85,9 +93,7 @@ export function SubathonTimerSidebar({
 
           <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background p-4">
             <span className="min-w-0">
-              <span className="block text-sm font-medium">
-                {"Show Title"}
-              </span>
+              <span className="block text-sm font-medium">{"Show Title"}</span>
               <span className="block text-[10px] text-muted-foreground">
                 {"Hides the SUBATHON text label next to the timer in the OBS preview"}
               </span>
@@ -180,9 +186,7 @@ export function SubathonTimerSidebar({
 
           <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-background p-4">
             <span className="min-w-0">
-              <span className="block text-sm font-medium">
-                {"Hide background container"}
-              </span>
+              <span className="block text-sm font-medium">{"Hide background container"}</span>
               <span className="block text-[10px] text-muted-foreground">
                 {"Shows only the timer text and icons on a fully transparent background"}
               </span>
@@ -256,6 +260,10 @@ export function SubathonTimerSidebar({
             </code>
           </div>
         </div>
+      ) : null}
+
+      {tab === "rules" ? (
+        <WidgetRulesPanel widgetId={widgetId} subathonId={subathonId} compact />
       ) : null}
     </div>
   );
