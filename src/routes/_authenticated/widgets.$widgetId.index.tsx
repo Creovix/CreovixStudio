@@ -19,6 +19,7 @@ import { syncGoalFollowers } from "@/lib/goals.functions";
 import { useWidgetStream } from "@/hooks/useWidgetStream";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { parseOverlayTheme } from "@/lib/overlayTheme";
+import { useLanguage } from "@/lib/i18n";
 import { DarkSelect } from "@/components/ui/dark-select";
 import {
   CHAT_LAYOUTS,
@@ -84,6 +85,7 @@ function WidgetBuilder() {
   const { user } = Route.useRouteContext();
   const { widgetId } = Route.useParams();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { data: workspace } = useWorkspace(user.id);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -828,7 +830,7 @@ function WidgetBuilder() {
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-transparent px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:border-red-500/30 hover:bg-red-500/10"
             >
               <Trash2 className="size-4" aria-hidden />
-              {"Delete widget"}
+              {t("home.delete")}
             </button>
             </>
             )}

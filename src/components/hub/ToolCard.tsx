@@ -50,6 +50,7 @@ export function ToolCard({
   comingSoon = false,
 }: ToolCardProps) {
   const { t } = useLanguage();
+  const resolvedDeleteLabel = deleteLabel === "Delete widget" ? t("home.delete") : deleteLabel;
   const [copied, setCopied] = useState(false);
 
   const previewLocked = locked || comingSoon;
@@ -106,6 +107,11 @@ export function ToolCard({
               <span className="rounded-full bg-zinc-800/80 px-2 py-0.5 text-[0.62rem] text-muted-foreground">
                 {t("home.comingSoon")}
               </span>
+            ) : locked ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.62rem] font-medium text-primary">
+                <Lock className="size-2.5" aria-hidden />
+                Pro
+              </span>
             ) : null}
           </div>
           <p className="mt-1 line-clamp-2 text-[0.74rem] leading-relaxed text-muted-foreground">
@@ -144,8 +150,8 @@ export function ToolCard({
             <button
               type="button"
               onClick={onDelete}
-              aria-label={`${deleteLabel}: ${name}`}
-              title={deleteLabel}
+              aria-label={`${resolvedDeleteLabel}: ${name}`}
+              title={resolvedDeleteLabel}
               className="rounded-xl bg-[oklch(1_0_0/0.05)] p-1.5 text-muted-foreground transition-opacity hover:opacity-80 hover:text-red-400"
             >
               <Trash2 className="size-3.5" aria-hidden />

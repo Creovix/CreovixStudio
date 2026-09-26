@@ -21,8 +21,8 @@ function CellValue({ value }: { value: FeatureAvailability }) {
   }
   if (value === false) {
     return (
-      <span className="inline-flex items-center justify-center text-muted-foreground/50" aria-label="Not included">
-        <X className="size-4" aria-hidden />
+      <span className="inline-flex items-center justify-center text-rose-400" aria-label="Not included">
+        <X className="size-4 stroke-[2.5]" aria-hidden />
       </span>
     );
   }

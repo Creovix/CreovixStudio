@@ -80,6 +80,7 @@ import { createWidget, errorMessage } from "@/lib/createWidget";
 import type { WidgetType } from "@/lib/widgets";
 import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import { isTestMode } from "@/lib/testMode";
+import { PRO_ONLY_HUB_TOOL_IDS } from "@/lib/plans";
 import { DarkSelect } from "@/components/ui/dark-select";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -107,7 +108,7 @@ const HUB_INITIAL_VISIBLE = 12;
 const HUB_LOAD_MORE = 8;
 
 /** Hub tools that require an active Pro subscription (matches PLAN_FEATURES). */
-const PRO_ONLY_TOOL_IDS = new Set(["emote-rain"]);
+const PRO_ONLY_TOOL_IDS = PRO_ONLY_HUB_TOOL_IDS;
 
 type Tool = {
   id: string;
@@ -432,11 +433,7 @@ function HomePage() {
           </span>
           <div className="min-w-0">
             <p className="text-[0.85rem] font-medium">{t("home.freePlan")}</p>
-            <p className="text-[0.76rem] text-muted-foreground">
-              {
-                "Essential widgets are unlocked. Activate a Pro code for Emote Rain and other Pro tools."
-              }
-            </p>
+            <p className="text-[0.76rem] text-muted-foreground">{t("home.freePlan.hint")}</p>
           </div>
           <button
             type="button"

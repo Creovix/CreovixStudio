@@ -159,6 +159,20 @@ export const FREE_PLAN_LIMITS = {
   messageTimers: 3,
 } as const;
 
+/** Dashboard hub tool ids that require an active Pro subscription. */
+export const PRO_ONLY_HUB_TOOL_IDS = new Set([
+  "emote-rain",
+  "giveaway",
+  "kick-media-requests",
+  "stream-events-schedule",
+]);
+
+/** Widget `type` values that require Pro (direct /widgets/$id access). */
+export const PRO_ONLY_WIDGET_TYPES = new Set([
+  "EMOTE_RAIN",
+  "STREAM_EVENTS_SCHEDULE",
+] as const);
+
 /** Full feature matrix — source of truth for cards + detailed table. */
 export const PLAN_FEATURES: PlanFeatureRow[] = [
   {
@@ -204,6 +218,27 @@ export const PLAN_FEATURES: PlanFeatureRow[] = [
     card: "pro-highlight",
   },
   {
+    id: "giveaways",
+    labelKey: "gateway.feature.giveaways",
+    free: false,
+    pro: true,
+    card: "free-missing",
+  },
+  {
+    id: "mediaRequests",
+    labelKey: "gateway.feature.mediaRequests",
+    free: false,
+    pro: true,
+    card: "free-missing",
+  },
+  {
+    id: "streamEvents",
+    labelKey: "gateway.feature.streamEvents",
+    free: false,
+    pro: true,
+    card: "pro-highlight",
+  },
+  {
     id: "linkInBio",
     labelKey: "gateway.feature.linkInBio",
     free: false,
@@ -235,12 +270,6 @@ export const PLAN_FEATURES: PlanFeatureRow[] = [
     labelKey: "gateway.feature.activityFeed",
     free: true,
     pro: true,
-  },
-  {
-    id: "giveaways",
-    labelKey: "gateway.feature.giveaways",
-    free: "Basic",
-    pro: "Full suite",
   },
   {
     id: "schedule",

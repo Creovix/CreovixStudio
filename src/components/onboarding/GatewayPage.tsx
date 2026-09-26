@@ -39,7 +39,6 @@ import {
   PRO_BILLING_OPTIONS,
   PRO_BILLING_ORDER,
   type ProBillingInterval,
-  type ProPurchaseType,
 } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
@@ -61,13 +60,19 @@ type FeaturePreviewId =
   | "unlimited"
   | "advanced"
   | "emoteRain"
-  | "export";
+  | "export"
+  | "giveaways"
+  | "mediaRequests"
+  | "streamEvents";
 
 const FREE_FEATURES: Bullet[] = [
   { key: "gateway.free.bullet.platforms", tipKey: "gateway.tip.platforms", included: true, preview: "platforms" },
   { key: "gateway.free.bullet.commands", tipKey: "gateway.tip.commands", included: true, preview: "commands" },
   { key: "gateway.free.bullet.timers", tipKey: "gateway.tip.timers", included: true, preview: "timers" },
   { key: "gateway.free.bullet.widgets", tipKey: "gateway.tip.widgets", included: true, preview: "widgets" },
+  { key: "gateway.free.bullet.giveaways", tipKey: "gateway.tip.giveaways", included: false, preview: "giveaways" },
+  { key: "gateway.free.bullet.mediaRequests", tipKey: "gateway.tip.mediaRequests", included: false, preview: "mediaRequests" },
+  { key: "gateway.free.bullet.streamEvents", tipKey: "gateway.tip.streamEvents", included: false, preview: "streamEvents" },
   { key: "gateway.free.bullet.linkInBio", tipKey: "gateway.tip.linkInBio", included: false, preview: "linkInBio" },
   { key: "gateway.free.bullet.analytics", tipKey: "gateway.tip.analytics", included: false, preview: "analytics" },
 ];
@@ -76,6 +81,9 @@ const PRO_FEATURES: Bullet[] = [
   { key: "gateway.pro.bullet.unlimited", tipKey: "gateway.tip.unlimited", included: true, preview: "unlimited" },
   { key: "gateway.pro.bullet.advanced", tipKey: "gateway.tip.advanced", included: true, preview: "advanced" },
   { key: "gateway.pro.bullet.emoteRain", tipKey: "gateway.tip.emoteRain", included: true, preview: "emoteRain" },
+  { key: "gateway.pro.bullet.giveaways", tipKey: "gateway.tip.giveaways", included: true, preview: "giveaways" },
+  { key: "gateway.pro.bullet.mediaRequests", tipKey: "gateway.tip.mediaRequests", included: true, preview: "mediaRequests" },
+  { key: "gateway.pro.bullet.streamEvents", tipKey: "gateway.tip.streamEvents", included: true, preview: "streamEvents" },
   { key: "gateway.pro.bullet.linkInBio", tipKey: "gateway.tip.linkInBio", included: true, preview: "linkInBio" },
   { key: "gateway.pro.bullet.analytics", tipKey: "gateway.tip.analytics", included: true, preview: "analytics" },
   { key: "gateway.pro.bullet.export", tipKey: "gateway.tip.export", included: true, preview: "export" },
@@ -126,10 +134,19 @@ function FeaturePreviewThumb({ id }: { id: FeaturePreviewId }) {
       <ActivityPreview />
     ) : id === "unlimited" ? (
       <TimerPreview />
-    ) : id === "advanced" ? (
-      <StreamEventsSchedulePreview />
     ) : id === "emoteRain" ? (
       <EmotePreview />
+    ) : id === "streamEvents" || id === "advanced" ? (
+      <StreamEventsSchedulePreview />
+    ) : id === "mediaRequests" ? (
+      <MediaRequestPreview />
+    ) : id === "giveaways" ? (
+      <div className="flex h-full flex-col items-center justify-center gap-2 px-3">
+        <div className="grid size-14 place-items-center rounded-full border border-[#bee1fc]/35 bg-[#bee1fc]/10 text-[#bee1fc]">
+          <Gift className="size-6" aria-hidden />
+        </div>
+        <p className="text-[0.65rem] text-zinc-400">!join · spin · winner</p>
+      </div>
     ) : id === "export" ? (
       <div className="flex h-full flex-col justify-center gap-1.5 px-3 font-mono text-[0.58rem] text-zinc-400">
         <div className="rounded-lg border border-white/8 bg-zinc-900/80 px-2.5 py-2 leading-relaxed">
@@ -303,139 +320,24 @@ function ProBillingSelector({
   );
 }
 
-function PurchaseTypeSelector({
-  value,
-  onChange,
-}: {
-  value: ProPurchaseType;
-  onChange: (next: ProPurchaseType) => void;
-}) {
-  const { t } = useLanguage();
-  /** In RTL, first item sits on the right (activate) and second on the left (gift). */
-  const options: Array<{ id: ProPurchaseType; label: TranslationKey; icon: LucideIcon }> = [
-    { id: "direct", label: "gateway.purchaseType.direct", icon: UserRoundCheck },
-    { id: "gift", label: "gateway.purchaseType.gift", icon: Gift },
-  ];
-
-  return (
-    <div
-      role="tablist"
-      aria-label={t("gateway.purchaseType.label")}
-      className="grid grid-cols-2 gap-1 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1"
-    >
-      {options.map((option) => {
-        const active = value === option.id;
-        const Icon = option.icon;
-        return (
-          <button
-            key={option.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(option.id)}
-            className={cn(
-              "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[0.68rem] font-semibold transition-colors sm:text-[0.72rem]",
-              active
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
-            )}
-          >
-            <Icon className="size-3.5 shrink-0 opacity-90" aria-hidden />
-            <span className="truncate">{t(option.label)}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function GiftFields({
-  recipientEmail,
-  giftMessage,
-  onRecipientChange,
-  onMessageChange,
-}: {
-  recipientEmail: string;
-  giftMessage: string;
-  onRecipientChange: (value: string) => void;
-  onMessageChange: (value: string) => void;
-}) {
-  const { t } = useLanguage();
-  return (
-    <div
-      className="mt-0 space-y-2 overflow-hidden rounded-lg border border-zinc-800/90 bg-zinc-950/60 p-2.5"
-      data-gift-fields
-    >
-      <div className="space-y-1">
-        <label
-          htmlFor="pro-gift-recipient"
-          className="block text-[0.68rem] font-medium text-zinc-400"
-        >
-          {t("gateway.gift.recipientLabel")}
-        </label>
-        <input
-          id="pro-gift-recipient"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          value={recipientEmail}
-          onChange={(e) => onRecipientChange(e.target.value)}
-          placeholder={t("gateway.gift.recipientPlaceholder")}
-          className="h-8 w-full rounded-md border border-zinc-800 bg-zinc-950 px-2.5 text-[0.78rem] text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30"
-        />
-        <p className="text-[0.62rem] leading-snug text-zinc-500">{t("gateway.gift.recipientHint")}</p>
-      </div>
-      <div className="space-y-1">
-        <label
-          htmlFor="pro-gift-message"
-          className="block text-[0.68rem] font-medium text-zinc-400"
-        >
-          {t("gateway.gift.messageLabel")}
-        </label>
-        <textarea
-          id="pro-gift-message"
-          rows={2}
-          maxLength={500}
-          value={giftMessage}
-          onChange={(e) => onMessageChange(e.target.value)}
-          placeholder={t("gateway.gift.messagePlaceholder")}
-          className="w-full resize-none rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-[0.78rem] text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30"
-        />
-      </div>
-    </div>
-  );
-}
-
 function ProPlanCard({
   badge,
   title,
   description,
   features,
-  cta,
   billing,
   onBillingChange,
-  purchaseType,
-  onPurchaseTypeChange,
-  giftRecipientEmail,
-  giftMessage,
-  onGiftRecipientChange,
-  onGiftMessageChange,
-  onUnlock,
+  onActivateAccount,
+  onGiftOrCode,
 }: {
   badge: string;
   title: string;
   description: string;
   features: Bullet[];
-  cta: string;
   billing: ProBillingInterval;
   onBillingChange: (next: ProBillingInterval) => void;
-  purchaseType: ProPurchaseType;
-  onPurchaseTypeChange: (next: ProPurchaseType) => void;
-  giftRecipientEmail: string;
-  giftMessage: string;
-  onGiftRecipientChange: (value: string) => void;
-  onGiftMessageChange: (value: string) => void;
-  onUnlock: () => void;
+  onActivateAccount: () => void;
+  onGiftOrCode: () => void;
 }) {
   const { t } = useLanguage();
   const option = PRO_BILLING_OPTIONS[billing];
@@ -479,40 +381,40 @@ function ProPlanCard({
         <FeatureList items={features} />
       </div>
 
-      <div className="mt-5 space-y-2.5">
-        {purchaseType === "gift" ? (
-          <GiftFields
-            recipientEmail={giftRecipientEmail}
-            giftMessage={giftMessage}
-            onRecipientChange={onGiftRecipientChange}
-            onMessageChange={onGiftMessageChange}
-          />
-        ) : null}
-        <PurchaseTypeSelector value={purchaseType} onChange={onPurchaseTypeChange} />
+      <div
+        className="mt-5 grid grid-cols-2 gap-2"
+        role="group"
+        aria-label={t("gateway.purchaseType.label")}
+      >
         <Button
           type="button"
           variant="default"
-          onClick={onUnlock}
-          className="h-10 w-full text-sm font-semibold shadow-[0_14px_36px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)]"
+          onClick={onActivateAccount}
+          className="h-10 min-w-0 gap-1.5 px-2 text-[0.72rem] font-semibold shadow-[0_14px_36px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)] sm:text-[0.78rem]"
           data-tier="pro"
           data-billing-interval={option.id}
           data-amount={option.amount}
           data-currency={option.currency}
           data-months={option.months}
-          data-purchase-type={purchaseType}
+          data-purchase-type="direct"
         >
-          {cta}
-          <ChevronRight className="size-3.5 opacity-70 rtl:rotate-180" aria-hidden />
+          <UserRoundCheck className="size-3.5 shrink-0 opacity-90" aria-hidden />
+          <span className="truncate">{t("gateway.purchaseType.direct")}</span>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onGiftOrCode}
+          className="h-10 min-w-0 gap-1.5 border-zinc-700 bg-zinc-950/60 px-2 text-[0.72rem] font-semibold text-zinc-100 hover:bg-zinc-900 hover:text-white sm:text-[0.78rem]"
+          data-tier="pro"
+          data-purchase-type="gift"
+        >
+          <Gift className="size-3.5 shrink-0 opacity-90" aria-hidden />
+          <span className="truncate">{t("gateway.purchaseType.gift")}</span>
         </Button>
       </div>
     </article>
   );
-}
-
-function isOptionalEmailValid(value: string): boolean {
-  const trimmed = value.trim();
-  if (!trimmed) return true;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }
 
 export function GatewayPlansPanel({
@@ -527,9 +429,6 @@ export function GatewayPlansPanel({
   const navigate = useNavigate();
   const [compareOpen, setCompareOpen] = useState(false);
   const [proBilling, setProBilling] = useState<ProBillingInterval>(DEFAULT_PRO_BILLING);
-  const [purchaseType, setPurchaseType] = useState<ProPurchaseType>("direct");
-  const [giftRecipientEmail, setGiftRecipientEmail] = useState("");
-  const [giftMessage, setGiftMessage] = useState("");
 
   const goDashboard = () => {
     markGatewayCompleted();
@@ -538,45 +437,25 @@ export function GatewayPlansPanel({
 
   const continueFree = onContinueFree ?? goDashboard;
 
-  const unlockPro = () => {
-    if (purchaseType === "gift" && !isOptionalEmailValid(giftRecipientEmail)) {
-      toast.error(t("gateway.gift.invalidEmail"));
-      return;
-    }
-
+  const activateOnAccount = () => {
     const payload = prepareProCheckout(proBilling, {
-      purchaseType,
+      purchaseType: "direct",
       userId: user.id,
       buyerEmail: user.email ?? null,
-      giftRecipientEmail: purchaseType === "gift" ? giftRecipientEmail : null,
-      giftMessage: purchaseType === "gift" ? giftMessage : null,
     });
-
-    if (purchaseType === "direct") {
-      toast.message(
-        t("gateway.billing.checkoutDirectReady").replace("{amount}", payload.label),
-      );
-      return;
-    }
-
-    const recipient = payload.giftRecipientEmail
-      ? ` to ${payload.giftRecipientEmail}`
-      : " to you";
     toast.message(
-      t("gateway.billing.checkoutGiftReady")
-        .replace("{amount}", payload.label)
-        .replace("{recipient}", recipient),
+      t("gateway.billing.checkoutDirectReady").replace("{amount}", payload.label),
     );
-    window.setTimeout(() => {
-      document.getElementById("gateway-redeem")?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }, 150);
   };
 
-  const unlockCta =
-    purchaseType === "direct" ? t("gateway.pro.ctaDirect") : t("gateway.pro.ctaGift");
+  const openGiftOrCode = () => {
+    const section = document.getElementById("gateway-redeem");
+    section?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => {
+      const input = section?.querySelector<HTMLInputElement>("input");
+      input?.focus();
+    }, 320);
+  };
 
   return (
     <TooltipProvider delayDuration={120}>
@@ -599,16 +478,10 @@ export function GatewayPlansPanel({
             title={t("gateway.pro.name")}
             description={t("gateway.pro.description")}
             features={PRO_FEATURES}
-            cta={unlockCta}
             billing={proBilling}
             onBillingChange={setProBilling}
-            purchaseType={purchaseType}
-            onPurchaseTypeChange={setPurchaseType}
-            giftRecipientEmail={giftRecipientEmail}
-            giftMessage={giftMessage}
-            onGiftRecipientChange={setGiftRecipientEmail}
-            onGiftMessageChange={setGiftMessage}
-            onUnlock={unlockPro}
+            onActivateAccount={activateOnAccount}
+            onGiftOrCode={openGiftOrCode}
           />
         </section>
 

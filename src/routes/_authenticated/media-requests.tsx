@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { DarkSelect } from "@/components/ui/dark-select";
+import { ProFeatureGate } from "@/components/subscription/ProLockedScreen";
 import { supabase } from "@/lib/supabase/client";
 import { useLiveChat } from "@/hooks/useLiveChat";
 import { MediaPlayerCard } from "@/components/media/MediaPlayerLayouts";
@@ -44,8 +45,9 @@ const glass="overflow-hidden rounded-2xl border border-white/5";
 const fmt=(s:number)=>`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
 export const Route=createFileRoute("/_authenticated/media-requests")({
   head:()=>({meta:[{title:"CylixStudio — طلبات الأغاني"},{property:"og:title",content:"CylixStudio — طلبات الأغاني"}]}),
-  component:Page,
+  component:MediaRequestsRoute,
 });
+function MediaRequestsRoute(){const{user}=Route.useRouteContext();return <ProFeatureGate userId={user.id}><Page/></ProFeatureGate>}
 function Page(){const{user}=Route.useRouteContext();const qc=useQueryClient();const query=useQuery({queryKey:["media-requests"],queryFn:()=>getMediaRequestDashboard()});const d=query.data;const settings=d?.settings as (NonNullable<typeof query.data>["settings"]&{player_layout?:string})|null|undefined;
   const[form,setForm]=useState({kickRewardId:"",requestMode:"MANUAL" as "AUTO"|"MANUAL"|"PAUSED",keywordBlacklist:"",userBlacklist:"",displayMode:"VIDEO" as "VIDEO"|"AUDIO_ONLY",playerLayout:"VERTICAL_CARD" as PlayerLayout,volume:80});
   const[setupTab,setSetupTab]=useState<"setup"|"links"|"safety">("setup");

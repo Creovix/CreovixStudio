@@ -10,6 +10,7 @@ import { DarkSelect } from "@/components/ui/dark-select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { GiveawayDisplay, type DrawPhase } from "@/components/widgets/GiveawayDisplay";
 import { PlatformIcon } from "@/components/widgets/PlatformIcon";
+import { ProFeatureGate } from "@/components/subscription/ProLockedScreen";
 import { useLiveChat } from "@/hooks/useLiveChat";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
@@ -46,8 +47,17 @@ export const Route = createFileRoute("/_authenticated/giveaway")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: GiveawayPage,
+  component: GiveawayRoute,
 });
+
+function GiveawayRoute() {
+  const { user } = Route.useRouteContext();
+  return (
+    <ProFeatureGate userId={user.id}>
+      <GiveawayPage />
+    </ProFeatureGate>
+  );
+}
 
 const field =
   "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-foreground outline-none focus:border-zinc-600";
