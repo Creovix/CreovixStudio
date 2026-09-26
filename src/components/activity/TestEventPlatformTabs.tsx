@@ -1,9 +1,6 @@
 import { PlatformAsset } from "@/components/icons/platformAssets";
-import {
-  TEST_EVENT_GROUPS,
-  TEST_EVENT_TAB_LABEL,
-  type TestEventGroup,
-} from "@/lib/testEvents";
+import { TEST_EVENT_GROUPS, type TestEventGroup } from "@/lib/testEvents";
+import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function TestEventPlatformTabs({
@@ -13,11 +10,13 @@ export function TestEventPlatformTabs({
   activePlatform: TestEventGroup["platform"];
   onSelect: (platform: TestEventGroup["platform"]) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div
       className="flex flex-wrap items-end justify-start gap-x-0.5 gap-y-1.5"
       role="tablist"
-      aria-label="Test event platforms"
+      aria-label={t("settings.test.platformsAria")}
     >
       {TEST_EVENT_GROUPS.map((group) => {
         const selected = group.platform === activePlatform;
@@ -41,8 +40,8 @@ export function TestEventPlatformTabs({
             )}
           >
             <PlatformAsset name={group.icon} size={16} label="" />
-            <span className="whitespace-nowrap">
-              {TEST_EVENT_TAB_LABEL[group.platform]}
+            <span className="whitespace-nowrap" dir="auto">
+              {t(group.tabKey)}
             </span>
           </button>
         );

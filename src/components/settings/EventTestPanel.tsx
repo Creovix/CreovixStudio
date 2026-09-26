@@ -35,8 +35,8 @@ export function EventTestPanel() {
   });
 
   const fire = async (group: TestEventGroup, event: TestEventSpec) => {
-    const id = `${group.platform}-${event.type}-${event.label}`;
-    const label = event.label;
+    const label = t(event.labelKey);
+    const id = `${group.platform}-${event.type}-${event.labelKey}`;
     setPending(id);
     try {
       const response = await mutation.mutateAsync({
@@ -97,13 +97,17 @@ export function EventTestPanel() {
           role="tabpanel"
           className="animate-in fade-in-0 slide-in-from-top-1 p-4 duration-200"
         >
-          <p className="mb-3 flex items-center gap-2 text-sm font-semibold" style={{ color: activeGroup.color }}>
+          <p
+            className="mb-3 flex items-center gap-2 text-start text-sm font-semibold"
+            style={{ color: activeGroup.color }}
+            dir="rtl"
+          >
             <PlatformAsset name={activeGroup.icon} size={14} label="" />
-            {t(activeGroup.headingKey)}
+            <span>{t(activeGroup.headingKey)}</span>
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-start gap-2">
             {activeGroup.events.map((event) => {
-              const id = `${activeGroup.platform}-${event.type}-${event.label}`;
+              const id = `${activeGroup.platform}-${event.type}-${event.labelKey}`;
               return (
                 <button
                   key={id}
@@ -112,7 +116,7 @@ export function EventTestPanel() {
                   onClick={() => void fire(activeGroup, event)}
                   className="min-h-9 rounded-full border border-white/8 px-3.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                 >
-                  {pending === id ? t("settings.test.sending") : event.label}
+                  {pending === id ? t("settings.test.sending") : t(event.labelKey)}
                 </button>
               );
             })}

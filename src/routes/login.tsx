@@ -8,20 +8,19 @@ import { supabase } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { navigateAfterLogin } from "@/lib/postLogin";
 import { enableTestMode, isTestMode } from "@/lib/testMode";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 
 type LoginSearch = { error?: string | undefined; detail?: string | undefined };
 
-const ERRORS: Record<string, string> = {
-  twitch_not_configured: "Twitch login isn't configured yet. Add the Twitch app credentials.",
-  kick_not_configured: "Kick login isn't configured yet. Add the Kick app credentials.",
-  state_mismatch: "The sign-in attempt expired. Please try again.",
-  missing_code: "The provider did not return an authorization code.",
-  pkce_verifier_missing: "The sign-in attempt expired. Please try again.",
-  oauth_failed: "Sign-in failed. Please try again.",
-  access_denied: "You cancelled the sign-in request.",
-  supabase_admin_key:
-    "Server auth is misconfigured (Supabase service role key). Set SUPABASE_SERVICE_ROLE_KEY to the service_role or sb_secret_ key for the same project as SUPABASE_URL.",
+const ERRORS: Record<string, TranslationKey> = {
+  twitch_not_configured: "login.error.twitch_not_configured",
+  kick_not_configured: "login.error.kick_not_configured",
+  state_mismatch: "login.error.state_mismatch",
+  missing_code: "login.error.missing_code",
+  pkce_verifier_missing: "login.error.pkce_verifier_missing",
+  oauth_failed: "login.error.oauth_failed",
+  access_denied: "login.error.access_denied",
+  supabase_admin_key: "login.error.supabase_admin_key",
 };
 
 export const Route = createFileRoute("/login")({
@@ -117,7 +116,7 @@ function LoginPage() {
           />
         </div>
         <h1 className="mt-6 text-center text-2xl font-bold tracking-tight text-zinc-50 sm:text-3xl">
-          Sign in to your control room
+          {t("login.title")}
         </h1>
 
         {error ? (
@@ -125,9 +124,11 @@ function LoginPage() {
             role="alert"
             className="mt-6 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground"
           >
-            {ERRORS[error] ?? "Something went wrong during sign-in."}
+            {t(ERRORS[error] ?? "login.error.generic")}
             {import.meta.env.DEV && detail ? (
-              <span className="mt-2 block break-words font-mono text-xs opacity-80">{detail}</span>
+              <span className="mt-2 block break-words font-mono text-xs opacity-80" dir="ltr">
+                {detail}
+              </span>
             ) : null}
           </div>
         ) : null}
@@ -154,7 +155,7 @@ function LoginPage() {
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-twitch px-5 py-3.5 text-base font-semibold text-twitch-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             <PlatformAsset key="login-twitch" name="twitch" size={20} variant="White" className="h-5 w-5" />
-            {pending === "twitch" ? "Redirecting…" : "Continue with Twitch"}
+            {pending === "twitch" ? t("login.redirecting") : t("login.continueTwitch")}
           </button>
 
           <button
@@ -164,7 +165,7 @@ function LoginPage() {
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-kick px-5 py-3.5 text-base font-semibold text-kick-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             <PlatformAsset key="login-kick" name="kick" size={20} variant="Black" className="h-5 w-5" />
-            {pending === "kick" ? "Redirecting…" : "Continue with Kick"}
+            {pending === "kick" ? t("login.redirecting") : t("login.continueKick")}
           </button>
 
           <div className="relative overflow-hidden rounded-xl">
@@ -174,7 +175,7 @@ function LoginPage() {
               className="pointer-events-none flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-black px-5 py-3.5 text-base font-semibold text-white opacity-60 blur-[2px] saturate-50"
             >
               <PlatformAsset key="login-tiktok" name="tiktok" size={20} variant="White" className="h-5 w-5" />
-              Continue with TikTok
+              {t("login.continueTikTok")}
             </button>
             <div className="absolute inset-0 grid place-items-center bg-black/45 backdrop-blur-[1px]">
               <span className="flex items-center gap-1.5 rounded-full border border-white/15 bg-zinc-950/85 px-3 py-1.5 text-[0.72rem] font-semibold text-foreground">
@@ -201,7 +202,7 @@ function LoginPage() {
           <Link to="/privacy" className="underline-offset-2 hover:text-zinc-400 hover:underline">
             {t("login.privacy")}
           </Link>{" "}
-          and{" "}
+          {t("login.and")}{" "}
           <Link to="/terms" className="underline-offset-2 hover:text-zinc-400 hover:underline">
             {t("login.terms")}
           </Link>

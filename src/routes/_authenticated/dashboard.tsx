@@ -89,9 +89,11 @@ const PRO_ONLY_TOOL_IDS = new Set(["emote-rain"]);
 
 type Tool = {
   id: string;
+  /** Stable English name used for existing widget matching / create payload. */
   name: string;
-  description: string;
-  category: string;
+  nameKey: TranslationKey;
+  descriptionKey: TranslationKey;
+  categoryKey: TranslationKey;
   icon: LucideIcon;
   preview: () => ReactElement;
   type?: WidgetType;
@@ -112,8 +114,9 @@ const TOOLS: Tool[] = [
   {
     id: "chat-box",
     name: "Chat box",
-    description: "Live platform chat with Dynamic Island, speech bubble or transparent layouts.",
-    category: "Chat",
+    nameKey: "home.tool.chatBox.name",
+    descriptionKey: "home.tool.chatBox.desc",
+    categoryKey: "cat.Chat",
     icon: MessageSquare,
     preview: ChatPreview,
     type: "CHAT_BOX",
@@ -123,8 +126,9 @@ const TOOLS: Tool[] = [
   {
     id: "subathon-timer",
     name: "Subathon timer",
-    description: "Visual timer editor with a dedicated Rules & Logic sub-tab.",
-    category: "Subathon",
+    nameKey: "home.tool.subathon.name",
+    descriptionKey: "home.tool.subathon.desc",
+    categoryKey: "cat.Subathon",
     icon: Timer,
     preview: TimerPreview,
     type: "SUBATHON_TIMER",
@@ -134,8 +138,9 @@ const TOOLS: Tool[] = [
   {
     id: "custom-goal",
     name: "Goal bar",
-    description: "Progress goals for followers, subscribers, donations or custom targets.",
-    category: "Goals",
+    nameKey: "home.tool.goalBar.name",
+    descriptionKey: "home.tool.goalBar.desc",
+    categoryKey: "cat.Goals",
     icon: Gauge,
     preview: CustomGoalPreview,
     type: "GOAL_BAR",
@@ -145,8 +150,9 @@ const TOOLS: Tool[] = [
   {
     id: "chat-spotlight",
     name: "Chat spotlight",
-    description: "Pin one chat message to a premium glass card on your OBS overlay.",
-    category: "Chat",
+    nameKey: "home.tool.spotlight.name",
+    descriptionKey: "home.tool.spotlight.desc",
+    categoryKey: "cat.Chat",
     icon: Pin,
     preview: SpotlightPreview,
     type: "CHAT_SPOTLIGHT",
@@ -155,10 +161,10 @@ const TOOLS: Tool[] = [
   },
   {
     id: "stream-events-schedule",
-    name: "جدول فعاليات البث",
-    description:
-      "Timed on-stream segments with a live countdown glass card — skip, edit, and sync to stream start.",
-    category: "Utilities",
+    name: "Stream events schedule",
+    nameKey: "home.tool.streamEvents.name",
+    descriptionKey: "home.tool.streamEvents.desc",
+    categoryKey: "cat.Utilities",
     icon: Clock3,
     preview: StreamEventsSchedulePreview,
     type: "STREAM_EVENTS_SCHEDULE",
@@ -168,8 +174,9 @@ const TOOLS: Tool[] = [
   {
     id: "tiktok-tappers",
     name: "Top Tappers Overlay",
-    description: "Live TikTok tap leaderboard with animated ranks and instant reordering.",
-    category: "TikTok",
+    nameKey: "home.tool.tappers.name",
+    descriptionKey: "home.tool.tappers.desc",
+    categoryKey: "cat.TikTok",
     icon: Trophy,
     preview: TappersPreview,
     type: "TIKTOK_TAPPERS",
@@ -180,8 +187,9 @@ const TOOLS: Tool[] = [
   {
     id: "tiktok-tap-goal",
     name: "TikTok Tap Goal Overlay",
-    description: "Progress bar toward a total tap target with live percentage and confetti.",
-    category: "TikTok",
+    nameKey: "home.tool.tapGoal.name",
+    descriptionKey: "home.tool.tapGoal.desc",
+    categoryKey: "cat.TikTok",
     icon: Gauge,
     preview: TapGoalPreview,
     type: "TIKTOK_TAP_GOAL",
@@ -192,9 +200,9 @@ const TOOLS: Tool[] = [
   {
     id: "kick-media-requests",
     name: "Media Requests",
-    description:
-      "Channel-point song requests from YouTube, Spotify, Anghami and SoundCloud with a moderated queue and OBS player.",
-    category: "Kick",
+    nameKey: "home.tool.mediaRequests.name",
+    descriptionKey: "home.tool.mediaRequests.desc",
+    categoryKey: "cat.Kick",
     icon: PlaySquare,
     preview: MediaRequestPreview,
     keywords: "media request song request youtube spotify anghami soundcloud kick channel points queue player",
@@ -203,8 +211,9 @@ const TOOLS: Tool[] = [
   {
     id: "emote-rain",
     name: "Emote rain",
-    description: "Falling emotes triggered by chat spam, gifts and hype events.",
-    category: "Utilities",
+    nameKey: "home.tool.emoteRain.name",
+    descriptionKey: "home.tool.emoteRain.desc",
+    categoryKey: "cat.Utilities",
     icon: Sparkles,
     preview: EmotePreview,
     type: "EMOTE_RAIN",
@@ -229,7 +238,7 @@ function HomePage() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const needsPro = subscription.isSuccess && !subscription.data.isActive;
-  const lockLabel = "Unlock Pro";
+  const lockLabel = t("home.unlockPro");
 
   const toolLocked = (tool: Tool) => needsPro && PRO_ONLY_TOOL_IDS.has(tool.id);
 
@@ -285,10 +294,8 @@ function HomePage() {
     tool.id === "custom-goal"
       ? (goalWidgets[0] ?? null)
       : tool.type
-      ? (widgets.data?.widgets.find(
-          (widget) => widget.type === tool.type && widget.name === tool.name,
-        ) ?? null)
-      : null;
+        ? (widgets.data?.widgets.find((widget) => widget.type === tool.type) ?? null)
+        : null;
 
   const goalPreset = goalTypePreset(goalType);
 
@@ -382,7 +389,7 @@ function HomePage() {
             <Lock className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-[0.85rem] font-medium">{"Free plan"}</p>
+            <p className="text-[0.85rem] font-medium">{t("home.freePlan")}</p>
             <p className="text-[0.76rem] text-muted-foreground">
               {
                 "Essential widgets are unlocked. Activate a Pro code for Emote Rain and other Pro tools."
@@ -394,7 +401,7 @@ function HomePage() {
             onClick={() => setRedeemModal(true)}
             className="ms-auto rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
-            {"Unlock Pro"}
+            {t("home.unlockPro")}
           </button>
         </div>
       ) : null}
@@ -450,21 +457,21 @@ function HomePage() {
               return (
                 <ToolCard
                   key={tool.id}
-                  name={tool.name}
-                  description={tool.description}
-                  category={tool.category}
+                  name={t(tool.nameKey)}
+                  description={t(tool.descriptionKey)}
+                  category={t(tool.categoryKey)}
                   icon={tool.icon}
                   platforms={tool.platforms}
                   comingSoon={Boolean(tool.comingSoon)}
                   preview={<Preview />}
                   status={
                     tool.id === "kick-media-requests"
-                      ? "Live"
+                      ? t("home.status.live")
                       : existing?.is_enabled
-                        ? "Live"
+                        ? t("home.status.live")
                         : existing
-                          ? "Paused"
-                          : "Ready"
+                          ? t("home.status.paused")
+                          : t("home.status.ready")
                   }
                   live={Boolean(existing?.is_enabled)}
                   publicToken={
@@ -478,12 +485,12 @@ function HomePage() {
                   disabled={busy === tool.id}
                   actionLabel={
                     tool.id === "kick-media-requests"
-                      ? "Open queue"
+                      ? t("home.action.openQueue")
                       : busy === tool.id
-                        ? "Opening…"
+                        ? t("home.action.opening")
                         : existing
-                          ? "Customize"
-                          : "Open"
+                          ? t("home.action.customize")
+                          : t("home.action.open")
                   }
                   onOpen={() => void open(tool)}
                   removing={Boolean(existing && removingId === existing.id)}

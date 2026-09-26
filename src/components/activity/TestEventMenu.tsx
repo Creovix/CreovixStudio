@@ -174,8 +174,8 @@ export function TestEventMenu({
         className="w-[min(30rem,calc(100vw-1rem))] !overflow-x-visible !overflow-y-auto rounded-2xl border-white/10 bg-[rgba(10,10,12,0.96)] p-0 shadow-2xl shadow-black/60 backdrop-blur-2xl"
       >
         <div className="border-b border-white/8 px-3 pb-3 pt-3">
-          <p className="mb-2.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Platform
+          <p className="mb-2.5 text-start text-[0.62rem] font-semibold tracking-[0.02em] text-muted-foreground">
+            {t("settings.test.platformsAria")}
           </p>
           <TestEventPlatformTabs activePlatform={activeGroup.platform} onSelect={setTab} />
         </div>
@@ -191,14 +191,14 @@ export function TestEventMenu({
               style={{ background: activeGroup.color }}
               aria-hidden
             />
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-start text-[0.72rem] font-semibold tracking-[0.02em] text-muted-foreground" dir="rtl">
               {t(activeGroup.headingKey)}
             </p>
           </div>
           <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
             {activeGroup.events.map((event) => (
               <DropdownMenuItem
-                key={`${activeGroup.platform}-${event.type}-${event.label}`}
+                key={`${activeGroup.platform}-${event.type}-${event.labelKey}`}
                 disabled={pending}
                 className="cursor-pointer rounded-xl border border-transparent px-3 py-2.5 text-[0.82rem] focus:border-white/8 focus:bg-white/[0.06]"
                 onSelect={() => void pick(activeGroup.platform, event)}
@@ -207,7 +207,7 @@ export function TestEventMenu({
                   className="me-2 size-1.5 shrink-0 rounded-full"
                   style={{ background: activeGroup.color }}
                 />
-                {event.label}
+                {t(event.labelKey)}
               </DropdownMenuItem>
             ))}
           </div>
