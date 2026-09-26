@@ -158,6 +158,7 @@ export type Database = {
       pro_purchases: {
         Row: {
           activation_code_id: string | null
+          activated_at: string | null
           amount_cents: number | null
           billing_interval: string
           code_delivered_at: string | null
@@ -165,16 +166,20 @@ export type Database = {
           currency: string
           duration_days: number
           email: string
+          gift_message: string | null
+          gift_recipient_email: string | null
           id: string
           metadata: Json
           provider: string
           provider_payment_id: string
+          purchase_type: string
           status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
           activation_code_id?: string | null
+          activated_at?: string | null
           amount_cents?: number | null
           billing_interval: string
           code_delivered_at?: string | null
@@ -182,16 +187,20 @@ export type Database = {
           currency?: string
           duration_days: number
           email: string
+          gift_message?: string | null
+          gift_recipient_email?: string | null
           id?: string
           metadata?: Json
           provider?: string
           provider_payment_id: string
+          purchase_type?: string
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           activation_code_id?: string | null
+          activated_at?: string | null
           amount_cents?: number | null
           billing_interval?: string
           code_delivered_at?: string | null
@@ -199,10 +208,13 @@ export type Database = {
           currency?: string
           duration_days?: number
           email?: string
+          gift_message?: string | null
+          gift_recipient_email?: string | null
           id?: string
           metadata?: Json
           provider?: string
           provider_payment_id?: string
+          purchase_type?: string
           status?: string
           updated_at?: string
           user_id?: string | null

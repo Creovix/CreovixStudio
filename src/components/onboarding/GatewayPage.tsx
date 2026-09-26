@@ -1,10 +1,12 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import {
   Check,
   ChevronRight,
   Crown,
+  Gift,
   Sparkles,
   Table2,
+  UserRoundCheck,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -25,6 +27,7 @@ import {
   PRO_BILLING_OPTIONS,
   PRO_BILLING_ORDER,
   type ProBillingInterval,
+  type ProPurchaseType,
 } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
@@ -181,6 +184,131 @@ function ProBillingSelector({
   );
 }
 
+function PurchaseTypeSelector({
+  value,
+  onChange,
+}: {
+  value: ProPurchaseType;
+  onChange: (next: ProPurchaseType) => void;
+}) {
+  const { t } = useLanguage();
+  const options: Array<{
+    id: ProPurchaseType;
+    label: TranslationKey;
+    hint: TranslationKey;
+    icon: LucideIcon;
+  }> = [
+    {
+      id: "direct",
+      label: "gateway.purchaseType.direct",
+      hint: "gateway.purchaseType.directHint",
+      icon: UserRoundCheck,
+    },
+    {
+      id: "gift",
+      label: "gateway.purchaseType.gift",
+      hint: "gateway.purchaseType.giftHint",
+      icon: Gift,
+    },
+  ];
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+        {t("gateway.purchaseType.label")}
+      </p>
+      <div
+        role="tablist"
+        aria-label={t("gateway.purchaseType.label")}
+        className="grid grid-cols-2 gap-1.5"
+      >
+        {options.map((option) => {
+          const active = value === option.id;
+          const Icon = option.icon;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onChange(option.id)}
+              className={cn(
+                "flex flex-col items-start gap-1 rounded-lg border px-2.5 py-2 text-start transition-colors",
+                active
+                  ? "border-primary/50 bg-primary/15 text-zinc-50"
+                  : "border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200",
+              )}
+            >
+              <span className="inline-flex items-center gap-1.5 text-[0.72rem] font-semibold leading-tight">
+                <Icon className="size-3.5 shrink-0 opacity-90" aria-hidden />
+                {t(option.label)}
+              </span>
+              <span className="text-[0.62rem] leading-snug opacity-80">{t(option.hint)}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function GiftFields({
+  recipientEmail,
+  giftMessage,
+  onRecipientChange,
+  onMessageChange,
+}: {
+  recipientEmail: string;
+  giftMessage: string;
+  onRecipientChange: (value: string) => void;
+  onMessageChange: (value: string) => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div
+      className="mt-2.5 space-y-2 overflow-hidden rounded-lg border border-zinc-800/90 bg-zinc-950/60 p-2.5"
+      data-gift-fields
+    >
+      <div className="space-y-1">
+        <label
+          htmlFor="pro-gift-recipient"
+          className="block text-[0.68rem] font-medium text-zinc-400"
+        >
+          {t("gateway.gift.recipientLabel")}
+        </label>
+        <input
+          id="pro-gift-recipient"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={recipientEmail}
+          onChange={(e) => onRecipientChange(e.target.value)}
+          placeholder={t("gateway.gift.recipientPlaceholder")}
+          className="h-8 w-full rounded-md border border-zinc-800 bg-zinc-950 px-2.5 text-[0.78rem] text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30"
+        />
+        <p className="text-[0.62rem] leading-snug text-zinc-500">{t("gateway.gift.recipientHint")}</p>
+      </div>
+      <div className="space-y-1">
+        <label
+          htmlFor="pro-gift-message"
+          className="block text-[0.68rem] font-medium text-zinc-400"
+        >
+          {t("gateway.gift.messageLabel")}
+        </label>
+        <textarea
+          id="pro-gift-message"
+          rows={2}
+          maxLength={500}
+          value={giftMessage}
+          onChange={(e) => onMessageChange(e.target.value)}
+          placeholder={t("gateway.gift.messagePlaceholder")}
+          className="w-full resize-none rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-[0.78rem] text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30"
+        />
+      </div>
+    </div>
+  );
+}
+
 function ProPlanCard({
   badge,
   title,
@@ -189,6 +317,12 @@ function ProPlanCard({
   cta,
   billing,
   onBillingChange,
+  purchaseType,
+  onPurchaseTypeChange,
+  giftRecipientEmail,
+  giftMessage,
+  onGiftRecipientChange,
+  onGiftMessageChange,
   onUnlock,
 }: {
   badge: string;
@@ -198,6 +332,12 @@ function ProPlanCard({
   cta: string;
   billing: ProBillingInterval;
   onBillingChange: (next: ProBillingInterval) => void;
+  purchaseType: ProPurchaseType;
+  onPurchaseTypeChange: (next: ProPurchaseType) => void;
+  giftRecipientEmail: string;
+  giftMessage: string;
+  onGiftRecipientChange: (value: string) => void;
+  onGiftMessageChange: (value: string) => void;
   onUnlock: () => void;
 }) {
   const { t } = useLanguage();
@@ -235,6 +375,15 @@ function ProPlanCard({
       </div>
 
       <ProBillingSelector value={billing} onChange={onBillingChange} />
+      <PurchaseTypeSelector value={purchaseType} onChange={onPurchaseTypeChange} />
+      {purchaseType === "gift" ? (
+        <GiftFields
+          recipientEmail={giftRecipientEmail}
+          giftMessage={giftMessage}
+          onRecipientChange={onGiftRecipientChange}
+          onMessageChange={onGiftMessageChange}
+        />
+      ) : null}
 
       <p className="mt-2 line-clamp-2 text-[0.78rem] leading-relaxed text-zinc-400">{description}</p>
 
@@ -252,6 +401,7 @@ function ProPlanCard({
         data-amount={option.amount}
         data-currency={option.currency}
         data-months={option.months}
+        data-purchase-type={purchaseType}
       >
         {cta}
         <ChevronRight className="size-3.5 opacity-70" aria-hidden />
@@ -260,11 +410,21 @@ function ProPlanCard({
   );
 }
 
+function isOptionalEmailValid(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+}
+
 export function GatewayPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useRouteContext({ from: "/_authenticated" });
   const [compareOpen, setCompareOpen] = useState(false);
   const [proBilling, setProBilling] = useState<ProBillingInterval>(DEFAULT_PRO_BILLING);
+  const [purchaseType, setPurchaseType] = useState<ProPurchaseType>("direct");
+  const [giftRecipientEmail, setGiftRecipientEmail] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
 
   const goDashboard = () => {
     markGatewayCompleted();
@@ -272,17 +432,44 @@ export function GatewayPage() {
   };
 
   const unlockPro = () => {
-    const payload = prepareProCheckout(proBilling);
-    // Checkout gateway is not live yet — guide users to the redeem-code path.
+    if (purchaseType === "gift" && !isOptionalEmailValid(giftRecipientEmail)) {
+      toast.error(t("gateway.gift.invalidEmail"));
+      return;
+    }
+
+    const payload = prepareProCheckout(proBilling, {
+      purchaseType,
+      userId: user.id,
+      buyerEmail: user.email ?? null,
+      giftRecipientEmail: purchaseType === "gift" ? giftRecipientEmail : null,
+      giftMessage: purchaseType === "gift" ? giftMessage : null,
+    });
+
+    if (purchaseType === "direct") {
+      toast.message(
+        t("gateway.billing.checkoutDirectReady").replace("{amount}", payload.label),
+      );
+      return;
+    }
+
+    const recipient = payload.giftRecipientEmail
+      ? ` to ${payload.giftRecipientEmail}`
+      : " to you";
     toast.message(
-      t("gateway.billing.checkoutReady").replace("{amount}", payload.label),
+      t("gateway.billing.checkoutGiftReady")
+        .replace("{amount}", payload.label)
+        .replace("{recipient}", recipient),
     );
     window.setTimeout(() => {
-      document.getElementById("gateway-redeem")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      const input = document.querySelector<HTMLInputElement>("#gateway-redeem input");
-      input?.focus();
+      document.getElementById("gateway-redeem")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }, 150);
   };
+
+  const unlockCta =
+    purchaseType === "direct" ? t("gateway.pro.ctaDirect") : t("gateway.pro.ctaGift");
 
   return (
     <main className="relative h-dvh overflow-hidden bg-charcoal text-foreground">
@@ -336,7 +523,7 @@ export function GatewayPage() {
         </header>
 
         <section
-          className="mt-4 grid min-h-0 shrink items-stretch gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4"
+          className="mt-4 grid min-h-0 shrink items-stretch gap-3 overflow-y-auto sm:mt-5 sm:grid-cols-2 sm:gap-4"
           aria-label={t("gateway.plansLabel")}
         >
           <FreePlanCard
@@ -353,9 +540,15 @@ export function GatewayPage() {
             title={t("gateway.pro.name")}
             description={t("gateway.pro.description")}
             features={PRO_FEATURES}
-            cta={t("gateway.pro.cta")}
+            cta={unlockCta}
             billing={proBilling}
             onBillingChange={setProBilling}
+            purchaseType={purchaseType}
+            onPurchaseTypeChange={setPurchaseType}
+            giftRecipientEmail={giftRecipientEmail}
+            giftMessage={giftMessage}
+            onGiftRecipientChange={setGiftRecipientEmail}
+            onGiftMessageChange={setGiftMessage}
             onUnlock={unlockPro}
           />
         </section>

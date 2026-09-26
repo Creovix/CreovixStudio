@@ -78,6 +78,8 @@ export const PRO_BILLING_ORDER: ProBillingInterval[] = ["monthly", "six_months",
 export const DEFAULT_PRO_BILLING: ProBillingInterval = "monthly";
 
 /** Payload handed to Tuwaiq Pay (or any checkout adapter) when Unlock Pro is pressed. */
+export type ProPurchaseType = "direct" | "gift";
+
 export type ProCheckoutPayload = {
   planId: "pro";
   interval: ProBillingInterval;
@@ -86,12 +88,32 @@ export type ProCheckoutPayload = {
   months: number;
   label: string;
   productName: string;
+  /** direct = activate on buyer account; gift = email an activation code */
+  purchaseType: ProPurchaseType;
+  /** Buyer account (required for direct). */
+  userId?: string | null;
+  buyerEmail?: string | null;
+  /** Gift-only optional fields */
+  giftRecipientEmail?: string | null;
+  giftMessage?: string | null;
+};
+
+export type PrepareProCheckoutOptions = {
+  purchaseType?: ProPurchaseType;
+  userId?: string | null;
+  buyerEmail?: string | null;
+  giftRecipientEmail?: string | null;
+  giftMessage?: string | null;
 };
 
 export const PENDING_PRO_CHECKOUT_KEY = "cylix.pending-pro-checkout";
 
-export function buildProCheckoutPayload(interval: ProBillingInterval): ProCheckoutPayload {
+export function buildProCheckoutPayload(
+  interval: ProBillingInterval,
+  options?: PrepareProCheckoutOptions,
+): ProCheckoutPayload {
   const option = PRO_BILLING_OPTIONS[interval];
+  const purchaseType = options?.purchaseType ?? "direct";
   return {
     planId: "pro",
     interval: option.id,
@@ -100,6 +122,15 @@ export function buildProCheckoutPayload(interval: ProBillingInterval): ProChecko
     months: option.months,
     label: option.label,
     productName: `CylixStudio Pro (${option.months === 1 ? "Monthly" : option.months === 6 ? "6 Months" : "Yearly"})`,
+    purchaseType,
+    userId: options?.userId ?? null,
+    buyerEmail: options?.buyerEmail?.trim().toLowerCase() || null,
+    giftRecipientEmail:
+      purchaseType === "gift"
+        ? options?.giftRecipientEmail?.trim().toLowerCase() || null
+        : null,
+    giftMessage:
+      purchaseType === "gift" ? options?.giftMessage?.trim().slice(0, 500) || null : null,
   };
 }
 
@@ -107,8 +138,11 @@ export function buildProCheckoutPayload(interval: ProBillingInterval): ProChecko
  * Persists the selected Pro checkout so a future Tuwaiq Pay redirect/handler
  * can read the exact total. Returns the payload for immediate use.
  */
-export function prepareProCheckout(interval: ProBillingInterval): ProCheckoutPayload {
-  const payload = buildProCheckoutPayload(interval);
+export function prepareProCheckout(
+  interval: ProBillingInterval,
+  options?: PrepareProCheckoutOptions,
+): ProCheckoutPayload {
+  const payload = buildProCheckoutPayload(interval, options);
   if (typeof window !== "undefined") {
     try {
       window.sessionStorage.setItem(PENDING_PRO_CHECKOUT_KEY, JSON.stringify(payload));

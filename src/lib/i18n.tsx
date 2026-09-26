@@ -251,8 +251,23 @@ const DICT = {
   "gateway.billing.yearly": "Yearly",
   "gateway.billing.save": "Save ~{percent}%",
   "gateway.billing.checkoutReady":
-    "Payment for {amount} is confirmed by email with your activation code — redeem it below or in Settings. Pro stays off until you activate.",
+    "Checkout prepared for {amount}. When payment succeeds, Pro activates per your selection (direct or gift code).",
+  "gateway.billing.checkoutDirectReady":
+    "Checkout prepared for {amount}. After payment, Pro activates on your account immediately — no code needed.",
+  "gateway.billing.checkoutGiftReady":
+    "Checkout prepared for {amount}. After payment, a gift activation code is emailed{recipient}.",
   "gateway.billing.selectorLabel": "Billing period",
+  "gateway.purchaseType.label": "How do you want Pro?",
+  "gateway.purchaseType.direct": "Activate on my account",
+  "gateway.purchaseType.directHint": "Pro unlocks instantly after payment.",
+  "gateway.purchaseType.gift": "Gift / activation code",
+  "gateway.purchaseType.giftHint": "We’ll email a redeemable code — optional recipient & message.",
+  "gateway.gift.recipientLabel": "Recipient email (optional)",
+  "gateway.gift.recipientPlaceholder": "friend@email.com",
+  "gateway.gift.recipientHint": "Leave empty to send the code to your own email.",
+  "gateway.gift.messageLabel": "Gift message (optional)",
+  "gateway.gift.messagePlaceholder": "Enjoy Pro — from me!",
+  "gateway.gift.invalidEmail": "Enter a valid recipient email, or leave it blank.",
   "gateway.free.name": "Free",
   "gateway.free.description": "Core tools to get on stream, with clear limits as you grow.",
   "gateway.free.cta": "Continue with Free",
@@ -268,6 +283,8 @@ const DICT = {
   "gateway.pro.description":
     "Unlimited tools for serious streamers — advanced widgets, Link in Bio, and full analytics.",
   "gateway.pro.cta": "Unlock Pro",
+  "gateway.pro.ctaDirect": "Unlock Pro on my account",
+  "gateway.pro.ctaGift": "Buy gift / code",
   "gateway.pro.bullet.unlimited": "Unlimited commands & message timers",
   "gateway.pro.bullet.advanced": "All advanced widgets unlocked",
   "gateway.pro.bullet.emoteRain": "Emote Rain and premium overlays",
@@ -279,7 +296,7 @@ const DICT = {
   "gateway.compare.subtitle": "Every CylixStudio capability, side by side.",
   "gateway.compare.feature": "Feature",
   "gateway.compare.note":
-    "Pro is activated with a prepaid redeem code. Limits on Free apply to custom commands, timers and advanced tools.",
+    "Pro can activate directly after checkout, or via a prepaid / gift redeem code. Free limits apply to custom commands, timers and advanced tools.",
   "gateway.feature.platforms": "Multi-platform linking (Twitch, Kick, YouTube, TikTok)",
   "gateway.feature.commands": "Custom chat commands",
   "gateway.feature.timers": "Message timers",
