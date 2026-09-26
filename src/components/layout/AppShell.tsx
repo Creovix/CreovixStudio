@@ -239,13 +239,14 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
           </nav>
 
           <div className="mt-auto space-y-2 border-t border-white/10 px-2 py-3">
-            <div ref={profileRef} className="relative">
+            <div ref={profileRef} className="relative" dir="ltr">
               <IconTip label={t("nav.profile")} collapsed={collapsed}>
                 <button
                   type="button"
                   onClick={() => setProfileOpen((open) => !open)}
                   aria-label={t("nav.profile")}
                   aria-expanded={profileOpen}
+                  dir="ltr"
                   className={cn(
                     "flex w-full items-center rounded-xl transition-colors hover:bg-white/5",
                     collapsed ? "justify-center p-1" : "gap-2.5 px-2 py-1.5",
@@ -261,8 +262,8 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                     )}
                   </span>
                   {collapsed ? null : (
-                    <span className="min-w-0 flex-1 text-start">
-                      <span className="block truncate text-xs font-semibold" dir="auto">
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block truncate text-xs font-semibold">
                         {profile?.name ?? "CylixStudio"}
                       </span>
                       <span className="block truncate text-[0.65rem] text-muted-foreground">
@@ -283,8 +284,8 @@ export function AppShell({ children, title, subtitle, actions, user, profile }: 
                   style={menuSurfaceStyle}
                   role="menu"
                 >
-                  <div className="px-3 py-2.5">
-                    <p className="text-[0.82rem] font-semibold" dir="auto">{profile?.name ?? "CylixStudio"}</p>
+                  <div className="px-3 py-2.5 text-left" dir="ltr">
+                    <p className="text-[0.82rem] font-semibold">{profile?.name ?? "CylixStudio"}</p>
                     <p className="mt-0.5 truncate text-[0.72rem] text-muted-foreground">
                       {user.email ?? "creovix0@gmail.com"}
                     </p>

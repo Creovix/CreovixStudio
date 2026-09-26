@@ -231,7 +231,7 @@ function FreePlanCard({
   onCta: () => void;
 }) {
   return (
-    <article className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/85 p-4 pt-5 sm:p-5">
+    <article className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/90 p-5 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.85)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-zinc-400">{title}</p>
@@ -240,14 +240,14 @@ function FreePlanCard({
             <span className="text-xs text-zinc-500">{period}</span>
           </div>
         </div>
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400">
           <Sparkles className="size-4" aria-hidden />
         </span>
       </div>
 
-      <p className="mt-2 line-clamp-2 text-[0.78rem] leading-relaxed text-zinc-400">{description}</p>
+      <p className="mt-3 text-[0.82rem] leading-relaxed text-zinc-400">{description}</p>
 
-      <div className="mt-3 min-h-0 flex-1 border-t border-zinc-800/90 pt-3">
+      <div className="mt-4 min-h-0 flex-1 border-t border-zinc-800/90 pt-4">
         <FeatureList items={features} />
       </div>
 
@@ -255,7 +255,7 @@ function FreePlanCard({
         type="button"
         variant="outline"
         onClick={onCta}
-        className="mt-4 h-9 w-full border-zinc-700 bg-zinc-900/70 text-[0.82rem] font-semibold text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800"
+        className="mt-5 h-10 w-full border-zinc-700 bg-zinc-900/70 text-sm font-semibold text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800"
         data-tier="free"
       >
         {cta}
@@ -442,7 +442,7 @@ function ProPlanCard({
   const Icon: LucideIcon = Crown;
 
   return (
-    <article className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-primary/45 bg-gradient-to-b from-primary/[0.16] via-zinc-950 to-zinc-950 p-4 pt-5 shadow-[0_0_40px_-12px_oklch(0.541_0.247_293_/_0.45)] sm:p-5">
+    <article className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-primary/45 bg-gradient-to-b from-primary/[0.16] via-zinc-950 to-zinc-950 p-5 pt-6 shadow-[0_0_48px_-14px_color-mix(in_oklab,var(--primary)_55%,transparent)] sm:p-6">
       <div className="absolute inset-x-0 top-0 flex justify-center">
         <span className="inline-flex items-center gap-1 rounded-b-lg border border-t-0 border-primary/35 bg-primary/15 px-3 py-1 text-[0.62rem] font-semibold tracking-wide text-primary">
           <Sparkles className="size-2.5" aria-hidden />
@@ -466,20 +466,20 @@ function ProPlanCard({
           </div>
           <p className="mt-1 text-[0.72rem] text-zinc-400">{option.perMonthLabel}</p>
         </div>
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/15 text-primary">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-primary/40 bg-primary/15 text-primary">
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
 
       <ProBillingSelector value={billing} onChange={onBillingChange} />
 
-      <p className="mt-2 line-clamp-2 text-[0.78rem] leading-relaxed text-zinc-400">{description}</p>
+      <p className="mt-3 text-[0.82rem] leading-relaxed text-zinc-400">{description}</p>
 
-      <div className="mt-3 min-h-0 flex-1 border-t border-zinc-800/90 pt-3">
+      <div className="mt-4 min-h-0 flex-1 border-t border-zinc-800/90 pt-4">
         <FeatureList items={features} />
       </div>
 
-      <div className="mt-4 space-y-2.5">
+      <div className="mt-5 space-y-2.5">
         {purchaseType === "gift" ? (
           <GiftFields
             recipientEmail={giftRecipientEmail}
@@ -493,7 +493,7 @@ function ProPlanCard({
           type="button"
           variant="default"
           onClick={onUnlock}
-          className="h-9 w-full text-[0.82rem] font-semibold shadow-[0_14px_36px_-16px_oklch(0.541_0.247_293_/_0.8)]"
+          className="h-10 w-full text-sm font-semibold shadow-[0_14px_36px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)]"
           data-tier="pro"
           data-billing-interval={option.id}
           data-amount={option.amount}
@@ -582,7 +582,7 @@ export function GatewayPlansPanel({
     <TooltipProvider delayDuration={120}>
       <div className={cn("flex w-full flex-col", className)}>
         <section
-          className="grid min-h-0 items-stretch gap-3 sm:grid-cols-2 sm:gap-4"
+          className="grid min-h-0 items-stretch gap-4 sm:grid-cols-2 sm:gap-5"
           aria-label={t("gateway.plansLabel")}
         >
           <FreePlanCard
@@ -612,7 +612,7 @@ export function GatewayPlansPanel({
           />
         </section>
 
-        <div className="my-3 flex shrink-0 items-center gap-3 sm:my-4" role="presentation">
+        <div className="my-5 flex shrink-0 items-center gap-3 sm:my-6" role="presentation">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-700 to-transparent" />
           <button
             type="button"
@@ -627,8 +627,7 @@ export function GatewayPlansPanel({
 
         <RedeemCodeSection
           id="gateway-redeem"
-          className="mx-auto w-full max-w-lg shrink-0"
-          compact
+          className="mx-auto w-full max-w-xl shrink-0"
           onActivated={goDashboard}
         />
 
@@ -648,31 +647,31 @@ export function GatewayPage() {
   };
 
   return (
-    <main className="relative h-dvh overflow-hidden bg-charcoal text-foreground">
+    <main className="relative min-h-dvh overflow-x-hidden bg-charcoal text-foreground">
       <div
         className="pointer-events-none absolute inset-0"
         style={{ backgroundImage: "var(--gradient-glow)" }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute start-1/2 top-[-18%] size-[36rem] -translate-x-1/2 rounded-full bg-primary/[0.09] blur-3xl"
+        className="pointer-events-none absolute start-1/2 top-[-12%] size-[36rem] -translate-x-1/2 rounded-full bg-primary/[0.09] blur-3xl"
         aria-hidden
       />
 
-      <div className="relative mx-auto flex h-full w-full max-w-[56rem] flex-col justify-center px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+      <div className="relative mx-auto flex w-full max-w-5xl flex-col px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
         <header className="mx-auto w-full max-w-2xl shrink-0 text-center">
-          <div className="mb-3 flex justify-center">
+          <div className="mb-4 flex justify-center">
             <BrandLogo markOnly size="lg" className="sm:hidden" />
             <BrandLogo markOnly size="xl" className="hidden sm:inline-flex" />
           </div>
           <h1 className="text-balance text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl lg:text-[2.15rem] lg:leading-[1.15]">
             {t("gateway.welcome.title")}
           </h1>
-          <p className="mx-auto mt-1.5 max-w-xl text-pretty text-[0.82rem] leading-relaxed text-zinc-400 sm:text-[0.9rem]">
+          <p className="mx-auto mt-2 max-w-xl text-pretty text-[0.86rem] leading-relaxed text-zinc-400 sm:text-[0.95rem]">
             {t("gateway.welcome.subtitle")}
           </p>
 
-          <div className="mt-3 flex justify-center">
+          <div className="mt-4 flex justify-center">
             <ul
               className="inline-flex flex-wrap items-center justify-center gap-1.5"
               aria-label={t("gateway.welcome.platformsLabel")}
@@ -698,7 +697,7 @@ export function GatewayPage() {
           </div>
         </header>
 
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto sm:mt-5">
+        <div className="mt-8 w-full sm:mt-10">
           <GatewayPlansPanel onContinueFree={goDashboard} />
         </div>
       </div>
